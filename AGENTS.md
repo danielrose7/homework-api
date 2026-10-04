@@ -43,6 +43,18 @@ then trust the stale text over the code.
 - Body: a brief narrative of what is included and why it was done this way, wrapped at ~72 columns.
 - Keep docs in `docs/plan/` in the same commit as the change that affects them.
 
+## Phase gates
+
+Work proceeds one phase at a time from `docs/plan/README.md`. A phase is not finished until its "Done when" line
+is true, and then work stops for human review.
+
+- Before stopping: `pnpm typecheck`, `pnpm lint`, `pnpm format:check` and `pnpm test` all pass; the phase's
+  checklist items are ticked; the decision log and affected docs are updated; everything is committed.
+- Stop with a short report: the commits made, what to review and where to look, anything that deviated from the
+  plan and why, and any new question. Then wait. Do not begin the next phase until told to.
+- If a decision comes up that the plan doesn't settle, ask instead of guessing, and record the answer in the plan.
+- After a context reset, start from `git log`, `docs/plan/README.md` and this file.
+
 ## Project rules
 
 - pnpm only (no npm/yarn).
