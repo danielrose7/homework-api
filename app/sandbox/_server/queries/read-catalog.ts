@@ -3,10 +3,10 @@ import type {
   CatalogItem,
 } from "@/app/sandbox/console/_components/catalog";
 import { SANDBOX_SCHOOL } from "@/app/sandbox/_server/seed-data";
-import { EXAMPLES } from "@/lib/docs/examples";
-import { fieldsOf } from "@/lib/docs/fields";
-import { ROUTE_DOCS } from "@/lib/docs/registry";
-import type { RouteGroup } from "@/lib/docs/types";
+import { EXAMPLES } from "@/app/docs/_lib/examples";
+import { fieldsOf } from "@/app/docs/_lib/fields";
+import { ROUTE_DOCS } from "@/app/docs/_lib/registry";
+import type { RouteGroup } from "@/lib/server/route-doc";
 
 const GROUPS: RouteGroup[] = ["Auth", "Student", "Teacher", "Shared"];
 

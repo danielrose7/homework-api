@@ -9,7 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 
-import type { Language } from "@/lib/docs/snippets";
+import type { Language } from "@/app/docs/_lib/snippets";
 
 const LanguageContext = createContext<
   [Language, Dispatch<SetStateAction<Language>>] | null

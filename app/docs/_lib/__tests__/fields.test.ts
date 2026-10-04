@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { fieldsOf } from "@/lib/docs/fields";
+import { fieldsOf } from "@/app/docs/_lib/fields";
 
 describe("fieldsOf", () => {
   it("describes types, requiredness, defaults, constraints and descriptions", () => {

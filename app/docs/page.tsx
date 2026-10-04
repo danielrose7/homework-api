@@ -4,9 +4,9 @@ import { LanguageProvider } from "@/app/docs/_components/language";
 import { Markdown } from "@/app/docs/_components/markdown";
 import { RouteSection } from "@/app/docs/_components/route-section";
 import { readContent } from "@/app/docs/_lib/content";
-import { EXAMPLE_VARIABLES } from "@/lib/docs/examples";
-import { ROUTE_DOCS } from "@/lib/docs/registry";
-import type { RouteGroup } from "@/lib/docs/types";
+import { EXAMPLE_VARIABLES } from "@/app/docs/_lib/examples";
+import { ROUTE_DOCS } from "@/app/docs/_lib/registry";
+import type { RouteGroup } from "@/lib/server/route-doc";
 
 export const metadata: Metadata = {
   title: "API docs · Homework API",

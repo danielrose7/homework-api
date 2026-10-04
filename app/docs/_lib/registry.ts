@@ -8,7 +8,7 @@ import { listSubmissionsRoute } from "@/app/api/v1/orgs/[org_slug]/submissions/r
 import type { DocumentedRoute } from "@/lib/server/route";
 
 import { signInDoc } from "./auth-routes";
-import type { RouteDoc } from "./types";
+import type { RouteDoc } from "@/lib/server/route-doc";
 
 /** Every `/api/v1` route definition, in the order the docs list them. */
 export const API_ROUTES: readonly DocumentedRoute[] = [

@@ -10,7 +10,7 @@ A tour of the code and the decisions behind it. Links go to the files on
 | [`modules/`](https://github.com/danielrose7/homework-api/tree/main/modules)                          | Behavior by resource: `queries`, `mutations` and `serializers.ts`.       |
 | [`lib/domain/`](https://github.com/danielrose7/homework-api/tree/main/lib/domain)                    | Pure rules with no database: grading, eligibility, filters, validation.  |
 | [`lib/server/`](https://github.com/danielrose7/homework-api/tree/main/lib/server)                    | Request context, errors, the route wrapper, auth and database plumbing.  |
-| [`lib/docs/`](https://github.com/danielrose7/homework-api/tree/main/lib/docs)                        | The route registry and the example generators behind this page.          |
+| [`app/docs/_lib/`](https://github.com/danielrose7/homework-api/tree/main/app/docs/_lib)              | The route registry and the example generators behind this page.          |
 | [`prisma/schema.prisma`](https://github.com/danielrose7/homework-api/blob/main/prisma/schema.prisma) | The data model.                                                          |
 | [`app/sandbox/`](https://github.com/danielrose7/homework-api/tree/main/app/sandbox)                  | The demo UI, the seed and the reset button.                              |
 | [`test/`](https://github.com/danielrose7/homework-api/tree/main/test)                                | Integration tests, factories and scenario helpers.                       |
@@ -23,7 +23,7 @@ the response.
 
 **Plain REST, documented from the code.** Each route's Zod schemas validate the request _and_ feed the field tables
 on this page, so the docs cannot drift from the handler. There is no OpenAPI file. The registry is
-[`lib/docs/registry.ts`](https://github.com/danielrose7/homework-api/blob/main/lib/docs/registry.ts), and a test
+[`app/docs/_lib/registry.ts`](https://github.com/danielrose7/homework-api/blob/main/app/docs/_lib/registry.ts), and a test
 fails if a route has no entry.
 
 **Two layers of validation.** Zod checks the shape at the route boundary; `validate*` functions in
@@ -61,7 +61,7 @@ scenario helpers such as
 page are tests too:
 [`test/docs-examples.test.ts`](https://github.com/danielrose7/homework-api/blob/main/test/docs-examples.test.ts)
 runs each against the seeded Sandbox school, and
-[`lib/docs/__tests__/snippets.test.ts`](https://github.com/danielrose7/homework-api/blob/main/lib/docs/__tests__/snippets.test.ts)
+[`app/docs/_lib/__tests__/snippets.test.ts`](https://github.com/danielrose7/homework-api/blob/main/app/docs/_lib/__tests__/snippets.test.ts)
 runs the curl, Python and Node versions and checks what each sends.
 
 ## What is deferred

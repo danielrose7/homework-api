@@ -1,6 +1,6 @@
 import { SANDBOX_SCHOOL } from "@/app/sandbox/_server/seed-data";
-import { variableName, type RouteExample } from "@/lib/docs/examples";
-import type { RouteDoc } from "@/lib/docs/types";
+import { variableName, type RouteExample } from "@/app/docs/_lib/examples";
+import type { RouteDoc } from "@/lib/server/route-doc";
 
 export type Language = "curl" | "python" | "node";
 

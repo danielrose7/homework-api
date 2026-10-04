@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { z } from "zod";
 
-import { fieldsOf } from "@/lib/docs/fields";
-import { API_ROUTES, ROUTE_DOCS } from "@/lib/docs/registry";
+import { fieldsOf } from "@/app/docs/_lib/fields";
+import { API_ROUTES, ROUTE_DOCS } from "@/app/docs/_lib/registry";
 
 const API_ROOT = "app/api/v1";
 

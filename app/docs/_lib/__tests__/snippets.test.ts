@@ -13,9 +13,13 @@ import {
   EXAMPLE_VARIABLES,
   variableName,
   type RouteExample,
-} from "@/lib/docs/examples";
-import { ROUTE_DOCS } from "@/lib/docs/registry";
-import { LANGUAGES, renderSnippet, type Language } from "@/lib/docs/snippets";
+} from "@/app/docs/_lib/examples";
+import { ROUTE_DOCS } from "@/app/docs/_lib/registry";
+import {
+  LANGUAGES,
+  renderSnippet,
+  type Language,
+} from "@/app/docs/_lib/snippets";
 import { SANDBOX_SCHOOL } from "@/app/sandbox/_server/seed-data";
 
 const exec = promisify(execFile);

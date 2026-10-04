@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { useLanguage } from "@/app/docs/_components/language";
 import { Button } from "@/components/ui/button";
-import { LANGUAGES, type Language } from "@/lib/docs/snippets";
+import { LANGUAGES, type Language } from "@/app/docs/_lib/snippets";
 import { cn } from "@/lib/utils";
 
 export interface ExampleView {

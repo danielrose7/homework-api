@@ -1,5 +1,5 @@
 import { InlineMarkdown } from "@/app/docs/_components/markdown";
-import type { FieldDoc } from "@/lib/docs/fields";
+import type { FieldDoc } from "@/app/docs/_lib/fields";
 
 export function FieldTable({ fields }: { fields: FieldDoc[] }) {
   if (fields.length === 0) return null;

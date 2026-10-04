@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { RouteDoc } from "@/lib/docs/types";
+import type { RouteDoc } from "@/lib/server/route-doc";
 import { STATUS } from "@/lib/http-status";
 import { recordActivity, type ResourceType } from "@/lib/server/activity";
 import type { Auth } from "@/lib/server/auth-factory";

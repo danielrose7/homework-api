@@ -4,10 +4,14 @@ import {
 } from "@/app/docs/_components/example-block";
 import { FieldTable } from "@/app/docs/_components/field-table";
 import { InlineMarkdown, Markdown } from "@/app/docs/_components/markdown";
-import { EXAMPLES } from "@/lib/docs/examples";
-import { fieldsOf, type FieldDoc } from "@/lib/docs/fields";
-import { LANGUAGES, renderSnippet, type Language } from "@/lib/docs/snippets";
-import type { RouteDoc } from "@/lib/docs/types";
+import { EXAMPLES } from "@/app/docs/_lib/examples";
+import { fieldsOf, type FieldDoc } from "@/app/docs/_lib/fields";
+import {
+  LANGUAGES,
+  renderSnippet,
+  type Language,
+} from "@/app/docs/_lib/snippets";
+import type { RouteDoc } from "@/lib/server/route-doc";
 import { cn } from "@/lib/utils";
 
 const ORG_SLUG_FIELD: FieldDoc = {

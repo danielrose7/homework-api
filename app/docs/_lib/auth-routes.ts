@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
 
-import type { RouteDoc } from "./types";
+import type { RouteDoc } from "@/lib/server/route-doc";
 
 const signInBody = z.object({
   username: z.string().describe("The person's username, such as `maya`."),

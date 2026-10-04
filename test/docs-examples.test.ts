@@ -4,8 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { seedSandbox } from "@/app/sandbox/_server/mutations/seed-sandbox";
 import { SANDBOX_PASSWORD } from "@/app/sandbox/_server/seed-data";
-import { EXAMPLES, variableName, type RouteExample } from "@/lib/docs/examples";
-import { API_ROUTES } from "@/lib/docs/registry";
+import {
+  EXAMPLES,
+  variableName,
+  type RouteExample,
+} from "@/app/docs/_lib/examples";
+import { API_ROUTES } from "@/app/docs/_lib/registry";
 import { createAuth } from "@/lib/server/auth-factory";
 
 import { callRoute } from "./http";

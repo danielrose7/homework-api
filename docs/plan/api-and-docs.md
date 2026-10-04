@@ -134,14 +134,14 @@ docs page lists the codes per endpoint.
 ## Docs (Phase 5)
 
 - No OpenAPI spec. `/docs` is generated from a route registry plus Zod's JSON Schema output. Each route carries a
-  `doc` on its `defineRoute` (id, method, path, roles, params/query/body schemas, errors); `lib/docs/registry.ts`
+  `doc` on its `defineRoute` (id, method, path, roles, params/query/body schemas, errors); `app/docs/_lib/registry.ts`
   lists them, and `test/docs-registry.test.ts` fails if a route file has no entry or a different verb, path or path
   parameter.
 - Sections: background, authentication, conventions, resources, running the examples, routes, and a codebase guide
   with links to the code on GitHub (`test/docs-codebase-links.test.ts` checks the links point at paths that exist).
   Prose is Markdown in `app/docs/_content/`.
-- Examples for every route are defined once in `lib/docs/examples.ts` and rendered as curl, Python (`requests`) and
-  Node (`fetch`) tabs by `lib/docs/snippets.ts`. They read `HOST`, `TOKEN` and ids from environment variables.
+- Examples for every route are defined once in `app/docs/_lib/examples.ts` and rendered as curl, Python (`requests`) and
+  Node (`fetch`) tabs by `app/docs/_lib/snippets.ts`. They read `HOST`, `TOKEN` and ids from environment variables.
   `test/docs-examples.test.ts` runs each against the seeded Sandbox school and checks the documented status and
   error code, and that the sample JSON in `resources.md` has the keys of the real responses. The snippet test runs
   every generated snippet against a local echo server (Python is skipped without `requests`; set `PYTHON` to pick an
