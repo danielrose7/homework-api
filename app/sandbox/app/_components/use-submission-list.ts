@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { send } from "@/app/sandbox/_lib/api";
 import {
@@ -57,11 +63,13 @@ export function useSubmissionList(
         return;
       }
       const page = exchange.json as ListResponse<Submission>;
-      setState((current) => ({
-        rows: more ? [...current.rows, ...page.data] : page.data,
-        has_more: page.has_more,
-        error: null,
-      }));
+      startTransition(() =>
+        setState((current) => ({
+          rows: more ? [...current.rows, ...page.data] : page.data,
+          has_more: page.has_more,
+          error: null,
+        })),
+      );
     },
     [path, filterKey, state.rows],
   );

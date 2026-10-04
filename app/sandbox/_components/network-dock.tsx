@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { ViewTransition, startTransition, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { BASE } from "@/app/sandbox/_lib/api";
@@ -40,72 +41,79 @@ export function NetworkDock({
           <Button
             size="xs"
             variant="outline"
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => startTransition(() => setOpen((value) => !value))}
           >
+            {open ? <EyeOff size={12} /> : <Eye size={12} />}
             {open ? "Hide" : "Show"}
           </Button>
         </span>
       </div>
       {open && (
-        <div className="h-40 overflow-auto md:h-48">
-          {rows.length === 0 ? (
-            <div className="text-muted-foreground p-6">
-              Every call the UI makes lands here, the way the browser network
-              tab shows it.
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead className="text-muted-foreground bg-card sticky top-0 text-left text-[10.5px] tracking-wider uppercase">
-                <tr>
-                  <th className="px-3 py-1">#</th>
-                  <th className="px-3 py-1">Time</th>
-                  <th className="px-3 py-1">Method</th>
-                  <th className="px-3 py-1">Path ({BASE})</th>
-                  <th className="px-3 py-1">Status</th>
-                  <th className="px-3 py-1">As</th>
-                  <th className="px-3 py-1">Took</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    onClick={() => {
-                      exchangeStore.select(row.id);
-                      onInspect(row.id);
-                    }}
-                    className={cn(
-                      "hover:bg-muted cursor-pointer",
-                      row.id === selectedId && "bg-accent",
-                    )}
-                  >
-                    <td className="text-muted-foreground px-3 py-0.5">
-                      {row.id}
-                    </td>
-                    <td className="text-muted-foreground px-3 py-0.5">
-                      {clock(row.at)}
-                    </td>
-                    <td className="px-3 py-0.5">
-                      <MethodTag method={row.method} />
-                    </td>
-                    <td className="max-w-[16rem] truncate px-3 py-0.5 md:max-w-xl">
-                      {row.path.replace(BASE, "")}
-                    </td>
-                    <td className="px-3 py-0.5">
-                      <StatusChip status={row.status} />
-                    </td>
-                    <td className="text-muted-foreground px-3 py-0.5">
-                      {row.persona}
-                    </td>
-                    <td className="text-muted-foreground px-3 py-0.5">
-                      {row.ms} ms
-                    </td>
+        <ViewTransition
+          enter="sandbox-fade-in"
+          exit="sandbox-fade-out"
+          default="none"
+        >
+          <div className="h-40 overflow-auto md:h-48">
+            {rows.length === 0 ? (
+              <div className="text-muted-foreground p-6">
+                Every call the UI makes lands here, the way the browser network
+                tab shows it.
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="text-muted-foreground bg-card sticky top-0 text-left text-[10.5px] tracking-wider uppercase">
+                  <tr>
+                    <th className="px-3 py-1">#</th>
+                    <th className="px-3 py-1">Time</th>
+                    <th className="px-3 py-1">Method</th>
+                    <th className="px-3 py-1">Path ({BASE})</th>
+                    <th className="px-3 py-1">Status</th>
+                    <th className="px-3 py-1">As</th>
+                    <th className="px-3 py-1">Took</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      onClick={() => {
+                        exchangeStore.select(row.id);
+                        onInspect(row.id);
+                      }}
+                      className={cn(
+                        "hover:bg-muted cursor-pointer",
+                        row.id === selectedId && "bg-accent",
+                      )}
+                    >
+                      <td className="text-muted-foreground px-3 py-0.5">
+                        {row.id}
+                      </td>
+                      <td className="text-muted-foreground px-3 py-0.5">
+                        {clock(row.at)}
+                      </td>
+                      <td className="px-3 py-0.5">
+                        <MethodTag method={row.method} />
+                      </td>
+                      <td className="max-w-[16rem] truncate px-3 py-0.5 md:max-w-xl">
+                        {row.path.replace(BASE, "")}
+                      </td>
+                      <td className="px-3 py-0.5">
+                        <StatusChip status={row.status} />
+                      </td>
+                      <td className="text-muted-foreground px-3 py-0.5">
+                        {row.persona}
+                      </td>
+                      <td className="text-muted-foreground px-3 py-0.5">
+                        {row.ms} ms
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </ViewTransition>
       )}
     </section>
   );

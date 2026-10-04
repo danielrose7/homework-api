@@ -9,6 +9,8 @@ import {
   useEffect,
   useRef,
   useState,
+  ViewTransition,
+  startTransition,
   type ReactNode,
 } from "react";
 
@@ -160,20 +162,39 @@ export function Workbench({ children }: { children: ReactNode }) {
               href={href}
               aria-current={pathname.startsWith(href) ? "page" : undefined}
               className={cn(
-                "border-b-2 border-transparent px-3 py-2 whitespace-nowrap",
+                "relative px-3 py-2 whitespace-nowrap",
                 pathname.startsWith(href)
-                  ? "border-primary font-bold"
+                  ? "font-bold"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
               {label}
+              {pathname.startsWith(href) && (
+                <ViewTransition name="sandbox-tab-indicator" default="none">
+                  <span className="bg-primary absolute inset-x-0 bottom-0 h-0.5" />
+                </ViewTransition>
+              )}
             </Link>
           ))}
         </nav>
-        <main className="flex min-h-0 flex-1 flex-col">{children}</main>
-        <NetworkDock onInspect={() => setInspecting(true)} />
+        <main className="flex min-h-0 flex-1 flex-col">
+          <ViewTransition
+            key={pathname}
+            default="none"
+            enter="sandbox-fade-in"
+            exit="sandbox-fade-out"
+          >
+            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+          </ViewTransition>
+        </main>
+        <NetworkDock
+          onInspect={() => startTransition(() => setInspecting(true))}
+        />
       </div>
-      <InspectDrawer open={inspecting} onClose={() => setInspecting(false)} />
+      <InspectDrawer
+        open={inspecting}
+        onClose={() => startTransition(() => setInspecting(false))}
+      />
       <ResetDialog
         open={reset !== null}
         busy={resetting}
@@ -196,18 +217,24 @@ function InspectDrawer({
   const exchange = exchanges.find((item) => item.id === selectedId) ?? null;
   if (!open) return null;
   return (
-    <aside className="bg-card fixed inset-y-0 right-0 z-20 flex w-[min(34rem,100%)] flex-col border-l font-(family-name:--font-app) text-[12.5px] shadow-2xl">
-      <div className="flex items-center gap-2.5 border-b px-4 py-2.5">
-        <b className="flex-1">
-          {exchange
-            ? `#${exchange.id} ${exchange.method} ${exchange.status}`
-            : "Request"}
-        </b>
-        <Button size="xs" variant="outline" onClick={onClose}>
-          Close
-        </Button>
-      </div>
-      <ExchangeView key={exchange?.id ?? 0} exchange={exchange} />
-    </aside>
+    <ViewTransition
+      enter="sandbox-slide-in"
+      exit="sandbox-slide-out"
+      default="none"
+    >
+      <aside className="bg-card fixed inset-y-0 right-0 z-20 flex w-[min(34rem,100%)] flex-col border-l font-(family-name:--font-app) text-[12.5px] shadow-2xl">
+        <div className="flex items-center gap-2.5 border-b px-4 py-2.5">
+          <b className="flex-1">
+            {exchange
+              ? `#${exchange.id} ${exchange.method} ${exchange.status}`
+              : "Request"}
+          </b>
+          <Button size="xs" variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+        <ExchangeView key={exchange?.id ?? 0} exchange={exchange} />
+      </aside>
+    </ViewTransition>
   );
 }

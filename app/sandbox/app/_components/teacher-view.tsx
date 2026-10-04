@@ -1,6 +1,12 @@
 "use client";
 
-import { useOptimistic, useState, useTransition } from "react";
+import {
+  ViewTransition,
+  startTransition as startViewTransition,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 
 import {
   Banner,
@@ -123,10 +129,12 @@ export function TeacherView({ options }: { options: SandboxOptions }) {
     const target = options.assignments.find(
       (a) => a.id === submission.assignment.id,
     );
-    setSelected(submission);
-    setForm(emptyForm(target?.grading_mode ?? "points"));
-    setFailure(null);
-    setSaved(null);
+    startViewTransition(() => {
+      setSelected(submission);
+      setForm(emptyForm(target?.grading_mode ?? "points"));
+      setFailure(null);
+      setSaved(null);
+    });
   }
 
   function saveGrade() {
@@ -279,42 +287,63 @@ export function TeacherView({ options }: { options: SandboxOptions }) {
             read.
           </div>
         ) : (
-          <div className="px-3.5 py-3">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <b>{selected.assignment.title}</b>
-              <GradeChip grade={selected.grade} />
-              {selected.grade?.percent ? (
-                <span className="text-muted-foreground tabular-nums">
-                  {selected.grade.points_awarded}/{selected.grade.max_points} (
-                  {selected.grade.percent}%)
-                </span>
-              ) : null}
-            </div>
-            <p className="bg-muted mb-3 rounded-md px-2.5 py-2 whitespace-pre-wrap">
-              {selected.text}
-            </p>
-            {saved && <Banner tone="good">Saved. {saved}</Banner>}
-            {failure && (
-              <ErrorBanner status={failure.status} body={failure.body} />
-            )}
-            {mode === "points" ? (
-              <>
-                <Field
-                  label={`points (0 to ${Number(assignment?.max_points ?? 0)})`}
-                  errors={errorsFor("points")}
-                >
-                  <input
-                    id="grade-points"
-                    inputMode="decimal"
-                    placeholder="e.g. 42"
-                    className={cn(inputClass, "w-full")}
-                    value={form.points}
-                    onChange={(event) =>
-                      setForm({ ...form, points: event.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="or manual band" errors={errorsFor("band")}>
+          <ViewTransition
+            key={selected.id}
+            enter="sandbox-fade-in"
+            exit="sandbox-fade-out"
+            default="none"
+          >
+            <div className="px-3.5 py-3">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <b>{selected.assignment.title}</b>
+                <GradeChip grade={selected.grade} />
+                {selected.grade?.percent ? (
+                  <span className="text-muted-foreground tabular-nums">
+                    {selected.grade.points_awarded}/{selected.grade.max_points}{" "}
+                    ({selected.grade.percent}%)
+                  </span>
+                ) : null}
+              </div>
+              <p className="bg-muted mb-3 rounded-md px-2.5 py-2 whitespace-pre-wrap">
+                {selected.text}
+              </p>
+              {saved && <Banner tone="good">Saved. {saved}</Banner>}
+              {failure && (
+                <ErrorBanner status={failure.status} body={failure.body} />
+              )}
+              {mode === "points" ? (
+                <>
+                  <Field
+                    label={`points (0 to ${Number(assignment?.max_points ?? 0)})`}
+                    errors={errorsFor("points")}
+                  >
+                    <input
+                      id="grade-points"
+                      inputMode="decimal"
+                      placeholder="e.g. 42"
+                      className={cn(inputClass, "w-full")}
+                      value={form.points}
+                      onChange={(event) =>
+                        setForm({ ...form, points: event.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="or manual band" errors={errorsFor("band")}>
+                    <select
+                      id="grade-band"
+                      className={cn(inputClass, "w-full")}
+                      value={form.band}
+                      onChange={(event) =>
+                        setForm({ ...form, band: event.target.value })
+                      }
+                    >
+                      <option value="">none</option>
+                      <option>Incomplete</option>
+                    </select>
+                  </Field>
+                </>
+              ) : (
+                <Field label="band" errors={errorsFor("band")}>
                   <select
                     id="grade-band"
                     className={cn(inputClass, "w-full")}
@@ -323,57 +352,43 @@ export function TeacherView({ options }: { options: SandboxOptions }) {
                       setForm({ ...form, band: event.target.value })
                     }
                   >
-                    <option value="">none</option>
-                    <option>Incomplete</option>
+                    <option>Pass</option>
+                    <option>Fail</option>
                   </select>
                 </Field>
-              </>
-            ) : (
-              <Field label="band" errors={errorsFor("band")}>
-                <select
-                  id="grade-band"
-                  className={cn(inputClass, "w-full")}
-                  value={form.band}
+              )}
+              <Field label="teacher_notes" errors={errorsFor("teacher_notes")}>
+                <textarea
+                  id="grade-notes"
+                  className={cn(inputClass, "min-h-16 w-full")}
+                  value={form.notes}
                   onChange={(event) =>
-                    setForm({ ...form, band: event.target.value })
+                    setForm({ ...form, notes: event.target.value })
                   }
-                >
-                  <option>Pass</option>
-                  <option>Fail</option>
-                </select>
+                />
               </Field>
-            )}
-            <Field label="teacher_notes" errors={errorsFor("teacher_notes")}>
-              <textarea
-                id="grade-notes"
-                className={cn(inputClass, "min-h-16 w-full")}
-                value={form.notes}
-                onChange={(event) =>
-                  setForm({ ...form, notes: event.target.value })
-                }
-              />
-            </Field>
-            <Field
-              label={`reason ${regrade ? "(required: this is a regrade)" : "(only needed on a regrade)"}`}
-              errors={errorsFor("reason")}
-            >
-              <input
-                id="grade-reason"
-                className={cn(inputClass, "w-full")}
-                value={form.reason}
-                onChange={(event) =>
-                  setForm({ ...form, reason: event.target.value })
-                }
-              />
-            </Field>
-            <Button disabled={pending} onClick={saveGrade}>
-              {regrade ? "Regrade" : "Save grade"}
-            </Button>
-            <p className="text-muted-foreground mt-3">
-              Grade history is the append-only table{" "}
-              <code>submission_grade_event</code> on the Data tab.
-            </p>
-          </div>
+              <Field
+                label={`reason ${regrade ? "(required: this is a regrade)" : "(only needed on a regrade)"}`}
+                errors={errorsFor("reason")}
+              >
+                <input
+                  id="grade-reason"
+                  className={cn(inputClass, "w-full")}
+                  value={form.reason}
+                  onChange={(event) =>
+                    setForm({ ...form, reason: event.target.value })
+                  }
+                />
+              </Field>
+              <Button disabled={pending} onClick={saveGrade}>
+                {regrade ? "Regrade" : "Save grade"}
+              </Button>
+              <p className="text-muted-foreground mt-3">
+                Grade history is the append-only table{" "}
+                <code>submission_grade_event</code> on the Data tab.
+              </p>
+            </div>
+          </ViewTransition>
         )}
       </Panel>
     </div>

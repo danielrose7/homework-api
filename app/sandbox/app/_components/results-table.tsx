@@ -1,3 +1,5 @@
+import { ViewTransition } from "react";
+
 import { GradeChip, formatDate } from "@/app/sandbox/_components/ui";
 import type { Submission } from "@/app/sandbox/_lib/types";
 import { cn } from "@/lib/utils";
@@ -46,41 +48,49 @@ export function ResultsTable({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr
+              <ViewTransition
                 key={row.id}
-                onClick={onSelect ? () => onSelect(row.id) : undefined}
-                className={cn(
-                  "hover:bg-muted border-t align-top",
-                  onSelect && "cursor-pointer",
-                  row.id === selectedId && "bg-accent",
-                  pendingIds?.has(row.id) && "opacity-60",
-                )}
+                enter="sandbox-fade-in"
+                exit="sandbox-fade-out"
+                default="none"
               >
-                {showStudent && (
-                  <td className="px-3 py-1.5">
-                    {row.student.name}
-                    <div className="text-muted-foreground">
-                      {row.student.username}
-                    </div>
+                <tr
+                  onClick={onSelect ? () => onSelect(row.id) : undefined}
+                  className={cn(
+                    "hover:bg-muted border-t align-top",
+                    onSelect && "cursor-pointer",
+                    row.id === selectedId && "bg-accent",
+                    pendingIds?.has(row.id) && "opacity-60",
+                  )}
+                >
+                  {showStudent && (
+                    <td className="px-3 py-1.5">
+                      {row.student.name}
+                      <div className="text-muted-foreground">
+                        {row.student.username}
+                      </div>
+                    </td>
+                  )}
+                  <td className="px-3 py-1.5">{row.assignment.title}</td>
+                  <td className="px-3 py-1.5 tabular-nums">
+                    {formatDate(row.submitted_at)}
                   </td>
-                )}
-                <td className="px-3 py-1.5">{row.assignment.title}</td>
-                <td className="px-3 py-1.5 tabular-nums">
-                  {formatDate(row.submitted_at)}
-                </td>
-                <td className="px-3 py-1.5 tabular-nums">
-                  {formatDate(row.graded_at) ?? <Null />}
-                </td>
-                <td className="px-3 py-1.5">
-                  <GradeChip grade={row.grade} />
-                  {row.grade?.points_awarded ? (
-                    <span className="text-muted-foreground ml-1.5 tabular-nums">
-                      {row.grade.points_awarded}/{row.grade.max_points}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="px-3 py-1.5">{row.teacher_notes ?? <Null />}</td>
-              </tr>
+                  <td className="px-3 py-1.5 tabular-nums">
+                    {formatDate(row.graded_at) ?? <Null />}
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <GradeChip grade={row.grade} />
+                    {row.grade?.points_awarded ? (
+                      <span className="text-muted-foreground ml-1.5 tabular-nums">
+                        {row.grade.points_awarded}/{row.grade.max_points}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-1.5">
+                    {row.teacher_notes ?? <Null />}
+                  </td>
+                </tr>
+              </ViewTransition>
             ))}
           </tbody>
         </table>
