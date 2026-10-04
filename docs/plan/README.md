@@ -87,8 +87,6 @@ Recorded as work lands; each is small but worth a look at the gate.
   and migrate cleanly. Check constraints and the grants still live in hand-written migration SQL.
 - `deleted_by_id` is a plain uuid column on every soft-deletable table, not a foreign key (an audit pointer, like
   the activity log). `graded_by_id` is a real composite foreign key to the member. Becoming relations is tracked in Phase 4.
-- Grading requires the `grade: update` permission for everyone (teachers and administrators); `grade: create` is
-  unused. Resolving this is the first "Decide before starting" item in Phase 3.
 - Submission attempt numbers must be allocated as `max(attempt_number) + 1` over all rows including soft-deleted
   ones, while the limit counts only live rows, because the attempt number is unique unconditionally.
 - Top-level reads hide soft-deleted rows; an administrator restore flow needs an unfiltered read path, to be
@@ -156,11 +154,11 @@ Each phase ends with passing tests. Tick as we go.
 - [x] Teacher: overview (assignment, date range, student-name filters), scoped to the classes a teacher teaches
 - [x] Teacher: grade route `PUT …/grade` over `gradeSubmission`, returning the grade version as an ETag and honoring
       `If-Match` (`428`/`412`)
-- [ ] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
+- [x] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
 - [x] Log authorization denials to the activity log from the route layer (the guards only throw today)
 - [x] Apply the permission-matrix decision in `lib/server/permissions.ts` and document the final role matrix
-- [ ] Pagination, per-route integration tests (including `400`/`422` cases)
-- **Done when:** every bullet in the PDF has a passing test.
+- [x] Pagination, per-route integration tests (including `400`/`422` cases)
+- **Done when:** every bullet in the PDF has a passing test (`test/brief.test.ts` walks them through the routes).
 
 ### Phase 4 — Depth
 

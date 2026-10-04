@@ -1,6 +1,6 @@
 export const UNGRADED = "ungraded";
 
-/** Grade filters match a band label or its group, ignoring case; `ungraded` is the reserved word for no grade. */
+/** The grade names a filter may use, lowercased: band labels and groups, plus the reserved word `ungraded`. */
 export function knownGradeNames(
   bands: ReadonlyArray<{ label: string; groupLabel: string | null }>,
 ): Set<string> {

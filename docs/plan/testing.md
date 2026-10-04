@@ -56,14 +56,16 @@ Better Auth sign-up, so every one has a real password hash and can sign in with 
 
 ## Route test helpers
 
-Setup helpers build a ready-to-use context so a route test is a few lines:
+Route handlers are `defineRoute` definitions, so a test runs one through the real wrapper without a server:
 
-- `createSchoolContext()` returns the school, administrator, teacher, students, a term, a class with seats and
-  a published assignment.
-- Each persona carries a signed-in Bearer token and a `request(as, method, path, body?)` helper that calls the
-  route handler in-process with the right headers and returns status, headers and parsed JSON.
-- Variants for common scenarios: `withGradedSubmission()`, `withTwoSchools()`, `withMissingWork()`.
-- All run inside the rollback harness, so helpers never need cleanup.
+- `callRoute(route, params, { method, headers, query, json, raw, form })` in `test/http.ts` builds a real `Request`,
+  runs it through `createServe` with the rolled-back client, and returns the `Response`. Path parameters are passed
+  in `params` (`orgSlug` plus any ids).
+- Personas from `seedSchool`, `seedClass`, `seedAssignment` and `seedSubmission` already carry a signed-in Bearer
+  `headers`, so a route test is a few lines.
+- `test/brief.test.ts` follows the assignment brief through the routes only: students submit and filter, teachers
+  see the overview, filter and grade.
+- All run inside the rollback harness, so nothing needs cleanup.
 
 ## Harness notes
 

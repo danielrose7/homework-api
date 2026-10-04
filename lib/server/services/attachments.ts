@@ -27,7 +27,7 @@ export interface BlobSummary {
   checksum: string;
 }
 
-/** Stores a file and returns its blob. The blob is unattached until `attachBlob` links it to a record. */
+/** Stores a file and returns its blob. The blob is unattached until `attachBlobToSubmission` links it to a record. */
 export async function createBlob(
   ctx: RequestContext,
   input: UploadInput,

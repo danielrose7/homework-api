@@ -359,3 +359,63 @@ describe("GET /submissions", () => {
     expect(anonymous.status).toBe(STATUS.unauthorized);
   });
 });
+
+describe("paging over HTTP", () => {
+  async function threeSubmissions() {
+    const first = await seedSubmission();
+    for (const title of ["Second", "Third"]) {
+      const next = await seedAssignment({
+        seeded: first,
+        assignment: { title },
+      });
+      await seedSubmission({ seededAssignment: next });
+    }
+    return first;
+  }
+
+  it("walks every submission once by following next_cursor", async () => {
+    const seeded = await threeSubmissions();
+    const params = { orgSlug: seeded.school.organization.slug };
+
+    for (const [route, persona] of [
+      [listMine, seeded.school.students[0]!],
+      [listAll, seeded.school.teachers[0]!],
+    ] as const) {
+      const seen: string[] = [];
+      let cursor: string | undefined;
+      let pages = 0;
+      do {
+        const response = await callRoute(route, params, {
+          headers: persona.headers,
+          query: { page_size: "2", ...(cursor ? { cursor } : {}) },
+        });
+        expect(response.status).toBe(STATUS.ok);
+        const body = await json(response);
+        seen.push(...(body.data as Json[]).map((row) => row.id as string));
+        cursor = (body.next_cursor as string | null) ?? undefined;
+        pages += 1;
+      } while (cursor);
+
+      expect(pages).toBe(2);
+      expect(new Set(seen).size).toBe(3);
+    }
+  });
+
+  it("answers 422 for a cursor that is not ours and for page sizes out of range", async () => {
+    const seeded = await seedSubmission();
+    const params = { orgSlug: seeded.school.organization.slug };
+    const headers = seeded.school.students[0]!.headers;
+
+    const queries: Record<string, string>[] = [
+      { cursor: "garbage" },
+      { cursor: Buffer.from("not-a-date|id").toString("base64url") },
+      { page_size: "0" },
+      { page_size: "101" },
+      { page_size: "ten" },
+    ];
+    for (const query of queries) {
+      const response = await callRoute(listMine, params, { headers, query });
+      expect(response.status).toBe(STATUS.unprocessable_content);
+    }
+  });
+});
