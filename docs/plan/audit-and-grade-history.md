@@ -40,14 +40,16 @@ the latest event's `created_at`. Events are the source of truth for history.
 
 ## Regrade concurrency (timestamps, not revision numbers)
 
-`PATCH …/grade` carries the `graded_at` the client last saw (`If-Unmodified-Since` or body field). If it doesn't
-equal the stored value → `409`. First grade carries `null`. Grading runs in a transaction with a row lock on the
-submission. Relies on `Timestamptz(3)` (see data-model.md).
+`PUT …/grade` sets the current grade and appends a grade event. The client sends `If-Match` with the ETag it
+last received, which is the quoted ISO-8601 `graded_at` at millisecond precision (`"2026-10-04T10:00:00.123Z"`).
+First grade sends `If-Match: *` semantics via no existing grade. Mismatch → `412 Precondition Failed`; header
+absent on a regrade → `428 Precondition Required`. (`If-Unmodified-Since` is unusable: HTTP dates are
+1-second precision.) Grading runs in a transaction with a row lock on the submission. Relies on `Timestamptz(3)` (see data-model.md).
 
 ## Tests
 
 - Event created per grade; history immutable; reason required on regrade.
-- Stale timestamp → `409`; concurrent regrades: one wins.
+- Stale ETag → `412`; missing → `428`; concurrent regrades: one wins.
 - Rolled-back mutation leaves no log row; denied/read logs survive rollback.
 - `app_user` cannot `UPDATE`/`DELETE` the append-only tables (grant test, not just the Prisma extension).
 - ms-precision round-trip of `graded_at` compares equal.

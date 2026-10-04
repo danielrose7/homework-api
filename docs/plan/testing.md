@@ -18,7 +18,10 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
    - every Prisma model has `createdAt` + `@updatedAt` unless allowlisted (`activity_log`, `submission_grade_event`)
    - every tenant table has `organization_id`, composite FK to its parents
    - (when RLS is on) every tenant table has RLS enabled + forced and ≥1 policy
-6. **Cross-tenant leak test:** two orgs; as `app_user` with org A's context, every table returns zero org B rows
+6. **Soft-delete tests:** default reads exclude deleted rows (including via relation includes); partial unique
+   indexes allow re-creating a deleted natural key; DELETE requires a reason on education records; purge
+   removes content but keeps the id-only `activity_log`.
+7. **Cross-tenant leak test:** two orgs; as `app_user` with org A's context, every table returns zero org B rows
    and cross-org writes fail.
 
 ## Harness notes
@@ -27,4 +30,4 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
   than bypassed by a superuser.
 - Seed/reset scripts for local dev are separate from test factories.
 - Race tests to write: N parallel submits with `max_submissions = 1` → exactly one success, rest `409`;
-  idempotent retry returns the original; concurrent regrades → one `409`.
+  idempotent retry returns the original; concurrent regrades → one `412`.

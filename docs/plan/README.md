@@ -30,19 +30,21 @@ Next.js (App Router) + TypeScript, Postgres, **Prisma**, **Better Auth** (self-h
 
 ## Decision log
 
-| Decision                                                                                            | Status                               | Notes                                                                                                                        |
-| --------------------------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Next.js + Prisma + Postgres + Better Auth (self-hosted)                                             | Decided                              |                                                                                                                              |
-| REST route handlers + OpenAPI generated from Zod, **no tRPC**                                       | **Proposed — awaiting confirmation** | tRPC can't be called cleanly from Python/curl, which the docs require                                                        |
-| `class_enrollment` renamed `class_seat`                                                             | Decided                              |                                                                                                                              |
-| `feedback` renamed `teacher_notes`                                                                  | Decided                              | Matches the spec wording                                                                                                     |
-| Timestamps (not revision numbers) for grade history + concurrency                                   | Decided                              | `Timestamptz(3)` everywhere to avoid ms/µs mismatch                                                                          |
-| `created_at`/`updated_at` both `@default(now())`; `updated_at` also `@updatedAt`; **no DB trigger** | Decided                              | DB default covers inserts; client sets updates. Raw SQL updates bypass `updated_at`, so we ban raw writes outside migrations |
-| Append-only tables enforced by role grants + Prisma extension, **no DB trigger**                    | Decided                              |                                                                                                                              |
-| Letter grade is computed, never stored                                                              | Decided                              |                                                                                                                              |
-| Work in small reviewable commits (verb-first title + short narrative body)                          | Decided                              | See `AGENTS.md`                                                                                                              |
-| Fully typed, `tsc --noEmit` as we go; boilerplate Prettier                                          | Decided                              |                                                                                                                              |
-| RLS: prepare schema + roles + `withTenant` now; enable policies later                               | Decided                              | Enable for real in Phase 4–5 if Better Auth tables cooperate                                                                 |
+| Decision                                                                                             | Status  | Notes                                                                                                                        |
+| ---------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Next.js + Prisma + Postgres + Better Auth (self-hosted)                                              | Decided |                                                                                                                              |
+| REST route handlers + OpenAPI generated from Zod, **no tRPC**                                        | Decided | tRPC can't be called cleanly from Python/curl. Standard verbs: GET / POST / PUT / PATCH / DELETE                             |
+| Soft deletes (`deleted_at`/`deleted_by`/`deletion_reason`) with a separate, logged purge path        | Decided | FERPA-supportive; see data-model.md. Retention periods are district/state policy, not hard-coded                             |
+| Stale-grade check uses `If-Match` ETag derived from `graded_at` (412/428), not `If-Unmodified-Since` | Decided | HTTP dates have 1s precision                                                                                                 |
+| `class_enrollment` renamed `class_seat`                                                              | Decided |                                                                                                                              |
+| `feedback` renamed `teacher_notes`                                                                   | Decided | Matches the spec wording                                                                                                     |
+| Timestamps (not revision numbers) for grade history + concurrency                                    | Decided | `Timestamptz(3)` everywhere to avoid ms/µs mismatch                                                                          |
+| `created_at`/`updated_at` both `@default(now())`; `updated_at` also `@updatedAt`; **no DB trigger**  | Decided | DB default covers inserts; client sets updates. Raw SQL updates bypass `updated_at`, so we ban raw writes outside migrations |
+| Append-only tables enforced by role grants + Prisma extension, **no DB trigger**                     | Decided |                                                                                                                              |
+| Letter grade is computed, never stored                                                               | Decided |                                                                                                                              |
+| Work in small reviewable commits (verb-first title + short narrative body)                           | Decided | See `AGENTS.md`                                                                                                              |
+| Fully typed, `tsc --noEmit` as we go; boilerplate Prettier                                           | Decided |                                                                                                                              |
+| RLS: prepare schema + roles + `withTenant` now; enable policies later                                | Decided | Enable for real in Phase 4–5 if Better Auth tables cooperate                                                                 |
 
 ## Phases
 
@@ -66,6 +68,7 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] Full schema + migrations (see data-model.md), composite org FKs, `RESTRICT`
 - [ ] DB roles + grants migration (`app_owner`, `app_user`, `app_readonly`)
 - [ ] `submission_grade_event`, `activity_log`, `recordActivity`, append-only extension
+- [ ] Soft-delete columns, Prisma read filter, partial unique indexes
 - [ ] Pure functions: points→letter, term overlap, submission eligibility
 - [ ] Service layer with org + role guards
 - **Done when:** unit tests cover letter-grade boundaries, scoping, permissions.
@@ -82,7 +85,7 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] Academic years, terms, classes, seats, assignments, gradebook
 - [ ] "Missing submission" view
 - [ ] Submit race protection + non-transactional race tests
-- [ ] Regrade flow with timestamp `409`; history + activity endpoints
+- [ ] Regrade flow with ETag `412`/`428`; history + activity endpoints
 - [ ] Enable RLS policies + cross-tenant leak test (if feasible)
 - [ ] Seed script
 
@@ -103,6 +106,5 @@ Each phase ends with passing tests. Tick as we go.
 
 ## Open questions
 
-- Confirm REST + OpenAPI over tRPC.
 - Username plugin on top of email login? (Spec says "username & password".)
 - Do students re-submit (`max_submissions` > 1) in the demo, or default to 1?

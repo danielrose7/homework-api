@@ -22,7 +22,7 @@
   tenant's parent.
 - **Members, not users:** org-scoped references (student, teacher, `graded_by`, `submitted_by`) point at
   `member.id`. A user can belong to several schools.
-- **Deletes:** `ON DELETE RESTRICT`; no hard deletes of domain rows. Use statuses (`dropped`, `withdrawn`).
+- **Deletes:** `ON DELETE RESTRICT`; the API never hard-deletes. See "Soft deletes and FERPA" below.
 - **Indexes:** `organization_id` is the leading column of any index used by filters/policies.
 - **Auth global tables** (`user`, `session`, `account`, `verification`) have no org; keep them in a separate
   Postgres schema (`auth`) — see auth-tenancy-rls.md.
@@ -69,3 +69,33 @@ Three layers; the database is the final guard.
 3. `Idempotency-Key` header: a retried/double-clicked request returns the original result.
 
 Also enforce: assignment is published, seat is active, `max_submissions` not exceeded, (decide) due-date policy.
+
+## Soft deletes and FERPA
+
+FERPA gives eligible students/parents rights to inspect and request amendment of education records and requires
+schools to keep a record of disclosures; it does **not** grant a GDPR-style erasure right or fix a retention
+period (those come from state/district schedules). So deletion here is "stop showing it, keep it recoverable and
+auditable, purge on a defined schedule". This supports a FERPA-compliant deployment; it does not by itself make
+one, and retention periods are configuration, not hard-coded. Not legal advice — have counsel confirm.
+
+- **Columns** (soft-deletable domain tables: `academic_year`, `term`, `class`, `class_teacher`, `class_seat`,
+  `assignment`, `assignment_submission`): `deletedAt DateTime? @db.Timestamptz(3)`, `deletedBy` (member id),
+  `deletionReason`. Append-only tables (`activity_log`, `submission_grade_event`) are never soft-deleted.
+- **Default invisibility:** a Prisma client extension adds `deletedAt: null` to reads. It does not cover raw SQL
+  or relation includes reliably, so a guard test checks the extension, and RLS later adds
+  `deleted_at IS NULL` for `app_user` as the backstop.
+- **Uniqueness:** natural-key unique constraints become partial indexes `WHERE deleted_at IS NULL` (hand-written
+  migration SQL; Prisma can't express them) so a deleted name can be reused.
+- **What `DELETE` may do:** terms, classes, assignments, seats (drop) and teacher assignments by admins. A
+  submission is an education record: soft-delete is admin-only with a required reason, and a student cannot
+  delete a graded one. Deleting a parent is blocked while live children exist (`RESTRICT` semantics at the
+  service layer), not cascaded.
+- **Restore:** `POST …/{id}/restore` (admin) clears the three columns; both actions are logged.
+- **Disclosure record:** `activity_log` doubles as the FERPA disclosure/access record, so exports and
+  third-party reads are logged with `action = export`. Because it holds IDs only, it survives a purge without
+  retaining student content.
+- **Purge (hard delete):** a separate admin-only, logged operation, not exposed through the resource routes. It
+  removes soft-deleted rows older than the org's retention window (config), grade events included, and is
+  refused while a hold or an open records request exists (a `records_hold` flag on the org/student is a later
+  addition). Users are tombstoned (PII scrubbed, id retained) rather than row-deleted so history stays joinable.
+- **Amendment requests:** handled as normal regrades/edits with a reason, not deletion.
