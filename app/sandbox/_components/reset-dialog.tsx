@@ -32,7 +32,7 @@ export function ResetDialog({
         event.preventDefault();
         if (!busy) onCancel();
       }}
-      className="bg-card text-foreground m-auto w-[min(26rem,calc(100%-2rem))] rounded-lg border p-5 shadow-xl backdrop:bg-black/40"
+      className="bg-card text-foreground m-auto font-(family-name:--font-app) text-[12.5px] w-[min(26rem,calc(100%-2rem))] rounded-lg border p-5 shadow-xl backdrop:bg-black/40"
     >
       <h2 className="mb-2 text-sm font-bold">Reset demo data?</h2>
       <p className="text-muted-foreground mb-1">

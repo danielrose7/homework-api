@@ -57,6 +57,8 @@ export async function send(options: SendOptions): Promise<Exchange> {
     method: options.method,
     headers,
     body: requestBody,
+    // Sign-in sets a session cookie; omitting it keeps the UI a bearer-only client, so "no token" really is anonymous.
+    credentials: "omit",
   });
   const text = await response.text();
   const ms = Math.round(performance.now() - startedAt);
