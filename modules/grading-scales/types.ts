@@ -1,16 +1,10 @@
-import type { Band, BandInput } from "@/lib/domain/grading";
+import type { Band } from "@/lib/domain/grading";
 
 export interface ScaleWithBands {
   id: string;
   name: string;
   is_default: boolean;
   bands: Band[];
-}
-
-export interface GradingScaleInput {
-  name: string;
-  is_default?: boolean;
-  bands: BandInput[];
 }
 
 export interface BandRow {

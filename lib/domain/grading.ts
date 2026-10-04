@@ -1,7 +1,4 @@
 import { formatHundredths, toHundredths } from "./decimal";
-import { issue, type ValidationIssue } from "./validation";
-
-export const RESERVED_LABELS = ["ungraded"] as const;
 
 export interface Band {
   id: string;
@@ -70,100 +67,6 @@ export function findManualBand(
 
 export function isManualOnly(band: Band): boolean {
   return band.min_percent === null;
-}
-
-export function validateScale(bands: readonly BandInput[]): ValidationIssue[] {
-  const issues: ValidationIssue[] = [];
-
-  if (bands.length === 0) {
-    return [issue("bands", "scale_empty", "A scale needs at least one band")];
-  }
-
-  const labels = new Set<string>();
-  const thresholds = new Set<number>();
-  let hasZero = false;
-
-  bands.forEach((band, index) => {
-    const at = (name: string) => `bands[${index}].${name}`;
-    const label = band.label.trim();
-
-    if (!label) {
-      issues.push(issue(at("label"), "label_required", "Label is required"));
-    } else {
-      const key = label.toLowerCase();
-      if ((RESERVED_LABELS as readonly string[]).includes(key)) {
-        issues.push(
-          issue(at("label"), "reserved_label", `"${label}" is a reserved word`),
-        );
-      }
-      if (labels.has(key)) {
-        issues.push(
-          issue(at("label"), "duplicate_label", `"${label}" is used twice`),
-        );
-      }
-      labels.add(key);
-    }
-
-    if (band.group_label !== null && !band.group_label.trim()) {
-      issues.push(
-        issue(at("group_label"), "group_label_blank", "Group label is blank"),
-      );
-    }
-
-    if (band.min_percent !== null) {
-      const min = toHundredths(band.min_percent);
-      if (min === null) {
-        issues.push(
-          issue(
-            at("min_percent"),
-            "invalid_percent",
-            "Use a number with at most two decimals",
-          ),
-        );
-      } else if (min < 0) {
-        issues.push(
-          issue(
-            at("min_percent"),
-            "negative_threshold",
-            "Must not be negative",
-          ),
-        );
-      } else {
-        if (thresholds.has(min)) {
-          issues.push(
-            issue(
-              at("min_percent"),
-              "duplicate_threshold",
-              `${formatHundredths(min)}% is used twice`,
-            ),
-          );
-        }
-        thresholds.add(min);
-        if (min === 0) hasZero = true;
-      }
-    }
-
-    if (band.gpa_points !== null) {
-      const gpa = toHundredths(band.gpa_points);
-      if (gpa === null || gpa < 0 || gpa > 500) {
-        issues.push(
-          issue(at("gpa_points"), "gpa_out_of_range", "GPA must be 0 to 5"),
-        );
-      }
-    }
-  });
-
-  if (!hasZero) {
-    issues.push(
-      issue(
-        "bands",
-        "missing_zero_band",
-        "A computed band at 0% is required so every score resolves",
-      ),
-    );
-  }
-
-  return issues;
 }
 
 export function resolveScaleId(ids: {

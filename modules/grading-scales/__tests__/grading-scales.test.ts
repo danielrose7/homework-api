@@ -1,33 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { PASS_FAIL, PLUS_MINUS, STANDARD_AF } from "@/lib/domain/grading";
-import { STATUS } from "@/lib/http-status";
 import { createAuth } from "@/lib/server/auth-factory";
-import { ApiError } from "@/lib/server/errors";
-import { createGradingScale } from "@/modules/grading-scales/mutations/create-grading-scale";
-import { setDefaultGradingScale } from "@/modules/grading-scales/mutations/set-default-grading-scale";
-import { getGradingScale } from "@/modules/grading-scales/queries/get-grading-scale";
-import { listGradingScales } from "@/modules/grading-scales/queries/list-grading-scales";
 import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
+import { gradingScaleFactory } from "@/test/factories/academics";
 import { seedSchool } from "@/test/scenarios/school";
 import { testDb, withRollbackDb } from "@/test/rollback-db";
 
 withRollbackDb();
 
-async function failure(promise: Promise<unknown>): Promise<ApiError> {
-  const error = await promise.then(
-    () => undefined,
-    (e: unknown) => e,
-  );
-  if (!(error instanceof ApiError)) throw new Error("expected an ApiError");
-  return error;
-}
-
 describe("default grading scale", () => {
   it("is created for every school made through the factories", async () => {
     const school = await seedSchool();
-    const ctx = await school.admin.context();
-    const scales = await listGradingScales(ctx);
+    const scales = await testDb().gradingScale.findMany({
+      where: { organization_id: school.organization.id },
+      include: { bands: { orderBy: { sort_order: "asc" } } },
+    });
     expect(scales).toHaveLength(1);
     expect(scales[0]).toMatchObject({ name: "Standard A–F", is_default: true });
     expect(scales[0]?.bands.map((b) => b.label)).toEqual([
@@ -70,164 +57,19 @@ describe("default grading scale", () => {
   });
 });
 
-describe("createGradingScale", () => {
-  it("lets an administrator create a scale and records it", async () => {
-    const school = await seedSchool();
-    const ctx = await school.admin.context();
-
-    const scale = await createGradingScale(ctx, {
-      name: "Plus/minus",
-      bands: [...PLUS_MINUS],
-    });
-
-    expect(scale.is_default).toBe(false);
-    expect(scale.bands).toHaveLength(PLUS_MINUS.length);
-    expect(scale.bands[0]?.label).toBe("A+");
-    const log = await testDb().activityLog.findFirstOrThrow({
-      where: { resource_id: scale.id },
-    });
-    expect(log).toMatchObject({
-      action: "create",
-      resource_type: "grading_scale",
-    });
-  });
-
-  it("forbids teachers and students", async () => {
-    const school = await seedSchool();
-    for (const persona of [school.teachers[0]!, school.students[0]!]) {
-      const error = await failure(
-        createGradingScale(await persona.context(), {
-          name: "Mine",
-          bands: [...STANDARD_AF],
-        }),
-      );
-      expect(error.status).toBe(STATUS.forbidden);
-    }
-  });
-
-  it("reports every validation problem at once as 422", async () => {
-    const school = await seedSchool();
-    const ctx = await school.admin.context();
-    const error = await failure(
-      createGradingScale(ctx, {
-        name: " ",
-        bands: [
-          {
-            label: "A",
-            group_label: null,
-            min_percent: "50",
-            gpa_points: null,
-            is_passing: true,
-            counts_in_average: true,
-          },
-          {
-            label: "a",
-            group_label: null,
-            min_percent: "50",
-            gpa_points: null,
-            is_passing: true,
-            counts_in_average: true,
-          },
-        ],
-      }),
-    );
-    expect(error.status).toBe(STATUS.unprocessable_content);
-    expect(error.details.map((d) => d.code).sort()).toEqual(
-      [
-        "duplicate_label",
-        "duplicate_threshold",
-        "missing_zero_band",
-        "name_required",
-      ].sort(),
-    );
-  });
-
-  it("rejects a name already used in the school", async () => {
-    const school = await seedSchool();
-    const ctx = await school.admin.context();
-    const error = await failure(
-      createGradingScale(ctx, {
-        name: "Standard A–F",
-        bands: [...STANDARD_AF],
-      }),
-    );
-    expect(error.status).toBe(STATUS.unprocessable_content);
-    expect(error.details[0]?.code).toBe("name_taken");
-  });
-
-  it("moves the default when asked", async () => {
-    const school = await seedSchool();
-    const ctx = await school.admin.context();
-    const created = await createGradingScale(ctx, {
-      name: "Plus/minus",
-      is_default: true,
-      bands: [...PLUS_MINUS],
-    });
-    const scales = await listGradingScales(ctx);
-    expect(scales.filter((s) => s.is_default).map((s) => s.id)).toEqual([
-      created.id,
-    ]);
-  });
-});
-
-describe("setDefaultGradingScale", () => {
-  it("switches the default and keeps exactly one", async () => {
-    const school = await seedSchool();
-    const ctx = await school.admin.context();
-    const pass_fail = await createGradingScale(ctx, {
-      name: "Pass/Fail",
-      bands: [...PASS_FAIL],
-    });
-
-    await setDefaultGradingScale(ctx, pass_fail.id);
-
-    const scales = await listGradingScales(ctx);
-    expect(scales.filter((s) => s.is_default)).toHaveLength(1);
-    expect(scales.find((s) => s.is_default)?.name).toBe("Pass/Fail");
-  });
-
-  it("treats another school's scale as not found", async () => {
-    const school = await seedSchool();
-    const other = await seedSchool();
-    const otherScale = (
-      await listGradingScales(await other.admin.context())
-    )[0]!;
-
-    const error = await failure(
-      setDefaultGradingScale(await school.admin.context(), otherScale.id),
-    );
-    expect(error.status).toBe(STATUS.not_found);
-    const read = await failure(
-      getGradingScale(await school.admin.context(), otherScale.id),
-    );
-    expect(read.status).toBe(STATUS.not_found);
-  });
-
-  it("is limited to administrators", async () => {
-    const school = await seedSchool();
-    const ctx = await school.admin.context();
-    const scale = (await listGradingScales(ctx))[0]!;
-    const error = await failure(
-      setDefaultGradingScale(await school.teachers[0]!.context(), scale.id),
-    );
-    expect(error.status).toBe(STATUS.forbidden);
-  });
-});
-
 describe("resolveGradingScale", () => {
   it("prefers the assignment's scale, then the class's, then the school default", async () => {
     const school = await seedSchool();
-    const ctx = await school.admin.context();
-    const school_default = (await listGradingScales(ctx))[0]!;
-    const classScale = await createGradingScale(ctx, {
-      name: "Plus/minus",
-      bands: [...PLUS_MINUS],
+    const organization_id = school.organization.id;
+    const school_default = await testDb().gradingScale.findFirstOrThrow({
+      where: { organization_id, is_default: true },
     });
-    const assignmentScale = await createGradingScale(ctx, {
-      name: "Pass/Fail",
-      bands: [...PASS_FAIL],
-    });
-    const organization_id = ctx.organization_id;
+    const classScale = await gradingScaleFactory
+      .plusMinus()
+      .create({ organization_id });
+    const assignmentScale = await gradingScaleFactory
+      .passFail()
+      .create({ organization_id });
 
     const resolve = (
       assignment_scale_id: string | null,

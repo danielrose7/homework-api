@@ -106,7 +106,8 @@ scanning belongs here too.
 ## Deferred from Phase 4
 
 Cut because the brief does not need them; the data they manage comes from the seed script and test factories. The
-service code for some of them exists and is listed under "Dead module code" in the plan README.
+unused service code that would have backed some of them was deleted; recover it from git history (the commit that
+removed `modules/academics/mutations/`).
 
 - Endpoints for academic years, terms, classes, seats and assignments, plus a gradebook (students by assignments).
 - Grading scale endpoints: create, new version, set default, overrides on a class or assignment.

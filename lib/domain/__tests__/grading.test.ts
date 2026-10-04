@@ -11,7 +11,6 @@ import {
   matchesGradeFilter,
   percentOf,
   resolveScaleId,
-  validateScale,
   type Band,
   type BandInput,
 } from "../grading";
@@ -154,73 +153,6 @@ describe("manual bands", () => {
     expect(band?.label).toBe("Incomplete");
     expect(band && isManualOnly(band)).toBe(true);
     expect(findManualBand(standard, "Excused")).toBeNull();
-  });
-});
-
-describe("validateScale", () => {
-  const ok = (bands: readonly BandInput[]) =>
-    validateScale(bands).map((i) => i.code);
-
-  const base: BandInput = {
-    label: "X",
-    group_label: null,
-    min_percent: "0",
-    gpa_points: null,
-    is_passing: true,
-    counts_in_average: true,
-  };
-
-  it("accepts the built-in scales", () => {
-    expect(ok(STANDARD_AF)).toEqual([]);
-    expect(ok(PLUS_MINUS)).toEqual([]);
-    expect(ok(PASS_FAIL)).toEqual([]);
-  });
-
-  it("requires at least one band", () => {
-    expect(ok([])).toEqual(["scale_empty"]);
-  });
-
-  it("requires a computed band at zero", () => {
-    expect(ok([{ ...base, min_percent: "50" }])).toContain("missing_zero_band");
-    expect(ok([{ ...base, min_percent: null, label: "Incomplete" }])).toContain(
-      "missing_zero_band",
-    );
-  });
-
-  it("rejects duplicate labels (any case) and thresholds", () => {
-    const codes = ok([
-      base,
-      { ...base, label: "x", min_percent: "50" },
-      { ...base, label: "Y", min_percent: "50" },
-    ]);
-    expect(codes).toContain("duplicate_label");
-    expect(codes).toContain("duplicate_threshold");
-  });
-
-  it("rejects blank and reserved labels", () => {
-    expect(ok([{ ...base, label: "  " }])).toContain("label_required");
-    expect(ok([{ ...base, label: "Ungraded" }])).toContain("reserved_label");
-  });
-
-  it("rejects bad numbers", () => {
-    expect(ok([{ ...base, min_percent: "-5" }])).toContain(
-      "negative_threshold",
-    );
-    expect(ok([{ ...base, min_percent: "9.999" }])).toContain(
-      "invalid_percent",
-    );
-    expect(ok([{ ...base, gpa_points: "9" }])).toContain("gpa_out_of_range");
-    expect(ok([{ ...base, group_label: " " }])).toContain("group_label_blank");
-  });
-
-  it("reports every problem at once with a field path", () => {
-    const issues = validateScale([
-      { ...base, label: "", min_percent: "-1" },
-      { ...base, label: "B", min_percent: "5.555" },
-    ]);
-    expect(issues.length).toBeGreaterThan(2);
-    expect(issues.map((i) => i.field)).toContain("bands[0].label");
-    expect(issues.map((i) => i.field)).toContain("bands[1].min_percent");
   });
 });
 

@@ -57,7 +57,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Assignments have a `grading_mode`: `points` (scale lookup) or `band` (teacher picks Pass/Fail directly, no points)                                                   | Decided | Pass/fail with no points needs nullable points and `max_points`; check constraints keep rows consistent                      |
 | The graded result (band, label, group) is snapshotted on the submission and grade event; scales are immutable once used                                              | Decided | Reverses "letter never stored": editable scales would otherwise relabel past grades                                          |
 | Sign-in is username + password (username plugin); email is required by Better Auth but contact-only                                                                  | Decided | Usernames globally unique; `/sign-in/email` disabled                                                                         |
-| The remaining Phase 4 endpoints are deferred; seed-only creation of people, classes, assignments and scales is enough for the brief                                  | Decided | Listed in future-ideas.md. Code they would have used is tracked under "Dead module code"                                     |
+| The remaining Phase 4 endpoints are deferred; seed-only creation of people, classes, assignments and scales is enough for the brief                                  | Decided | Listed in future-ideas.md. The unused service code for them was deleted; git history has it                                  |
 | `modules/demo` became `app/sandbox/_server`, and "demo" became "sandbox" everywhere (`SANDBOX_MODE`, `SANDBOX_PASSWORD`, `resetSandboxData`)                         | Decided | Sandbox-only code lives with the sandbox so it is not mistaken for application modules                                       |
 | Work in small reviewable commits (verb-first title + short narrative body)                                                                                           | Decided | See `AGENTS.md`                                                                                                              |
 | Organize application behavior into domain modules with `queries`, `mutations` and Django-style serializers; keep HTTP contracts in their `app/api` route files       | Decided | Migrate module by module; see `docs/architecture.md`                                                                         |
@@ -201,7 +201,7 @@ script and the test factories only. Decisions 1 to 5 below belong to the deferre
 - [ ] Submit race protection + non-transactional race tests; allocate attempt numbers as the maximum over all rows
       including soft-deleted ones
 - [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
-- [ ] Remove or keep the production-dead module code listed under "Dead module code" below
+- [x] Remove the production-dead module code (deleted with its tests; the deferred endpoints would rebuild it)
 - [x] Seed script and `pnpm db:seed` / `pnpm db:reset` (see sandbox-and-seed.md)
 - [x] Sandbox reset endpoint (`POST /sandbox/api/reset`) and confirmed UI button
 
@@ -245,19 +245,6 @@ script and the test factories only. Decisions 1 to 5 below belong to the deferre
 
 - [ ] README: setup, design decisions, how to run tests
 - [ ] CI; final test-suite pass
-
-## Dead module code
-
-Found with `knip --production`: code that no route, page or the seed reaches; only its own tests use it. Kept for now
-because the deferred endpoints would call it. Remove it (with its tests) unless an endpoint is built, and re-run
-`pnpm dlx knip --production --include files,exports` afterward. Nothing here is imported by app code.
-
-- `modules/academics/mutations/`: `add-class-seat`, `add-class-teacher`, `create-academic-year`, `create-assignment`,
-  `create-class`, `create-term`; `modules/academics/validation.ts`; `lib/domain/terms.ts`.
-- `modules/grading-scales/`: `mutations/create-grading-scale`, `mutations/set-default-grading-scale`,
-  `queries/get-grading-scale`, `queries/list-grading-scales`, `validation.ts`.
-- Exports to check when those go: `requireClass` and `memberWithRole` in `modules/academics/queries/access.ts`,
-  `validateScale` in `lib/domain/grading.ts`.
 
 ## Future ideas
 
