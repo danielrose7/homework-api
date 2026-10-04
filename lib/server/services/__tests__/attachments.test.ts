@@ -57,7 +57,7 @@ describe("createBlob", () => {
     });
     expect(row).toMatchObject({
       serviceName: "database",
-      uploadedBy: student.memberId,
+      uploadedById: student.memberId,
     });
     expect(row.key).toBeTruthy();
     const data = await testDb().storageBlobData.findFirstOrThrow({

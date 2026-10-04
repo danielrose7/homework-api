@@ -58,10 +58,15 @@ is true, and then work stops for human review.
 ## Project rules
 
 - pnpm only (no npm/yarn).
+- Before the first release, edit the existing migrations in place instead of adding new ones, then rebuild the local
+  database with `pnpm db:fresh` (it recreates the Docker volume, so roles and grants are reapplied). Confirm there is
+  no drift with `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`.
+- Columns that point at another table end in `_id` (`graded_by_id`, `deleted_by_id`); the Prisma relation field drops
+  the suffix (`gradedBy`).
 - Services take an explicit `RequestContext` and scope every query by `organizationId`. No RLS for now, but keep
   the schema RLS-ready. No raw-SQL writes in app code (`updated_at` is set by the Prisma client).
 - Every domain table: UUIDv7 id, `organization_id`, `createdAt`/`updatedAt` (see `docs/plan/data-model.md`).
-- App and API code never hard-delete: `DELETE` is a soft delete (`deletedAt`/`deletedBy`/`deletionReason`). Only
+- App and API code never hard-delete: `DELETE` is a soft delete (`deletedAt`/`deletedById`/`deletionReason`). Only
   dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection.
 - Grading scales are data (`grading_scale`/`grading_scale_band`). The resolved grade is snapshotted when graded;
   scales are immutable once used.

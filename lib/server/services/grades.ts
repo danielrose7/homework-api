@@ -47,7 +47,7 @@ export interface GradeResult {
 interface ApplyGradeParams {
   organizationId: string;
   submissionId: string;
-  gradedBy: string;
+  gradedById: string;
   now: Date;
   scaleId: string;
   band: Band;
@@ -79,7 +79,7 @@ export async function applyGrade(
       gradeGroup: group,
       teacherNotes: params.teacherNotes,
       gradedAt: params.now,
-      gradedBy: params.gradedBy,
+      gradedById: params.gradedById,
     },
   });
   await tx.submissionGradeEvent.create({
@@ -94,7 +94,7 @@ export async function applyGrade(
       gradeGroup: group,
       teacherNotes: params.teacherNotes,
       reason: params.reason,
-      gradedBy: params.gradedBy,
+      gradedById: params.gradedById,
       createdAt: params.now,
     },
   });
@@ -184,7 +184,7 @@ export async function gradeSubmission(
     const result = await applyGrade(tx, {
       organizationId: ctx.organizationId,
       submissionId,
-      gradedBy: ctx.memberId,
+      gradedById: ctx.memberId,
       now: new Date(),
       scaleId: scale.id,
       band,

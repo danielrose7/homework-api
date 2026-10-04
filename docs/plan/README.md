@@ -36,7 +36,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Next.js + Prisma + Postgres + Better Auth (self-hosted)                                                                                                              | Decided |                                                                                                                              |
 | REST route handlers + OpenAPI generated from Zod, **no tRPC**                                                                                                        | Decided | tRPC can't be called cleanly from Python/curl. Standard verbs: GET / POST / PUT / PATCH / DELETE                             |
-| Soft deletes (`deleted_at`/`deleted_by`/`deletion_reason`); app and API code never hard-delete                                                                       | Decided | Only dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection                                          |
+| Soft deletes (`deleted_at`/`deleted_by_id`/`deletion_reason`); app and API code never hard-delete                                                                    | Decided | Only dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection                                          |
 | Retention is indefinite; no purge feature                                                                                                                            | Decided | FERPA-supportive; purge and retention windows are future decisions                                                           |
 | "Incomplete" is a manual-only, neutral grade band (not a status, not null); `ungraded` = no band                                                                     | Decided | Matches the brief's grade list; no `status` column                                                                           |
 | Two-layer validation: Zod at the boundary, `validate*` functions for meaning; both return `422` with all field issues                                                | Decided | `409` is for state conflicts; see api-and-docs.md                                                                            |
@@ -76,8 +76,8 @@ Recorded as work lands; each is small but worth a look at the gate.
 - `package.json` sets `"type": "module"`.
 - Partial unique indexes use Prisma's `partialIndexes` preview feature (7.4+), so they live in `schema.prisma`
   and migrate cleanly. Check constraints and the grants still live in hand-written migration SQL.
-- `deleted_by` is a plain uuid column on every soft-deletable table, not a foreign key (an audit pointer, like
-  the activity log). `graded_by` is a real composite foreign key to the member.
+- `deleted_by_id` is a plain uuid column on every soft-deletable table, not a foreign key (an audit pointer, like
+  the activity log). `graded_by_id` is a real composite foreign key to the member.
 - Grading requires the `grade: update` permission for everyone (teachers and administrators); `grade: create` is
   unused.
 - Submission attempt numbers must be allocated as `max(attempt_number) + 1` over all rows including soft-deleted

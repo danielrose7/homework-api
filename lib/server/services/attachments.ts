@@ -46,7 +46,7 @@ export async function createBlob(
         byteSize: input.bytes.length,
         checksum,
         serviceName: service.name,
-        uploadedBy: ctx.memberId,
+        uploadedById: ctx.memberId,
       },
     });
     await service.upload(

@@ -64,7 +64,7 @@ describe("tenant integrity (composite foreign keys)", () => {
           gradeBandId: other.bands[0]!.id,
           gradeLabel: "Pass",
           gradedAt: new Date(),
-          gradedBy: school.teachers[0]!.member.id,
+          gradedById: school.teachers[0]!.member.id,
         },
       }),
       "assignment_submission_organization_id_grading_scale_id",

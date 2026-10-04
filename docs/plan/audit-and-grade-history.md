@@ -33,7 +33,7 @@ One row per grading action; a regrade adds a row, never edits one. Ordered by `(
 breaks ties within a millisecond.
 
 Columns: `organization_id`, `submission_id`, `points_awarded` (nullable), `teacher_notes`, `max_points`
-(snapshot, nullable), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group` (the grade as the student saw it), `graded_by` (member), `reason` (required for any event after the first), `created_at`.
+(snapshot, nullable), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group` (the grade as the student saw it), `graded_by_id` (member), `reason` (required for any event after the first), `created_at`.
 
 The submission row holds the **current** grade (denormalized for fast filtering); `submission.graded_at` equals
 the latest event's `created_at`. Events are the source of truth for history.

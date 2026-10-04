@@ -20,7 +20,7 @@
   Parents declare `@@unique([id, organizationId])`; children use composite relations
   `fields: [organizationId, parentId], references: [organizationId, id]` so a child can never reference another
   tenant's parent.
-- **Members, not users:** org-scoped references (student, teacher, `graded_by`, `submitted_by`) point at
+- **Members, not users:** org-scoped references (student, teacher, `graded_by_id`, `submitted_by`) point at
   `member.id`. A user can belong to several schools.
 - **Deletes:** `ON DELETE RESTRICT`; the API never hard-deletes. See "Soft deletes and FERPA" below.
 - **Indexes:** `organization_id` is the leading column of any index used by filters/policies.
@@ -41,7 +41,7 @@
 | `class_teacher`                                   | org, class, teacher member (role must be teacher)                                                                                                                                                                                                                                                         |
 | `class_seat`                                      | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at`                                                                                                                                                                                                            |
 | `assignment`                                      | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `grading_mode` (`points`/`band`), `max_points` (null in `band` mode), optional `grading_scale_id` override, reserved `score_cap_points` and `is_bonus` (see Reserved columns), `due_at`, `max_submissions` (default 1), `published_at` |
-| `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded` (null in `band` mode), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group`, `teacher_notes`, `graded_at`, `graded_by`                                                    |
+| `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded` (null in `band` mode), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group`, `teacher_notes`, `graded_at`, `graded_by_id`                                                 |
 | `storage_blob`                                    | org, `key`, `filename`, `content_type`, `byte_size`, `checksum` (sha256), `service_name` (where the bytes live), `metadata` json, `uploaded_by`; immutable                                                                                                                                                |
 | `storage_blob_data`                               | org, blob (one-to-one), `content` bytea; only for `service_name = database`; immutable                                                                                                                                                                                                                    |
 | `storage_attachment`                              | org, blob, polymorphic `record_type` + `record_id` + `name`; soft-deletable                                                                                                                                                                                                                               |
@@ -182,7 +182,7 @@ decision. This supports a FERPA-compliant deployment; it does not by itself make
 counsel confirm.
 
 - **Columns** (soft-deletable domain tables: `academic_year`, `term`, `class`, `class_teacher`, `class_seat`,
-  `assignment`, `assignment_submission`): `deletedAt DateTime? @db.Timestamptz(3)`, `deletedBy` (member id),
+  `assignment`, `assignment_submission`): `deletedAt DateTime? @db.Timestamptz(3)`, `deletedById` (member id),
   `deletionReason`. Append-only tables (`activity_log`, `submission_grade_event`) are never soft-deleted.
 - **Default invisibility:** a Prisma client extension adds `deletedAt: null` to reads. It does not cover raw SQL
   or relation includes reliably, so a guard test checks the extension and raw queries are
@@ -208,7 +208,7 @@ Exams and in-class work are often graded without the student uploading anything.
 
 - `assignment.submission_mode`: `online` (default) or `none`.
 - For `none`, grading creates the submission row at that moment, with `submitted_at` null (made nullable) and
-  `graded_by` set; the "missing" view skips `none` assignments.
+  `graded_by_id` set; the "missing" view skips `none` assignments.
 
 Deferred until the required API (Phase 3) is done.
 

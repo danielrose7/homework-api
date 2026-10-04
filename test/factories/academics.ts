@@ -616,7 +616,7 @@ async function gradeDirectly(
   const result = await applyGrade(db, {
     organizationId: assignment.organizationId,
     submissionId,
-    gradedBy: graderId,
+    gradedById: graderId,
     now: new Date(),
     scaleId: scale.id,
     band,

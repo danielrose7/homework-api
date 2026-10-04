@@ -24,7 +24,7 @@ CREATE TABLE "academic_year" (
     "starts_on" DATE NOT NULL,
     "ends_on" DATE NOT NULL,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -41,7 +41,7 @@ CREATE TABLE "term" (
     "starts_on" DATE NOT NULL,
     "ends_on" DATE NOT NULL,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -57,7 +57,7 @@ CREATE TABLE "grading_scale" (
     "is_default" BOOLEAN NOT NULL DEFAULT false,
     "supersedes_id" UUID,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -78,7 +78,7 @@ CREATE TABLE "grading_scale_band" (
     "counts_in_average" BOOLEAN NOT NULL DEFAULT true,
     "sort_order" INTEGER NOT NULL,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -94,7 +94,7 @@ CREATE TABLE "class" (
     "name" TEXT NOT NULL,
     "grading_scale_id" UUID,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -109,7 +109,7 @@ CREATE TABLE "class_teacher" (
     "class_id" UUID NOT NULL,
     "member_id" UUID NOT NULL,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -126,7 +126,7 @@ CREATE TABLE "class_seat" (
     "status" "seat_status" NOT NULL DEFAULT 'active',
     "dropped_at" TIMESTAMPTZ(3),
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -151,7 +151,7 @@ CREATE TABLE "assignment" (
     "max_submissions" INTEGER NOT NULL DEFAULT 1,
     "published_at" TIMESTAMPTZ(3),
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -175,9 +175,9 @@ CREATE TABLE "assignment_submission" (
     "grade_group" TEXT,
     "teacher_notes" TEXT,
     "graded_at" TIMESTAMPTZ(3),
-    "graded_by" UUID,
+    "graded_by_id" UUID,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -198,7 +198,7 @@ CREATE TABLE "submission_attachment" (
     "storage_key" TEXT,
     "content" BYTEA,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -219,7 +219,7 @@ CREATE TABLE "submission_grade_event" (
     "grade_group" TEXT,
     "teacher_notes" TEXT,
     "reason" TEXT,
-    "graded_by" UUID NOT NULL,
+    "graded_by_id" UUID NOT NULL,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "submission_grade_event_pkey" PRIMARY KEY ("id")
@@ -398,7 +398,7 @@ ALTER TABLE "assignment_submission" ADD CONSTRAINT "assignment_submission_organi
 ALTER TABLE "assignment_submission" ADD CONSTRAINT "assignment_submission_organization_id_grading_scale_id_gra_fkey" FOREIGN KEY ("organization_id", "grading_scale_id", "grade_band_id") REFERENCES "grading_scale_band"("organization_id", "grading_scale_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "assignment_submission" ADD CONSTRAINT "assignment_submission_organization_id_graded_by_fkey" FOREIGN KEY ("organization_id", "graded_by") REFERENCES "member"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "assignment_submission" ADD CONSTRAINT "assignment_submission_organization_id_graded_by_id_fkey" FOREIGN KEY ("organization_id", "graded_by_id") REFERENCES "member"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "submission_attachment" ADD CONSTRAINT "submission_attachment_organization_id_submission_id_fkey" FOREIGN KEY ("organization_id", "submission_id") REFERENCES "assignment_submission"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -410,7 +410,7 @@ ALTER TABLE "submission_grade_event" ADD CONSTRAINT "submission_grade_event_orga
 ALTER TABLE "submission_grade_event" ADD CONSTRAINT "submission_grade_event_organization_id_grading_scale_id_gr_fkey" FOREIGN KEY ("organization_id", "grading_scale_id", "grade_band_id") REFERENCES "grading_scale_band"("organization_id", "grading_scale_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "submission_grade_event" ADD CONSTRAINT "submission_grade_event_organization_id_graded_by_fkey" FOREIGN KEY ("organization_id", "graded_by") REFERENCES "member"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "submission_grade_event" ADD CONSTRAINT "submission_grade_event_organization_id_graded_by_id_fkey" FOREIGN KEY ("organization_id", "graded_by_id") REFERENCES "member"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -436,7 +436,7 @@ ALTER TABLE "assignment_submission" ADD CONSTRAINT "submission_grade_together" C
   ("grade_band_id" IS NULL) = ("grading_scale_id" IS NULL)
   AND ("grade_band_id" IS NULL) = ("grade_label" IS NULL)
   AND ("grade_band_id" IS NULL) = ("graded_at" IS NULL)
-  AND ("grade_band_id" IS NULL) = ("graded_by" IS NULL)
+  AND ("grade_band_id" IS NULL) = ("graded_by_id" IS NULL)
 );
 ALTER TABLE "assignment_submission" ADD CONSTRAINT "submission_points" CHECK (
   "points_awarded" IS NULL OR ("grade_band_id" IS NOT NULL AND "points_awarded" >= 0)

@@ -52,7 +52,7 @@ describe("first grade with points", () => {
     });
     expect(row).toMatchObject({
       gradeLabel: "A",
-      gradedBy: seeded.school.teachers[0]!.member.id,
+      gradedById: seeded.school.teachers[0]!.member.id,
     });
     expect(row.gradedAt?.toISOString()).toBe(result.gradedAt);
 

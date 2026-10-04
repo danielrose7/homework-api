@@ -27,7 +27,7 @@ CREATE TABLE "storage_blob" (
     "checksum" TEXT NOT NULL,
     "service_name" TEXT NOT NULL,
     "metadata" JSONB NOT NULL DEFAULT '{}',
-    "uploaded_by" UUID,
+    "uploaded_by_id" UUID,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -55,7 +55,7 @@ CREATE TABLE "storage_attachment" (
     "record_id" UUID NOT NULL,
     "name" TEXT NOT NULL,
     "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by" UUID,
+    "deleted_by_id" UUID,
     "deletion_reason" TEXT,
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
