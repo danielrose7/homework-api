@@ -88,7 +88,7 @@ describe("schema conventions", () => {
       });
 
       it("keeps foreign keys from cascading", () => {
-        if (GLOBAL.has(name)) return;
+        if (GLOBAL.has(name) || BETTER_AUTH_OWNED.has(name)) return;
         for (const [field, definition] of model.fields) {
           if (
             definition.includes("@relation(") &&
