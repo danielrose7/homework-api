@@ -1,7 +1,7 @@
 import { Factory } from "fishery";
 
 import { createDefaultGradingScale } from "@/lib/server/services/grading-scales";
-import { createDefaultOrganizationPreferences } from "@/lib/server/services/organization-preferences";
+import { createDefaultOrganizationPreferences } from "@/modules/organizations/mutations/create-default-preferences";
 
 import { factoryDb } from "./runtime";
 
