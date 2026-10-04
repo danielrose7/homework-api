@@ -19,7 +19,7 @@ import {
 } from "@/app/sandbox/console/_components/catalog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { DemoOptions } from "@/modules/demo/queries/read-options";
+import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 
 type SubTab = "params" | "body" | "auth";
 
@@ -53,7 +53,7 @@ function makeDraft(item: CatalogItem, persona: string): Draft {
 const varsIn = (path: string) =>
   [...path.matchAll(/\{(\w+)\}/g)].map((match) => match[1] ?? "");
 
-export function ConsoleView({ options }: { options: DemoOptions }) {
+export function ConsoleView({ options }: { options: SandboxOptions }) {
   const { active } = useSession();
   const persona = active ?? "";
   const { exchanges, selectedId } = useExchanges();

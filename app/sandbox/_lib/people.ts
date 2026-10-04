@@ -1,4 +1,4 @@
-import { PEOPLE } from "@/modules/demo/seed-data";
+import { PEOPLE } from "@/app/sandbox/_server/seed-data";
 
 export { PEOPLE };
 

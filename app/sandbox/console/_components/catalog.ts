@@ -1,7 +1,7 @@
 import { BASE } from "@/app/sandbox/_lib/api";
 import { roleOf } from "@/app/sandbox/_lib/people";
-import type { DemoOptions } from "@/modules/demo/queries/read-options";
-import { DEMO_PASSWORD } from "@/modules/demo/seed-data";
+import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
+import { SANDBOX_PASSWORD } from "@/app/sandbox/_server/seed-data";
 
 export interface CatalogItem {
   key: string;
@@ -100,7 +100,8 @@ export const CATALOG: Array<{ group: string; items: CatalogItem[] }> = [
 export const ALL_ITEMS = CATALOG.flatMap((group) => group.items);
 
 export function sampleBody(key: string, persona: string): object | null {
-  if (key === "signin") return { username: persona, password: DEMO_PASSWORD };
+  if (key === "signin")
+    return { username: persona, password: SANDBOX_PASSWORD };
   if (key === "submit")
     return {
       text: "Solved both equations by isolating x, then checked by substitution.",
@@ -113,8 +114,8 @@ export function sampleBody(key: string, persona: string): object | null {
   return null;
 }
 
-type Submission = DemoOptions["submissions"][number];
-type Assignment = DemoOptions["assignments"][number];
+type Submission = SandboxOptions["submissions"][number];
+type Assignment = SandboxOptions["assignments"][number];
 
 export interface Preset {
   label: string;
@@ -151,7 +152,7 @@ const points = (s: Submission | undefined, fraction: number) =>
 
 export function presetsFor(
   key: string,
-  options: DemoOptions,
+  options: SandboxOptions,
   activePersona: string | null,
 ): PresetGroup | null {
   const subs = options.submissions;

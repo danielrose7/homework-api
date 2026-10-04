@@ -5,7 +5,7 @@ import {
   isBrowsableTable,
   listTables,
   readTable,
-} from "@/modules/demo/queries/read-tables";
+} from "@/app/sandbox/_server/queries/read-tables";
 import { DataGrid } from "@/app/sandbox/data/_components/data-grid";
 import { cn } from "@/lib/utils";
 

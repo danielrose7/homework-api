@@ -10,11 +10,11 @@ import { ErrorBanner } from "@/app/sandbox/app/_components/error-banner";
 import { ResultsTable } from "@/app/sandbox/app/_components/results-table";
 import { useSubmissionList } from "@/app/sandbox/app/_components/use-submission-list";
 import { Button } from "@/components/ui/button";
-import type { DemoOptions } from "@/modules/demo/queries/read-options";
+import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 
 type Outcome = { status: number; body: unknown; location?: string };
 
-export function StudentView({ options }: { options: DemoOptions }) {
+export function StudentView({ options }: { options: SandboxOptions }) {
   const { active } = useSession();
   const [filters, setFilters] = useState({ grade: "", assignment: "" });
   const list = useSubmissionList(`${BASE}/submissions/me`, {
@@ -35,7 +35,7 @@ export function StudentView({ options }: { options: DemoOptions }) {
       .map((row) => row.assignment_id),
   );
 
-  function submit(assignment: DemoOptions["assignments"][number]) {
+  function submit(assignment: SandboxOptions["assignments"][number]) {
     const text = answers[assignment.id] ?? "";
     startTransition(async () => {
       addOptimistic({

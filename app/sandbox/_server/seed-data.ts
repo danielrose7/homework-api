@@ -1,7 +1,7 @@
 import type { RoleName } from "@/lib/server/permissions";
 
-export const DEMO_SCHOOL = { name: "Sandbox", slug: "sandbox" } as const;
-export const DEMO_PASSWORD = "sandbox-dev";
+export const SANDBOX_SCHOOL = { name: "Sandbox", slug: "sandbox" } as const;
+export const SANDBOX_PASSWORD = "sandbox-dev";
 
 export interface PersonSpec {
   username: string;

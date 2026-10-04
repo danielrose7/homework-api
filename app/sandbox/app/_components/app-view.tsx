@@ -4,9 +4,9 @@ import { roleOf } from "@/app/sandbox/_lib/people";
 import { useSession } from "@/app/sandbox/_lib/session";
 import { StudentView } from "@/app/sandbox/app/_components/student-view";
 import { TeacherView } from "@/app/sandbox/app/_components/teacher-view";
-import type { DemoOptions } from "@/modules/demo/queries/read-options";
+import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 
-export function AppView({ options }: { options: DemoOptions }) {
+export function AppView({ options }: { options: SandboxOptions }) {
   const { active } = useSession();
   const role = roleOf(active);
   if (!role) {

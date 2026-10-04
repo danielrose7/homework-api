@@ -74,7 +74,7 @@ Route handlers are `defineRoute` definitions, so a test runs one through the rea
   ESLint `no-restricted-imports` rule enforces this for test files, and the singletons carry a JSDoc saying why.
 - Test client runs `SET LOCAL ROLE app_user` so grants (append-only tables) are exercised rather than bypassed
   by a superuser.
-- Seed/reset scripts for local dev are separate from test data; see demo-and-seed.md.
+- Seed/reset scripts for local dev are separate from test data; see sandbox-and-seed.md.
 - Race tests to write: N parallel submits with `max_submissions = 1` → exactly one success, rest `409`;
   idempotent retry returns the original; concurrent regrades → both applied in order, two history rows.
 

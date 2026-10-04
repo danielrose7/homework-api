@@ -102,3 +102,15 @@ and returns the upload URL (Rails calls this a direct upload), a job to clear bl
 buckets with short-lived signed reads, and object keys that carry no personal data. A one-off copy moves existing
 bytes out of `storage_blob_data` and flips `service_name`. Mockable with an in-memory service for demos. Virus
 scanning belongs here too.
+
+## Deferred from Phase 4
+
+Cut because the brief does not need them; the data they manage comes from the seed script and test factories. The
+service code for some of them exists and is listed under "Dead module code" in the plan README.
+
+- Endpoints for academic years, terms, classes, seats and assignments, plus a gradebook (students by assignments).
+- Grading scale endpoints: create, new version, set default, overrides on a class or assignment.
+- A "missing submission" view: an active seat, a published and live assignment, and no live submission.
+- Grade history and activity endpoints (the data is already written by `gradeSubmission` and the activity log).
+- `DELETE` soft-delete, administrator restore and an unfiltered read path for deleted rows; with them,
+  `deleted_by_id` and `storage_blob.uploaded_by_id` become real composite relations (edit the domain migration).

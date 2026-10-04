@@ -5,7 +5,7 @@ import type { AppPrismaClient } from "@/lib/server/db";
 import {
   seedSandbox,
   type SeedSummary,
-} from "@/modules/demo/mutations/seed-sandbox";
+} from "@/app/sandbox/_server/mutations/seed-sandbox";
 
 /** Truncating needs the owner role: `app_user` has no TRUNCATE grant. */
 export async function truncateAllTables(owner_url: string) {
@@ -23,7 +23,7 @@ export async function truncateAllTables(owner_url: string) {
   }
 }
 
-export async function resetDemoData(params: {
+export async function resetSandboxData(params: {
   db: AppPrismaClient;
   auth: Auth;
   owner_url: string;

@@ -6,7 +6,8 @@ config({ quiet: true });
 async function main() {
   const { prisma } = await import("@/lib/server/db");
   const { auth } = await import("@/lib/server/auth");
-  const { seedSandbox } = await import("@/modules/demo/mutations/seed-sandbox");
+  const { seedSandbox } =
+    await import("@/app/sandbox/_server/mutations/seed-sandbox");
   const { printSummary } = await import("./summary");
 
   try {

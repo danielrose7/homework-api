@@ -150,7 +150,7 @@ export function Workbench({ children }: { children: ReactNode }) {
             variant="destructive"
             onClick={() => void requestReset()}
           >
-            Reset demo data
+            Reset sandbox data
           </Button>
         </header>
         <nav className="bg-card flex gap-0.5 overflow-x-auto border-b px-3">

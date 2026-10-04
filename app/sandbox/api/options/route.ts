@@ -1,7 +1,10 @@
-import { demoDisabledResponse, demoModeEnabled } from "@/modules/demo/guard";
-import { readDemoOptions } from "@/modules/demo/queries/read-options";
+import {
+  sandboxDisabledResponse,
+  sandboxEnabled,
+} from "@/app/sandbox/_server/guard";
+import { readSandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 
 export async function GET() {
-  if (!demoModeEnabled()) return demoDisabledResponse();
-  return Response.json(await readDemoOptions());
+  if (!sandboxEnabled()) return sandboxDisabledResponse();
+  return Response.json(await readSandboxOptions());
 }

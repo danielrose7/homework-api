@@ -1,4 +1,4 @@
-import { ownerPool } from "@/modules/demo/owner-pool";
+import { ownerPool } from "@/app/sandbox/_server/owner-pool";
 
 export const BROWSABLE_TABLES = [
   "assignment_submission",

@@ -12,7 +12,7 @@ This directory is the living plan. Update it as we go (tick boxes, add to the de
 | [schema-conventions.md](schema-conventions.md)           | Naming, keys, timestamps, tenancy, deletes: the rules every model follows |
 | [data-model.md](data-model.md)                           | Tables, conventions (UUIDv7, timestamps, org scoping), grading rules      |
 | [auth-and-tenancy.md](auth-and-tenancy.md)               | Better Auth, roles, request context, DB roles, RLS-ready schema rules     |
-| [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                     |
+| [sandbox-and-seed.md](sandbox-and-seed.md)               | Seed data, reset button, dev-style UI                                     |
 | [audit-and-grade-history.md](audit-and-grade-history.md) | HIPAA-style `activity_log`, grade events, regrade concurrency             |
 | [future-ideas.md](future-ideas.md)                       | Deferred features, options considered, and what is already prepared       |
 | [testing.md](testing.md)                                 | Rollback-per-test, Fishery, guard tests, race tests                       |
@@ -57,6 +57,8 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Assignments have a `grading_mode`: `points` (scale lookup) or `band` (teacher picks Pass/Fail directly, no points)                                                   | Decided | Pass/fail with no points needs nullable points and `max_points`; check constraints keep rows consistent                      |
 | The graded result (band, label, group) is snapshotted on the submission and grade event; scales are immutable once used                                              | Decided | Reverses "letter never stored": editable scales would otherwise relabel past grades                                          |
 | Sign-in is username + password (username plugin); email is required by Better Auth but contact-only                                                                  | Decided | Usernames globally unique; `/sign-in/email` disabled                                                                         |
+| The remaining Phase 4 endpoints are deferred; seed-only creation of people, classes, assignments and scales is enough for the brief                                  | Decided | Listed in future-ideas.md. Code they would have used is tracked under "Dead module code"                                     |
+| `modules/demo` became `app/sandbox/_server`, and "demo" became "sandbox" everywhere (`SANDBOX_MODE`, `SANDBOX_PASSWORD`, `resetSandboxData`)                         | Decided | Sandbox-only code lives with the sandbox so it is not mistaken for application modules                                       |
 | Work in small reviewable commits (verb-first title + short narrative body)                                                                                           | Decided | See `AGENTS.md`                                                                                                              |
 | Organize application behavior into domain modules with `queries`, `mutations` and Django-style serializers; keep HTTP contracts in their `app/api` route files       | Decided | Migrate module by module; see `docs/architecture.md`                                                                         |
 | Use `snake_case` for domain data across Prisma, module inputs/results, route/Zod contracts, serializers and audit metadata; Better Auth stays camelCase              | Decided | Better Auth's adapter owns its model contract; third-party API option names also remain unchanged                            |
@@ -65,11 +67,11 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Migration history stays clean start to end: edit the migration that introduced a thing, never rework it in a follow-up (pre-release); rebuild with `pnpm db:fresh`   | Decided | See schema-conventions.md                                                                                                    |
 | Tests may not import the app-wide `auth` or `prisma` singletons (ESLint rule)                                                                                        | Decided | They commit outside the test transaction; see testing.md                                                                     |
 | RLS is **out of scope**; the schema is RLS-ready (`organization_id` almost everywhere, composite FKs)                                                                | Decided | Isolation is enforced in the service layer; see auth-and-tenancy.md appendix                                                 |
-| The demo school is named "Sandbox" (slug `sandbox`), in the seed and in all docs examples                                                                            | Decided | Slug is reserved                                                                                                             |
-| UI is dev/API-flavored, monospace, demo-friendly, with a seed script and a reset button                                                                              | Decided | See demo-and-seed.md                                                                                                         |
+| The sandbox school is named "Sandbox" (slug `sandbox`), in the seed and in all docs examples                                                                         | Decided | Slug is reserved                                                                                                             |
+| UI is dev/API-flavored, monospace, demo-friendly, with a seed script and a reset button                                                                              | Decided | See sandbox-and-seed.md                                                                                                      |
 | Fishery factories persist in `onCreate`; traits agreed together before writing                                                                                       | Decided | See testing.md                                                                                                               |
 | Route tests build context through setup helpers                                                                                                                      | Decided | See testing.md                                                                                                               |
-| Demo seed data is separate from CI factories                                                                                                                         | Decided | Deterministic, readable names; see demo-and-seed.md                                                                          |
+| Sandbox seed data is separate from CI factories                                                                                                                      | Decided | Deterministic, readable names; see sandbox-and-seed.md                                                                       |
 | Grading uses one permission, `grade: update`, for teachers and administrators; `grade: create` is removed                                                            | Decided | Phase 3 applies it in `lib/server/permissions.ts`                                                                            |
 | No member-provisioning or invitation endpoints; people are created by the seed script. The API covers what the PDF brief needs, give or take                         | Decided | Better Auth's own routes stay mounted for sign-in and school creation                                                        |
 | JSON fields use `snake_case` (`teacher_notes`, `submitted_at`)                                                                                                       | Decided | Matches the brief and Python clients                                                                                         |
@@ -78,7 +80,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Each school has a time zone in a new `organization_preferences` table; date filters and date-only inputs are read in it, not UTC                                     | Decided | Timestamps in responses stay ISO 8601 with an offset; see api-and-docs.md                                                    |
 | The seed creates people through Better Auth sign-up, with one shared dev password (`sandbox-dev`)                                                                    | Decided | Phase 4 decision 8; passwords hash the way sign-in expects                                                                   |
 | `pnpm db:seed` refuses a database that has data; `pnpm db:reset` truncates every table (auth included) through the owner connection and re-seeds                     | Decided | Phase 4 decisions 6 and 9. The UI reset button asks for confirmation first                                                   |
-| UI authenticates with a Bearer token kept in memory and `sessionStorage`; screens are console, app, brief checks, and a data view behind `DEMO_MODE`                 | Decided | Phase 6 decisions 1 and 3; the data view reads tables through a dev-only route                                               |
+| UI authenticates with a Bearer token kept in memory and `sessionStorage`; screens are console, app, brief checks, and a data view behind `SANDBOX_MODE`              | Decided | Phase 6 decisions 1 and 3; the data view reads tables through a dev-only route                                               |
 
 ## Deviations from the plan
 
@@ -93,21 +95,21 @@ Recorded as work lands; each is small but worth a look at the gate.
 - Partial unique indexes use Prisma's `partialIndexes` preview feature (7.4+), so they live in `schema.prisma`
   and migrate cleanly. Check constraints and the grants still live in hand-written migration SQL.
 - `deleted_by_id` is a plain uuid column on every soft-deletable table, not a foreign key (an audit pointer, like
-  the activity log). `graded_by_id` is a real composite foreign key to the member. Becoming relations is tracked in Phase 4.
+  the activity log). `graded_by_id` is a real composite foreign key to the member. Becoming relations is deferred with the delete endpoints.
 - Submission attempt numbers must be allocated as `max(attempt_number) + 1` over all rows including soft-deleted
   ones, while the limit counts only live rows, because the attempt number is unique unconditionally.
 - Top-level reads hide soft-deleted rows; an administrator restore flow needs an unfiltered read path, to be
-  added in Phase 4 with the restore endpoints.
-- The submit service exists (Phase 3). Race protection and the non-transactional race tests are Phase 4; until then a
+  added with the restore endpoints, which are deferred.
+- The submit service exists (Phase 3). Race protection and the non-transactional race tests are in Phase 4; until then a
   concurrent double submit is caught by the unique attempt number and answered `409`.
 - Denials are logged for school members only: `403`s and the deliberate `404` refusals. A request from a
   non-member, an unauthenticated one, or one for a missing id leaves no `denied` row.
 - `GET /submissions/{id}` was not in the route plan. It was added because submit returns a `Location` pointing at it
   and because a client needs to read one record after a write; reading it is a logged single-record read.
-- All demo UI and dev-only routes live under `/sandbox`, as server and client components co-located in
-  `app/sandbox` (private `_components` and `_lib` folders). The reset endpoint is `POST /sandbox/api/reset`, not
-  `/api/v1/dev/reset`, so nothing demo-specific sits in the public API namespace. The whole segment answers `404`
-  unless `DEMO_MODE=true`. The seed and reset logic stay in `modules/demo` because the CLI scripts share them.
+- All sandbox UI and dev-only routes live under `/sandbox`, as server and client components co-located in
+  `app/sandbox` (private `_components`, `_lib` and `_server` folders). The reset endpoint is `POST /sandbox/api/reset`, not
+  `/api/v1/dev/reset`, so nothing sandbox-specific sits in the public API namespace. The whole segment answers `404`
+  unless `SANDBOX_MODE=true`. The seed and reset logic stay in `app/sandbox/_server` because the CLI scripts share them.
 - No `Idempotency-Key` on submit; the attempt limit already makes a repeated request a `409`.
 
 ## Phases
@@ -174,6 +176,11 @@ Each phase ends with passing tests. Tick as we go.
 
 ### Phase 4 — Depth
 
+Scope was cut: the brief needs only the routes built in Phase 3, so the endpoints for academics, grading scales,
+the missing view, grade history, activity, soft-delete and restore are deferred (see "Deferred from Phase 4" in
+[future-ideas.md](future-ideas.md)). People, classes, assignments and scales get into the database through the seed
+script and the test factories only. Decisions 1 to 5 below belong to the deferred endpoints and are not needed now.
+
 **Decide before starting** (recommendation in italics):
 
 1. What "new version" of a used grading scale does to things pointing at the old one: _classes and assignments keep
@@ -185,25 +192,18 @@ Each phase ends with passing tests. Tick as we go.
 5. Restore rules: _administrator only, logged, and refused while the parent record is still deleted._
 6. What reset clears: _every table through the owner connection, including auth, so sessions end._
 7. Seed scope: _the seed script is the only way people get into a school, since there are no member endpoints; the
-   Sandbox school is the one in demo-and-seed.md, with the default `America/New_York` time zone._
+   Sandbox school is the one in sandbox-and-seed.md, with the default `America/New_York` time zone._
 8. How the seed creates people: _through Better Auth's own sign-up, so passwords are hashed the way sign-in expects,
    with one shared dev password._
 9. Running the seed on a database that already has data: _refuse and point at `pnpm db:reset`, rather than merging
    or duplicating._
 
-- [ ] Academic years, terms, classes, seats, assignments, gradebook
-- [ ] Grading scale endpoints (create, new version, set default) and scale overrides
-- [ ] "Missing submission" view
 - [ ] Submit race protection + non-transactional race tests; allocate attempt numbers as the maximum over all rows
       including soft-deleted ones
-- [ ] Grade history and activity endpoints (regrade logic and version checks already live in `gradeSubmission`)
-- [ ] Soft-delete (`DELETE`) and administrator restore endpoints, with an unfiltered read path for deleted rows
-- [ ] Turn `deleted_by_id` (every soft-deletable table) and `storage_blob.uploaded_by_id` into real composite relations
-      to the member (`deletedBy`, `uploadedBy`), as `graded_by_id` already is, when these endpoints start writing them;
-      edit the domain migration in place
 - [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
-- [x] Seed script and `pnpm db:seed` / `pnpm db:reset` (see demo-and-seed.md)
-- [x] Demo reset endpoint (`POST /sandbox/api/reset`) and confirmed UI button
+- [ ] Remove or keep the production-dead module code listed under "Dead module code" below
+- [x] Seed script and `pnpm db:seed` / `pnpm db:reset` (see sandbox-and-seed.md)
+- [x] Sandbox reset endpoint (`POST /sandbox/api/reset`) and confirmed UI button
 
 ### Phase 5 — Docs
 
@@ -232,7 +232,7 @@ Each phase ends with passing tests. Tick as we go.
 4. Monospace font: _the system monospace stack behind one CSS variable; no web font._
 
 - [x] Dev-flavored monospace UI, `useOptimistic` + `startTransition`, via the REST API (all under `/sandbox`)
-- [x] Persona sign-in, network log with copy-as-cURL, reset button with confirmation (demo-and-seed.md)
+- [x] Persona sign-in, network log with copy-as-cURL, reset button with confirmation (sandbox-and-seed.md)
 - [ ] Browser walk-through of every screen; component tests are not planned
 
 ### Phase 7 — Polish
@@ -245,6 +245,19 @@ Each phase ends with passing tests. Tick as we go.
 
 - [ ] README: setup, design decisions, how to run tests
 - [ ] CI; final test-suite pass
+
+## Dead module code
+
+Found with `knip --production`: code that no route, page or the seed reaches; only its own tests use it. Kept for now
+because the deferred endpoints would call it. Remove it (with its tests) unless an endpoint is built, and re-run
+`pnpm dlx knip --production --include files,exports` afterward. Nothing here is imported by app code.
+
+- `modules/academics/mutations/`: `add-class-seat`, `add-class-teacher`, `create-academic-year`, `create-assignment`,
+  `create-class`, `create-term`; `modules/academics/validation.ts`; `lib/domain/terms.ts`.
+- `modules/grading-scales/`: `mutations/create-grading-scale`, `mutations/set-default-grading-scale`,
+  `queries/get-grading-scale`, `queries/list-grading-scales`, `validation.ts`.
+- Exports to check when those go: `requireClass` and `memberWithRole` in `modules/academics/queries/access.ts`,
+  `validateScale` in `lib/domain/grading.ts`.
 
 ## Future ideas
 

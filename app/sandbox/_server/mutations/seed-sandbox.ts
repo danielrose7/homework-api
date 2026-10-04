@@ -14,13 +14,13 @@ import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-gr
 import {
   ASSIGNMENTS,
   CLASSES,
-  DEMO_PASSWORD,
-  DEMO_SCHOOL,
+  SANDBOX_PASSWORD,
+  SANDBOX_SCHOOL,
   PEOPLE,
   SUBMISSIONS,
   type GradeSpec,
   type ScaleKey,
-} from "@/modules/demo/seed-data";
+} from "@/app/sandbox/_server/seed-data";
 import { createDefaultOrganizationPreferences } from "@/modules/organizations/mutations/create-default-preferences";
 
 export class SeedRefusedError extends Error {
@@ -64,7 +64,7 @@ export async function seedSandbox(
   }
 
   const now = Date.now();
-  const organization = await db.organization.create({ data: DEMO_SCHOOL });
+  const organization = await db.organization.create({ data: SANDBOX_SCHOOL });
   const organization_id = organization.id;
   const standard_id = await createDefaultGradingScale(db, organization_id);
   await createDefaultOrganizationPreferences(db, organization_id);
@@ -85,7 +85,7 @@ export async function seedSandbox(
       body: {
         name: person.name,
         email: `${person.username}@sandbox.test`,
-        password: DEMO_PASSWORD,
+        password: SANDBOX_PASSWORD,
         username: person.username,
       },
     });
@@ -278,8 +278,8 @@ export async function seedSandbox(
 
   return {
     organization_id,
-    slug: DEMO_SCHOOL.slug,
-    password: DEMO_PASSWORD,
+    slug: SANDBOX_SCHOOL.slug,
+    password: SANDBOX_PASSWORD,
     people: PEOPLE.map(({ username, role }) => ({ username, role })),
     submissions: SUBMISSIONS.length,
   };

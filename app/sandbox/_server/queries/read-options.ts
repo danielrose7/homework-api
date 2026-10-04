@@ -1,6 +1,6 @@
-import { ownerPool } from "@/modules/demo/owner-pool";
+import { ownerPool } from "@/app/sandbox/_server/owner-pool";
 
-export interface DemoOptions {
+export interface SandboxOptions {
   assignments: Array<{
     id: string;
     title: string;
@@ -21,7 +21,7 @@ export interface DemoOptions {
 }
 
 /** Ids and readable labels for the console's pickers; the public API has no assignment listing yet. */
-export async function readDemoOptions(): Promise<DemoOptions> {
+export async function readSandboxOptions(): Promise<SandboxOptions> {
   const pool = ownerPool();
   const assignments = await pool.query(
     `SELECT a.id, a.title, c.name AS class_name, a.grading_mode, a.max_points::text

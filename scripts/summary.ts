@@ -1,4 +1,4 @@
-import type { SeedSummary } from "@/modules/demo/mutations/seed-sandbox";
+import type { SeedSummary } from "@/app/sandbox/_server/mutations/seed-sandbox";
 
 export function printSummary(summary: SeedSummary) {
   console.log(`Seeded school "${summary.slug}" (${summary.organization_id})`);

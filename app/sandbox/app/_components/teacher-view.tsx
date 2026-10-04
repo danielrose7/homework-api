@@ -19,7 +19,7 @@ import { ResultsTable } from "@/app/sandbox/app/_components/results-table";
 import { useSubmissionList } from "@/app/sandbox/app/_components/use-submission-list";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { DemoOptions } from "@/modules/demo/queries/read-options";
+import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 
 const FILTER_FIELDS = [
   ["assignment", "Assignment", "contains…"],
@@ -62,7 +62,7 @@ function Field({
   );
 }
 
-export function TeacherView({ options }: { options: DemoOptions }) {
+export function TeacherView({ options }: { options: SandboxOptions }) {
   const [filters, setFilters] = useState({
     assignment: "",
     student: "",

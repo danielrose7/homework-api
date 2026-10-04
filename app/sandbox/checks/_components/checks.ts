@@ -5,7 +5,7 @@ import {
   type ListResponse,
   type Submission,
 } from "@/app/sandbox/_lib/types";
-import type { DemoOptions } from "@/modules/demo/queries/read-options";
+import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 
 export interface Asserter {
   ok(exchange: Exchange | null, condition: boolean, message: string): void;
@@ -31,7 +31,7 @@ export interface Caller {
     post(path: string, body: object): Promise<Exchange>;
     put(path: string, body: object): Promise<Exchange>;
   };
-  options(): Promise<DemoOptions>;
+  options(): Promise<SandboxOptions>;
 }
 
 export const caller: Caller = {
@@ -41,8 +41,8 @@ export const caller: Caller = {
     put: (path, body) => send({ method: "PUT", path, body, as: user }),
   }),
   options: async () => {
-    const options = await devJson<DemoOptions>("/sandbox/api/options");
-    if (!options) throw new Error("could not load demo options");
+    const options = await devJson<SandboxOptions>("/sandbox/api/options");
+    if (!options) throw new Error("could not load sandbox options");
     return options;
   },
 };

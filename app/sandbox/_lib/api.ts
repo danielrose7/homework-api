@@ -3,7 +3,7 @@ import {
   type Exchange,
 } from "@/app/sandbox/_lib/exchange-store";
 import { session } from "@/app/sandbox/_lib/session";
-import { DEMO_PASSWORD } from "@/modules/demo/seed-data";
+import { SANDBOX_PASSWORD } from "@/app/sandbox/_server/seed-data";
 
 export const ORG = "sandbox";
 export const BASE = `/api/v1/orgs/${ORG}`;
@@ -98,7 +98,7 @@ export async function signIn(username: string): Promise<string | null> {
   const exchange = await send({
     method: "POST",
     path: "/api/auth/sign-in/username",
-    body: { username, password: DEMO_PASSWORD },
+    body: { username, password: SANDBOX_PASSWORD },
     auth: "none",
     label: username,
   });

@@ -71,7 +71,7 @@ Created by `db/init/01-roles.sql` for the local Docker database:
   grants, plus a Prisma client extension that rejects `update`/`delete` on those models). No triggers.
 - Two URLs: `DATABASE_URL` (`app_user`), `MIGRATION_DATABASE_URL` (`app_owner`) in `prisma.config.ts`.
 - Prisma can't express roles or grants: hand-written SQL in migrations.
-- The demo reset (see demo-and-seed.md) truncates tables, which `app_user` cannot do; it uses the owner connection.
+- The sandbox reset (see sandbox-and-seed.md) truncates tables, which `app_user` cannot do; it uses the owner connection.
 
 ## Appendix: enabling RLS later
 

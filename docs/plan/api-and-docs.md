@@ -140,6 +140,6 @@ OpenAPI spec documents the codes per endpoint.
 
 ## UI (Phase 6)
 
-Dev-flavored, monospace, demo-friendly; details in [demo-and-seed.md](demo-and-seed.md). shadcn/ui, with
+Dev-flavored, monospace, demo-friendly; details in [sandbox-and-seed.md](sandbox-and-seed.md). shadcn/ui, with
 `useOptimistic` + `startTransition` for submit/grade. The UI calls the same REST API (not server-only actions)
 so the API stays the real product surface, and a request inspector shows each call.
