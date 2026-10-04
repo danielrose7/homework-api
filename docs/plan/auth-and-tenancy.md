@@ -39,7 +39,8 @@ These are what make a later RLS migration a policy-writing exercise rather than 
   point at another school's parent.
 - School roles reference `member.id`, not `user.id`.
 - No cross-tenant cascades (`ON DELETE RESTRICT`); soft deletes only through the API.
-- Auth tables (`user`, `session`, `account`, `verification`) are global; keep them in a separate `auth` schema.
+- Auth tables (`user`, `session`, `account`, `verification`) are global. They live in `public` for now; moving
+  them to an `auth` schema is part of enabling RLS.
 - Views, if any, are created `WITH (security_invoker = true)`.
 
 ## DB roles

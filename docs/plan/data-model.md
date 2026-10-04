@@ -24,8 +24,8 @@
   `member.id`. A user can belong to several schools.
 - **Deletes:** `ON DELETE RESTRICT`; the API never hard-deletes. See "Soft deletes and FERPA" below.
 - **Indexes:** `organization_id` is the leading column of any index used by filters/policies.
-- **Auth global tables** (`user`, `session`, `account`, `verification`) have no org; keep them in a separate
-  Postgres schema (`auth`) — see auth-and-tenancy.md.
+- **Auth global tables** (`user`, `session`, `account`, `verification`) have no org and live in `public` — see
+  auth-and-tenancy.md.
 
 ## Tables
 

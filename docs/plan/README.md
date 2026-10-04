@@ -64,6 +64,17 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Route tests build context through setup helpers                                                                                           | Decided      | See testing.md                                                                                                               |
 | Demo seed data is separate from CI factories                                                                                              | Decided      | Deterministic, readable names; see demo-and-seed.md                                                                          |
 
+## Deviations from the plan
+
+Recorded as work lands; each is small but worth a look at the gate.
+
+- Better Auth tables stay in the `public` schema. A separate `auth` schema needs Prisma multi-schema support and
+  only mattered for RLS, which is out of scope.
+- Better Auth tables keep `ON DELETE CASCADE` to their parents (they are Better Auth's own and the API never
+  deletes users or schools). Our domain tables will use `RESTRICT`.
+- Tests use a separate `homework_test` database created by Vitest global setup, and test files run serially.
+- `package.json` sets `"type": "module"`.
+
 ## Phases
 
 Each phase ends with passing tests. Tick as we go.
@@ -72,13 +83,13 @@ Each phase ends with passing tests. Tick as we go.
 
 - [x] `git init`, `AGENTS.md`
 - [x] pnpm, Next.js, strict TypeScript + `typecheck` script, Prettier
-- [ ] shadcn init
-- [ ] `docker-compose` Postgres; env handling
-- [ ] Prisma setup; two connection strings (`DATABASE_URL` app role, migration URL owner)
-- [ ] Better Auth: username+password (username plugin), organization plugin (custom roles), bearer plugin, UUIDv7 ids
-- [ ] Shared timestamp conventions; schema guard test (every model has `createdAt` + `@updatedAt` unless allowlisted)
-- [ ] `RequestContext` type and member/role guard helpers
-- [ ] Vitest + rollback-per-test Prisma client
+- [x] shadcn init
+- [x] `docker-compose` Postgres; env handling
+- [x] Prisma setup; two connection strings (`DATABASE_URL` app role, migration URL owner)
+- [x] Better Auth: username+password (username plugin), organization plugin (custom roles), bearer plugin, UUIDv7 ids
+- [x] Shared timestamp conventions; schema guard test (every model has `createdAt` + `@updatedAt` unless allowlisted)
+- [x] `RequestContext` type and member/role guard helpers
+- [x] Vitest + rollback-per-test Prisma client
 - [ ] Fishery factories (traits agreed with Daniel first; persistence in `onCreate`)
 - [ ] Route-test setup helpers that build a context (school, users, tokens)
 - **Done when:** a test signs up a user, creates an org, checks a role, and rolls back cleanly.
