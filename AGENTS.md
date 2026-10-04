@@ -77,6 +77,8 @@ is true, and then work stops for human review.
 - Validate in two layers: Zod at the route boundary, then `validate*` functions in the service layer for rules
   that depend on other fields or data. Bad input is `422` with every issue listed; state conflicts are `409`.
   Never let a database error surface as `500` for something the user can fix.
+- HTTP statuses come from the `STATUS` map in `lib/http-status.ts` (`STATUS.unprocessable_content`, Rails-style names),
+  never a bare number, in code and in tests.
 - Audit/log rows are IDs only — never names, notes, or grade contents.
 
 <!-- BEGIN:nextjs-agent-rules -->
