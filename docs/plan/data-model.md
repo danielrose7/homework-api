@@ -29,34 +29,66 @@
 
 ## Tables
 
-| Table                                             | Key columns / notes                                                                                                                                                                                         |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user`, `session`, `account`, `verification`      | Better Auth (email + password; username plugin TBD)                                                                                                                                                         |
-| `organization` (= school), `member`, `invitation` | Better Auth org plugin. Roles: `administrator`, `teacher`, `student` (+ `owner`)                                                                                                                            |
-| `academic_year`                                   | org, name, start/end dates                                                                                                                                                                                  |
-| `term`                                            | org, academic_year, name, start/end; no overlap within a year                                                                                                                                               |
-| `class`                                           | org, term, name, optional grading-scale override                                                                                                                                                            |
-| `class_teacher`                                   | org, class, teacher member (role must be teacher)                                                                                                                                                           |
-| `class_seat`                                      | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at`                                                                                                              |
-| `assignment`                                      | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `max_points`, `due_at`, `max_submissions` (default 1), `published_at`                                                                    |
-| `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded`, `status` (`submitted`/`graded`/`incomplete`), `teacher_notes`, `graded_at`, `graded_by` |
-| `submission_grade_event`                          | append-only grade history — see audit-and-grade-history.md                                                                                                                                                  |
-| `activity_log`                                    | append-only audit log — see audit-and-grade-history.md                                                                                                                                                      |
+| Table                                             | Key columns / notes                                                                                                                                                                                                                                                            |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `user`, `session`, `account`, `verification`      | Better Auth (username + password sign-in; email required but contact-only)                                                                                                                                                                                                     |
+| `organization` (= school), `member`, `invitation` | Better Auth org plugin. Roles: `administrator`, `teacher`, `student` (+ `owner`)                                                                                                                                                                                               |
+| `academic_year`                                   | org, name, start/end dates                                                                                                                                                                                                                                                     |
+| `term`                                            | org, academic_year, name, start/end; no overlap within a year                                                                                                                                                                                                                  |
+| `grading_scale`                                   | org, name, `is_default`, optional `supersedes_id`; one default per school; see Grading scales                                                                                                                                                                                  |
+| `grading_scale_band`                              | org, scale, `label`, `group_label`, `min_percent`, `gpa_points`, `is_passing`, `sort_order`                                                                                                                                                                                    |
+| `class`                                           | org, term, name, optional `grading_scale_id` override                                                                                                                                                                                                                          |
+| `class_teacher`                                   | org, class, teacher member (role must be teacher)                                                                                                                                                                                                                              |
+| `class_seat`                                      | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at`                                                                                                                                                                                 |
+| `assignment`                                      | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `max_points`, optional `grading_scale_id` override, `due_at`, `max_submissions` (default 1), `published_at`                                                                                                 |
+| `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded`, `status` (`submitted`/`graded`/`incomplete`), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group`, `teacher_notes`, `graded_at`, `graded_by` |
+| `submission_grade_event`                          | append-only grade history — see audit-and-grade-history.md                                                                                                                                                                                                                     |
+| `activity_log`                                    | append-only audit log — see audit-and-grade-history.md                                                                                                                                                                                                                         |
 
 `assignment_submission` references `class_seat` (not a bare student) so a submission can only exist for an
 enrolled student. Unique: `(assignment_id, class_seat_id, attempt_number)`.
 
-## Grading rules
+## Grading scales
 
-- **Letter grade is computed** from `points_awarded / max_points` with a pure function; never stored. A scale
-  change then needs no data migration.
-- Default US scale: A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, F < 60. Boundaries are inclusive at the lower edge; decide
-  and test rounding explicitly (compare on the raw ratio, don't round first).
-- Filter states for the API: `A`–`F`, `incomplete` (teacher marked it), `ungraded` (submitted, no grade yet).
+Scales are data, not code, so +/- letters, pass/fail and other schemes need no deploy.
+
+- **`grading_scale`**: belongs to a school; `is_default` marks the school default (partial unique index: one
+  default per school among non-deleted rows). Every new school gets a default "Standard A–F" scale, created in
+  Better Auth's `afterCreateOrganization` hook.
+- **`grading_scale_band`**: `label` (`B+`, `Pass`), `group_label` (`B`; null means the label is its own group),
+  `min_percent` (inclusive lower bound, `numeric(6,2)`), `gpa_points` (nullable), `is_passing`, `sort_order`.
+  Unique `(scale, min_percent)` and `(scale, label)` among non-deleted rows.
+- **Valid scale:** has a band at `min_percent = 0`, no duplicate thresholds, at least one band. The top band is
+  open-ended so extra credit above 100% still resolves.
+- **Resolution order:** `assignment.grading_scale_id` → `class.grading_scale_id` → the school default. This is how
+  a pass/fail assignment lives inside a lettered class.
+- **Lookup** is the highest band whose `min_percent` is at or below the percentage. Compare with exact decimals
+  (`points * 100 >= min_percent * max_points`), not floats and not a pre-rounded percentage. Points and
+  `max_points` are `numeric(7,2)`.
+- Seed examples: "Standard A–F" (90/80/70/60/0), "Plus/minus" (A+ … F), "Pass/Fail" (60/0).
+
+### Stored result, immutable scales
+
+This reverses the earlier "letter grade is never stored". If scales are editable, recomputing would silently
+relabel grades students already saw.
+
+- At grading time the resolved result is **snapshotted** on the submission and the grade event: `grading_scale_id`,
+  `grade_band_id`, `grade_label`, `grade_group` (the latter two denormalized for filtering without a join).
+- Bands and the scale are **immutable once any grade references them**. "Editing" a used scale creates a new
+  scale (`supersedes_id` points at the old one) and the school default moves to it; existing grades keep the old
+  label. Unused scales can be replaced freely (old bands are soft-deleted).
+- Re-labelling existing work is an explicit action ("regrade with scale X") that writes grade events with a reason.
+- Soft-deleting a scale is blocked while it is the default or referenced.
+
+## Grade states and filters
+
+- `grade` filter matches `grade_label` or `grade_group`, case-insensitively: `B` matches B+/B/B- and `B+` matches
+  only B+. A plain A–F scale makes both the same. Other values: `incomplete` (teacher marked it, no band) and
+  `ungraded` (submitted, no grade yet).
 - **"Hasn't submitted"** is derived: active seats × published assignments with no submission row. Exposed as
   `GET …/assignments/{id}/missing`.
-- Editing `assignment.max_points` is blocked once any submission is graded (letters would silently change).
-  Later: an explicit "regrade all" action that writes grade events with a reason.
+- Editing `assignment.max_points` or its scale is blocked once any submission is graded. Later: an explicit
+  "regrade all" action that writes grade events with a reason.
 - Each grade event stores `max_points` at grading time as a snapshot.
 
 ## Submission concurrency (block over-submission)

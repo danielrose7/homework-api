@@ -50,7 +50,8 @@ then trust the stale text over the code.
   the schema RLS-ready. No raw-SQL writes in app code (`updated_at` is set by the Prisma client).
 - Every domain table: UUIDv7 id, `organization_id`, `createdAt`/`updatedAt` (see `docs/plan/data-model.md`).
 - The API never hard-deletes: `DELETE` is a soft delete (`deletedAt`/`deletedBy`/`deletionReason`).
-- Letter grades are computed from points, never stored.
+- Grading scales are data (`grading_scale`/`grading_scale_band`). The resolved grade is snapshotted when graded;
+  scales are immutable once used.
 - Audit/log rows are IDs only — never names, notes, or grade contents.
 
 <!-- BEGIN:nextjs-agent-rules -->

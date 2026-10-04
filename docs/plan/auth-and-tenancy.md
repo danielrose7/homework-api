@@ -5,7 +5,10 @@ without reshaping tables; isolation today is enforced in the service layer and b
 
 ## Authentication (Better Auth, self-hosted)
 
-- Email + password. Username plugin: open question.
+- **Username + password** via the username plugin (`signIn.username`). Better Auth's core `user` table still
+  requires an email, so email is stored as contact info only and `/sign-in/email` is disabled with
+  `disabledPaths`. Usernames are normalized to lowercase and are **globally unique** (the `user` table is global,
+  not per school). Seeded emails are placeholders like `alvarez@riverside.test`.
 - **Bearer plugin** (primary for API docs): sign in → token in the `set-auth-token` response header → send
   `Authorization: Bearer <token>`. Server: `auth.api.getSession({ headers })`.
 - **API key plugin** (integrations): header `x-api-key` by default, configurable via `apiKeyHeaders`.

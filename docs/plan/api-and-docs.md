@@ -20,19 +20,20 @@
 
 ### Routes (draft)
 
-| Method + path                                     | Who           | Purpose                                                                                     |
-| ------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- |
-| `POST /assignments/{id}/submissions`              | student       | Submit (idempotent via `Idempotency-Key`; `409` over limit)                                 |
-| `GET /submissions/me?grade=&assignment=`          | student       | Own submissions; grade ∈ `A–F`, `incomplete`, `ungraded`                                    |
-| `GET /submissions?assignment=&from=&to=&student=` | teacher/admin | Overview                                                                                    |
-| `PUT /submissions/{id}/grade`                     | teacher       | Set current grade (points + `teacher_notes`); `If-Match` → `412` if stale, `428` if missing |
-| `GET /submissions/{id}/history`                   | teacher/admin | Grade events                                                                                |
-| `GET /assignments/{id}/missing`                   | teacher/admin | Enrolled students with no submission                                                        |
-| `GET /activity`                                   | admin         | Audit log                                                                                   |
-| Terms / classes / seats / assignments CRUD        | admin/teacher | Phase 4: `POST` create, `GET` read, `PUT` replace, `PATCH` partial, `DELETE` soft-delete    |
+| Method + path                                                                                                                        | Who           | Purpose                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------- |
+| `POST /assignments/{id}/submissions`                                                                                                 | student       | Submit (idempotent via `Idempotency-Key`; `409` over limit)                                 |
+| `GET /submissions/me?grade=&assignment=`                                                                                             | student       | Own submissions; grade ∈ `A–F`, `incomplete`, `ungraded`                                    |
+| `GET /submissions?assignment=&from=&to=&student=`                                                                                    | teacher/admin | Overview                                                                                    |
+| `PUT /submissions/{id}/grade`                                                                                                        | teacher       | Set current grade (points + `teacher_notes`); `If-Match` → `412` if stale, `428` if missing |
+| `GET /submissions/{id}/history`                                                                                                      | teacher/admin | Grade events                                                                                |
+| `GET /assignments/{id}/missing`                                                                                                      | teacher/admin | Enrolled students with no submission                                                        |
+| `GET /activity`                                                                                                                      | admin         | Audit log                                                                                   |
+| `GET/POST /grading-scales`, `GET/PATCH/DELETE /grading-scales/{id}`, `PUT /grading-scales/{id}/bands`, `PUT /grading-scales/default` | admin         | Scales and bands; edits to a used scale create a new version                                |
+| Terms / classes / seats / assignments CRUD                                                                                           | admin/teacher | Phase 4: `POST` create, `GET` read, `PUT` replace, `PATCH` partial, `DELETE` soft-delete    |
 
-Submission response includes: assignment, student, `submitted_at`, `graded_at`, `letter_grade` (computed),
-`points_awarded`, `teacher_notes`.
+Submission response includes: assignment, student, `submitted_at`, `graded_at`, a `grade` object (`label`, `group`, `points_awarded`,
+`max_points`, `percent`, `scale_id`) that is `null` until graded, plus `status` and `teacher_notes`.
 
 ## Docs (Phase 5)
 
