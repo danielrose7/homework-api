@@ -5,6 +5,7 @@ import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
 import {
   listOwnSubmissions,
+  listSubmissionsOverview,
   submitAssignment,
 } from "@/lib/server/services/submissions";
 import { seedAssignment, seedSubmission } from "@/test/scenarios/class";
@@ -349,5 +350,172 @@ describe("listOwnSubmissions", () => {
       listOwnSubmissions(await seeded.school.teachers[0]!.context(), {}),
     );
     expect(error.status).toBe(STATUS.forbidden);
+  });
+});
+
+describe("listSubmissionsOverview", () => {
+  async function twoClasses() {
+    const first = await seedSubmission({
+      students: 2,
+      teachers: 2,
+      assignment: { title: "Fractions" },
+    });
+    const second = await seedAssignment({
+      school: first.school,
+      assignment: { title: "Poetry" },
+    });
+    await testDb().classTeacher.updateMany({
+      where: {
+        classId: second.klass.id,
+        memberId: first.school.teachers[0]!.member.id,
+      },
+      data: { deletedAt: new Date() },
+    });
+    const poems = await seedSubmission({ seededAssignment: second });
+    return { first, second, poems };
+  }
+
+  it("shows a teacher only the classes they teach and an administrator everything", async () => {
+    const { first } = await twoClasses();
+    await seedSubmission();
+    const titles = async (persona: (typeof first.school)["admin"]) =>
+      (await listSubmissionsOverview(await persona.context(), {})).items
+        .map((s) => s.assignment.title)
+        .sort();
+
+    expect(await titles(first.school.teachers[0]!)).toEqual(["Fractions"]);
+    expect(await titles(first.school.teachers[1]!)).toEqual([
+      "Fractions",
+      "Poetry",
+    ]);
+    expect(await titles(first.school.admin)).toEqual(["Fractions", "Poetry"]);
+  });
+
+  it("is not for students", async () => {
+    const { first } = await twoClasses();
+
+    const error = await failure(
+      listSubmissionsOverview(await first.school.students[0]!.context(), {}),
+    );
+
+    expect(error.status).toBe(STATUS.forbidden);
+  });
+
+  it("filters by student display name or username, ignoring case", async () => {
+    const { first } = await twoClasses();
+    const [maya, sam] = first.school.students;
+    await testDb().user.update({
+      where: { id: maya!.member.user.id },
+      data: { name: "Maya Chen", username: "mchen" },
+    });
+    await testDb().user.update({
+      where: { id: sam!.member.user.id },
+      data: { name: "Sam Ortiz", username: "sortiz" },
+    });
+    const secondSubmission = await seedAssignment({
+      seeded: first,
+      assignment: { title: "Sam's work" },
+    });
+    await testDb().assignmentSubmission.create({
+      data: {
+        organizationId: first.klass.organizationId,
+        assignmentId: secondSubmission.assignment.id,
+        classSeatId: first.seats[1]!.id,
+        attemptNumber: 1,
+      },
+    });
+    const ctx = await first.school.admin.context();
+    const names = async (student: string) =>
+      (await listSubmissionsOverview(ctx, { student })).items.map(
+        (s) => s.student.name,
+      );
+
+    expect(await names("chen")).toEqual(["Maya Chen", "Maya Chen"]);
+    expect(await names("MAYA")).toEqual(["Maya Chen", "Maya Chen"]);
+    expect(await names("sortiz")).toEqual(["Sam Ortiz"]);
+    expect(await names("zz")).toEqual([]);
+  });
+
+  describe("date range", () => {
+    async function submittedAt(...instants: string[]) {
+      const seeded = await seedSubmission();
+      const rows = [seeded.submission.id];
+      for (const [index] of instants.slice(1).entries()) {
+        const next = await seedAssignment({
+          seeded,
+          assignment: { title: `Extra ${index}` },
+        });
+        const made = await seedSubmission({ seededAssignment: next });
+        rows.push(made.submission.id);
+      }
+      for (const [index, id] of rows.entries()) {
+        await testDb().assignmentSubmission.update({
+          where: { id },
+          data: { submittedAt: new Date(instants[index]!) },
+        });
+      }
+      return { seeded, ctx: await seeded.school.admin.context(), rows };
+    }
+
+    it("reads from and to as days in the school's time zone, both inclusive", async () => {
+      const { ctx, rows } = await submittedAt(
+        "2026-03-10T03:30:00Z",
+        "2026-03-10T04:00:00Z",
+        "2026-03-11T03:59:59Z",
+        "2026-03-11T04:00:00Z",
+      );
+      const ids = async (range: { from?: string; to?: string }) =>
+        (await listSubmissionsOverview(ctx, range)).items
+          .map((s) => rows.indexOf(s.id))
+          .sort();
+
+      expect(await ids({ to: "2026-03-09" })).toEqual([0]);
+      expect(await ids({ from: "2026-03-10", to: "2026-03-10" })).toEqual([
+        1, 2,
+      ]);
+      expect(await ids({ from: "2026-03-10" })).toEqual([1, 2, 3]);
+      expect(await ids({ from: "2026-03-09", to: "2026-03-11" })).toEqual([
+        0, 1, 2, 3,
+      ]);
+    });
+
+    it("moves the day boundaries when the school changes its time zone", async () => {
+      const { seeded, ctx } = await submittedAt("2026-03-10T03:30:00Z");
+      await testDb().organizationPreferences.update({
+        where: { organizationId: seeded.school.organization.id },
+        data: { timezone: "Asia/Tokyo" },
+      });
+
+      const items = (range: { from: string; to: string }) =>
+        listSubmissionsOverview(ctx, range).then((page) => page.items);
+
+      expect(
+        await items({ from: "2026-03-10", to: "2026-03-10" }),
+      ).toHaveLength(1);
+      expect(
+        await items({ from: "2026-03-09", to: "2026-03-09" }),
+      ).toHaveLength(0);
+    });
+  });
+
+  it("lists every problem at once", async () => {
+    const { first } = await twoClasses();
+    const ctx = await first.school.admin.context();
+
+    const error = await failure(
+      listSubmissionsOverview(ctx, {
+        from: "2026-02-01",
+        to: "2026-01-01",
+        student: "m",
+        grade: "Z",
+      }),
+    );
+
+    expect(error.status).toBe(STATUS.unprocessable_content);
+    expect(codes(error)).toEqual([
+      "date_range_inverted",
+      "student_too_short",
+      "unknown_grade",
+    ]);
   });
 });

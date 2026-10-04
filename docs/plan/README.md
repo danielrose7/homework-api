@@ -151,8 +151,9 @@ Each phase ends with passing tests. Tick as we go.
 - [x] Student: submit as JSON (text) or `multipart/form-data` (files, using `createBlob` + `attachBlobToSubmission` and
       `submissionEligibility` in one transaction); list own submissions (grade / assignment-name filters)
 - [x] Attachments: list and download routes (downloads are logged reads)
-- [ ] Teacher: overview (assignment, date range, student-name filters); grade route `PUT …/grade` over
-      `gradeSubmission`, returning the grade version as an ETag and honoring `If-Match` (`428`/`412`)
+- [x] Teacher: overview (assignment, date range, student-name filters), scoped to the classes a teacher teaches
+- [ ] Teacher: grade route `PUT …/grade` over `gradeSubmission`, returning the grade version as an ETag and honoring
+      `If-Match` (`428`/`412`)
 - [ ] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
 - [ ] Log authorization denials to the activity log from the route layer (the guards only throw today)
 - [ ] Apply the permission-matrix decision in `lib/server/permissions.ts` and document the final role matrix

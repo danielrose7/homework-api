@@ -5,7 +5,8 @@ import {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
 } from "@/lib/domain/pagination";
-import { issue } from "@/lib/domain/validation";
+import { instantsForDayRange, validateDayRange } from "@/lib/domain/local-days";
+import { issue, type ValidationIssue } from "@/lib/domain/validation";
 import {
   submissionEligibility,
   validateSubmissionContent,
@@ -214,6 +215,9 @@ export async function submitAssignment(
 export interface SubmissionFilters {
   grade?: string;
   assignment?: string;
+  student?: string;
+  submittedFrom?: Date;
+  submittedBefore?: Date;
   pageSize?: number;
   cursor?: string;
 }
@@ -261,12 +265,12 @@ export async function runSubmissionQuery(
   ctx: RequestContext,
   scope: Prisma.AssignmentSubmissionWhereInput,
   filters: SubmissionFilters,
+  earlierIssues: ValidationIssue[] = [],
 ): Promise<SubmissionPage> {
-  const issues = await gradeFilterIssue(
-    ctx.db,
-    ctx.organizationId,
-    filters.grade,
-  );
+  const issues = [
+    ...earlierIssues,
+    ...(await gradeFilterIssue(ctx.db, ctx.organizationId, filters.grade)),
+  ];
   const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
   if (pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
     issues.push(
@@ -297,6 +301,36 @@ export async function runSubmissionQuery(
                 title: { contains: filters.assignment, mode: "insensitive" },
               },
             },
+        filters.student === undefined
+          ? {}
+          : {
+              classSeat: {
+                member: {
+                  user: {
+                    OR: [
+                      {
+                        name: {
+                          contains: filters.student,
+                          mode: "insensitive",
+                        },
+                      },
+                      {
+                        username: {
+                          contains: filters.student,
+                          mode: "insensitive",
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+        filters.submittedFrom === undefined
+          ? {}
+          : { submittedAt: { gte: filters.submittedFrom } },
+        filters.submittedBefore === undefined
+          ? {}
+          : { submittedAt: { lt: filters.submittedBefore } },
         cursor === null
           ? {}
           : {
@@ -334,5 +368,71 @@ export async function listOwnSubmissions(
     ctx,
     { classSeat: { memberId: ctx.memberId } },
     filters,
+  );
+}
+
+export interface OverviewFilters extends Omit<
+  SubmissionFilters,
+  "submittedFrom" | "submittedBefore"
+> {
+  /** Calendar days (`YYYY-MM-DD`) in the school's time zone, both inclusive. */
+  from?: string;
+  to?: string;
+}
+
+export const MIN_STUDENT_FILTER_LENGTH = 2;
+
+export function validateOverviewFilters(
+  filters: OverviewFilters,
+): ValidationIssue[] {
+  const issues = validateDayRange(filters);
+  if (
+    filters.student !== undefined &&
+    filters.student.length < MIN_STUDENT_FILTER_LENGTH
+  ) {
+    issues.push(
+      issue(
+        "student",
+        "student_too_short",
+        `Type at least ${MIN_STUDENT_FILTER_LENGTH} characters of the name`,
+      ),
+    );
+  }
+  return issues;
+}
+
+export async function listSubmissionsOverview(
+  ctx: RequestContext,
+  filters: OverviewFilters,
+): Promise<SubmissionPage> {
+  requirePermission(ctx, { submission: ["readAll"] });
+  const { timezone } = await ctx.db.organizationPreferences.findUniqueOrThrow({
+    where: { organizationId: ctx.organizationId },
+  });
+  const range = instantsForDayRange(filters, timezone);
+
+  return runSubmissionQuery(
+    ctx,
+    ctx.role === "administrator"
+      ? {}
+      : {
+          assignment: {
+            class: {
+              teachers: {
+                some: { memberId: ctx.memberId, deletedAt: null },
+              },
+            },
+          },
+        },
+    {
+      grade: filters.grade,
+      assignment: filters.assignment,
+      student: filters.student,
+      pageSize: filters.pageSize,
+      cursor: filters.cursor,
+      ...(range.from ? { submittedFrom: range.from } : {}),
+      ...(range.before ? { submittedBefore: range.before } : {}),
+    },
+    validateOverviewFilters(filters),
   );
 }

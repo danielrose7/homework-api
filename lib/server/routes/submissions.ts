@@ -7,6 +7,8 @@ import type { RouteHandler } from "@/lib/server/route";
 import { attachmentJson } from "@/lib/server/routes/attachments";
 import {
   listOwnSubmissions,
+  listSubmissionsOverview,
+  MIN_STUDENT_FILTER_LENGTH,
   submitAssignment,
   type SubmissionPage,
   type SubmissionView,
@@ -133,6 +135,29 @@ export const listMine: RouteHandler = async ({ ctx, input }) => {
       await listOwnSubmissions(ctx, {
         grade: query.grade,
         assignment: query.assignment,
+        pageSize: query.page_size,
+        cursor: query.cursor,
+      }),
+    ),
+  );
+};
+
+const overviewQuery = listQuery.extend({
+  student: z.string().trim().min(MIN_STUDENT_FILTER_LENGTH).optional(),
+  from: z.iso.date().optional(),
+  to: z.iso.date().optional(),
+});
+
+export const listAll: RouteHandler = async ({ ctx, input }) => {
+  const query = input.query(overviewQuery);
+  return Response.json(
+    pageJson(
+      await listSubmissionsOverview(ctx, {
+        grade: query.grade,
+        assignment: query.assignment,
+        student: query.student,
+        from: query.from,
+        to: query.to,
         pageSize: query.page_size,
         cursor: query.cursor,
       }),

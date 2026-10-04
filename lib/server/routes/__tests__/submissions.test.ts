@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
-import { listMine, submit } from "@/lib/server/routes/submissions";
+import { listAll, listMine, submit } from "@/lib/server/routes/submissions";
 import { callRoute } from "@/test/http";
 import { seedAssignment, seedSubmission } from "@/test/scenarios/class";
-import { withRollbackDb } from "@/test/rollback-db";
+import { testDb, withRollbackDb } from "@/test/rollback-db";
 
 withRollbackDb();
 
@@ -263,5 +263,69 @@ describe("GET /submissions/me", () => {
     );
 
     expect(response.status).toBe(STATUS.forbidden);
+  });
+});
+
+describe("GET /submissions", () => {
+  it("gives a teacher the overview of their classes with the date filter in school time", async () => {
+    const seeded = await seedSubmission({ assignment: { title: "Fractions" } });
+    await testDb().assignmentSubmission.update({
+      where: { id: seeded.submission.id },
+      data: { submittedAt: new Date("2026-03-10T03:30:00Z") },
+    });
+    const params = { orgSlug: seeded.school.organization.slug };
+    const headers = seeded.school.teachers[0]!.headers;
+    const count = async (query: Record<string, string>) => {
+      const response = await callRoute(listAll, params, { headers, query });
+      expect(response.status).toBe(STATUS.ok);
+      return ((await json(response)).data as unknown[]).length;
+    };
+
+    expect(await count({ to: "2026-03-09" })).toBe(1);
+    expect(await count({ from: "2026-03-10" })).toBe(0);
+    expect(await count({ assignment: "fract", student: "user" })).toBe(1);
+  });
+
+  it("answers 422 listing a bad date, an inverted range and a short name", async () => {
+    const seeded = await seedSubmission();
+
+    const response = await callRoute(
+      listAll,
+      { orgSlug: seeded.school.organization.slug },
+      {
+        headers: seeded.school.admin.headers,
+        query: { from: "03/10/2026", student: "m" },
+      },
+    );
+    const inverted = await callRoute(
+      listAll,
+      { orgSlug: seeded.school.organization.slug },
+      {
+        headers: seeded.school.admin.headers,
+        query: { from: "2026-02-01", to: "2026-01-01" },
+      },
+    );
+
+    expect(response.status).toBe(STATUS.unprocessable_content);
+    expect(
+      (await errorOf(response)).details?.map((d) => d.field).sort(),
+    ).toEqual(["from", "student"]);
+    expect(inverted.status).toBe(STATUS.unprocessable_content);
+    expect((await errorOf(inverted)).details?.[0]?.code).toBe(
+      "date_range_inverted",
+    );
+  });
+
+  it("answers 403 for a student and 401 without a token", async () => {
+    const seeded = await seedSubmission();
+    const params = { orgSlug: seeded.school.organization.slug };
+
+    const student = await callRoute(listAll, params, {
+      headers: seeded.school.students[0]!.headers,
+    });
+    const anonymous = await callRoute(listAll, params);
+
+    expect(student.status).toBe(STATUS.forbidden);
+    expect(anonymous.status).toBe(STATUS.unauthorized);
   });
 });
