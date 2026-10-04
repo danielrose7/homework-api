@@ -54,7 +54,7 @@ function bandRows(bands: readonly BandInput[]) {
   }));
 }
 
-async function addBands(
+export async function addBands(
   db: DbClient,
   organizationId: string,
   gradingScaleId: string,
@@ -213,7 +213,7 @@ export async function getGradingScale(
   return scale;
 }
 
-async function loadScale(
+export async function loadScale(
   db: DbClient,
   organizationId: string,
   scaleId: string,

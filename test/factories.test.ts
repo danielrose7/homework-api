@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createPrismaClient } from "@/lib/server/db";
+import { resolveContext } from "@/lib/server/context";
 import { ApiError } from "@/lib/server/errors";
 
 import { factoryAuth } from "./factories/runtime";
@@ -78,7 +79,6 @@ describe("seedSchool", () => {
 });
 
 async function resolveFor(headers: Headers, slug: string) {
-  const { resolveContext } = await import("@/lib/server/context");
   return resolveContext({
     auth: factoryAuth(),
     db: testDb(),
