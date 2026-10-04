@@ -82,7 +82,7 @@ Recorded as work lands; each is small but worth a look at the gate.
 - `deleted_by_id` is a plain uuid column on every soft-deletable table, not a foreign key (an audit pointer, like
   the activity log). `graded_by_id` is a real composite foreign key to the member. Becoming relations is tracked in Phase 4.
 - Grading requires the `grade: update` permission for everyone (teachers and administrators); `grade: create` is
-  unused. Settling this is tracked in Phase 3.
+  unused. Resolving this is the first "Decide before starting" item in Phase 3.
 - Submission attempt numbers must be allocated as `max(attempt_number) + 1` over all rows including soft-deleted
   ones, while the limit counts only live rows, because the attempt number is unique unconditionally.
 - Top-level reads hide soft-deleted rows; an administrator restore flow needs an unfiltered read path, to be
@@ -123,6 +123,20 @@ Each phase ends with passing tests. Tick as we go.
 
 ### Phase 3 — Required API (the assignment)
 
+**Decide before starting** (recommendation in italics; nothing here is decided until confirmed):
+
+1. Permission matrix: use `grade: create` for a first grade, or remove it. _Remove it; grading is one `update`._
+2. How people get into a school over HTTP: _administrator-provisioned. `POST /orgs/{slug}/members` creates the Better
+   Auth user (username + password) and the member in one call; no email invitations, since there is no sender. Any
+   signed-in user may create a school, as Better Auth allows by default._
+3. JSON field casing: _`snake_case` (`teacher_notes`, `submitted_at`), matching the brief and friendly to Python
+   clients._
+4. Submit request: _JSON `{ "text" }` or multipart with a `text` field and repeated `files`; attachments cannot be
+   added after submitting._
+5. List filters: _`from`/`to` are UTC dates, both inclusive, on `submitted_at`; `assignment` and `student` are
+   case-insensitive "contains" (student matches display name or username, minimum two characters); newest first;
+   page size 25, maximum 100._
+
 - [ ] Route plumbing: mount Better Auth's HTTP handler (`/api/auth/*`) so curl, Python and Node can sign up, sign in
       for a Bearer token and create a school; a small route wrapper that builds the `RequestContext`, parses with Zod and
       turns `ApiError` into the shared JSON error shape
@@ -133,12 +147,22 @@ Each phase ends with passing tests. Tick as we go.
       `gradeSubmission`, returning the grade version as an ETag and honoring `If-Match` (`428`/`412`)
 - [ ] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
 - [ ] Log authorization denials to the activity log from the route layer (the guards only throw today)
-- [ ] Settle the permission matrix as the routes wire it up: grading uses only `grade: update`, so either use
-      `grade: create` for a first grade or remove it from `lib/server/permissions.ts`; document the final role matrix
+- [ ] Apply the permission-matrix decision in `lib/server/permissions.ts` and document the final role matrix
 - [ ] Pagination, per-route integration tests (including `400`/`422` cases)
 - **Done when:** every bullet in the PDF has a passing test.
 
 ### Phase 4 — Depth
+
+**Decide before starting** (recommendation in italics):
+
+1. What "new version" of a used grading scale does to things pointing at the old one: _classes and assignments keep
+   the old scale unless moved explicitly; only the school default moves; old scales stay readable._
+2. Re-adding a dropped student: _reactivate the existing seat and clear `dropped_at`, not a second row._
+3. "Missing submission": _an active seat, a published and live assignment, and no live submission. Due dates are
+   ignored while late work is undecided._
+4. Gradebook shape: _students by assignments, each cell the grade label and points; no averages._
+5. Restore rules: _administrator only, logged, and refused while the parent record is still deleted._
+6. What reset clears: _every table through the owner connection, including auth, so sessions end._
 
 - [ ] Academic years, terms, classes, seats, assignments, gradebook
 - [ ] Grading scale endpoints (create, new version, set default) and scale overrides
@@ -155,16 +179,40 @@ Each phase ends with passing tests. Tick as we go.
 
 ### Phase 5 — Docs
 
+**Decide before starting** (recommendation in italics):
+
+1. How the OpenAPI document is produced: _Zod's built-in JSON Schema output plus a small route registry; spike
+   `zod-to-openapi` first and keep whichever is less code._
+2. Docs renderer: _an off-the-shelf viewer (such as Scalar) over the generated spec, not a custom one._
+3. Keeping examples honest: _one definition per route generates the curl, Python and Node tabs, and a test runs each
+   example against the seeded `sandbox` school._
+4. Source of the project-background copy: _a Markdown file rendered on the page._
+
 - [ ] OpenAPI spec generated from Zod, served at `/api/openapi.json`
 - [ ] Docs page: background, authentication, routes
 - [ ] Tabbed curl / Python / Node examples
 
 ### Phase 6 — Lightweight UI
 
+**Decide before starting** (recommendation in italics):
+
+1. UI authentication: _Bearer token kept in memory and `sessionStorage`, so the UI is a plain client of the public
+   API._
+2. Data fetching: _client components calling the REST API, so the request inspector shows real calls._
+3. Screens in scope: _student (my submissions, submit), teacher (submissions overview, grade), administrator (grading
+   scales)._
+4. Monospace font: _the system monospace stack behind one CSS variable; no web font._
+
 - [ ] Dev-flavored monospace UI (shadcn), `useOptimistic` + `startTransition`, via the REST API
 - [ ] Persona sign-in, API request viewer, reset button (demo-and-seed.md)
 
 ### Phase 7 — Polish
+
+**Decide before starting** (recommendation in italics):
+
+1. CI: _GitHub Actions with a Postgres service container running typecheck, lint, format check, tests and build._
+2. Deployment: _none for the take-home; the README explains how to run it locally in two commands._
+3. README scope: _what it is, run it, run the tests, the design decisions worth discussing, and what was deferred._
 
 - [ ] README: setup, design decisions, how to run tests
 - [ ] CI; final test-suite pass

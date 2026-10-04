@@ -52,6 +52,8 @@ is true, and then work stops for human review.
   checklist items are ticked; the decision log and affected docs are updated; everything is committed.
 - Stop with a short report: the commits made, what to review and where to look, anything that deviated from the
   plan and why, and any new question. Then wait. Do not begin the next phase until told to.
+- Before starting a phase, put that phase's "Decide before starting" list to the user, record the answers in the
+  decision log, and only then begin. Do not treat the recommendations as decisions.
 - If a decision comes up that the plan doesn't settle, ask instead of guessing, and record the answer in the plan.
 - After a context reset, start from `git log`, `docs/plan/README.md` and this file.
 
