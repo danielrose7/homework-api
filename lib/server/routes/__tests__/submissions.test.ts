@@ -97,7 +97,7 @@ describe("POST /assignments/{id}/submissions", () => {
     expect(error.details).toEqual([
       expect.objectContaining({ field: "files.0.file", code: "file_empty" }),
       expect.objectContaining({
-        field: "files.1.contentType",
+        field: "files.1.content_type",
         code: "content_type_not_allowed",
       }),
     ]);

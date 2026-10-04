@@ -59,12 +59,29 @@ export const validationFailed = (details: ErrorDetail[]) =>
     details,
   );
 
+/** Services name fields as their TypeScript properties; the wire format is snake_case, path segment by segment. */
+export function wireField(field: string): string {
+  return field
+    .split(".")
+    .map((segment) =>
+      segment.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase(),
+    )
+    .join(".");
+}
+
 export function errorBody(error: ApiError) {
   return {
     error: {
       code: error.code,
       message: error.message,
-      ...(error.details.length > 0 ? { details: error.details } : {}),
+      ...(error.details.length > 0
+        ? {
+            details: error.details.map((detail) => ({
+              ...detail,
+              field: wireField(detail.field),
+            })),
+          }
+        : {}),
     },
   };
 }
