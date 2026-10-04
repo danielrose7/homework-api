@@ -5,6 +5,11 @@
 - Route Handlers under `/api/v1/orgs/{orgSlug}/…`. Zod schemas are the single source of truth for validation,
   types and OpenAPI (`zod-to-openapi` or similar). Handlers are thin; logic lives in a service layer that the UI
   also calls.
+- Handlers are wrapped in `serve(...)` (`lib/server/serve.ts`), which resolves the `RequestContext` from the bearer
+  token and the `orgSlug` path segment, gives the handler `input.params/query/body(zodSchema)` parsers, and maps
+  `ApiError`, Zod failures (`422`), unparseable JSON (`400`) and anything unexpected (generic `500`, logged with the
+  request id) to the error shape below. Every response carries `x-request-id`. `createServe(deps)` takes the auth and
+  database explicitly so route tests can pass the rolled-back client.
 - Auth: `Authorization: Bearer <token>` (or `x-api-key`). Org from the path; membership + role checked per request.
 - Consistent error shape: `{ error: { code, message, details? } }`; `409` for conflicts, `412`/`428` for failed/missing preconditions, a resource in another school returns `404`
   (existence isn't leaked); `403` only when the caller is a member of the school but lacks the role.

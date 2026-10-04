@@ -143,7 +143,7 @@ Each phase ends with passing tests. Tick as we go.
 - [x] `organization_preferences` (one row per school, IANA `timezone`, default `America/New_York`), created with the
       school and with the default scale; edit the domain migration in place and rebuild with `pnpm db:fresh`
 
-- [ ] Route plumbing: mount Better Auth's HTTP handler (`/api/auth/*`) so curl, Python and Node can sign up, sign in
+- [x] Route plumbing: mount Better Auth's HTTP handler (`/api/auth/*`) so curl, Python and Node can sign up, sign in
       for a Bearer token and create a school; a small route wrapper that builds the `RequestContext`, parses with Zod and
       turns `ApiError` into the shared JSON error shape
 - [ ] Student: submit as JSON (text) or `multipart/form-data` (files, using `createBlob` + `attachBlobToSubmission` and
