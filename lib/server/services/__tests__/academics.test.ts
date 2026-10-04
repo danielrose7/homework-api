@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
 import {
   addClassSeat,
@@ -61,7 +62,7 @@ describe("academic years and terms", () => {
         endsOn: "2027-06-15",
       }),
     );
-    expect(error.status).toBe(403);
+    expect(error.status).toBe(STATUS.forbidden);
   });
 
   it("validate dates and names", async () => {
@@ -74,7 +75,7 @@ describe("academic years and terms", () => {
         endsOn: "2026-09-01",
       }),
     );
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(codes(error)).toEqual(["name_required", "end_not_after_start"]);
   });
 
@@ -132,7 +133,7 @@ describe("academic years and terms", () => {
         endsOn: "2026-12-01",
       }),
     );
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(error.details[0]).toMatchObject({
       field: "academicYearId",
       code: "not_found",
@@ -180,10 +181,10 @@ describe("classes, teachers and seats", () => {
 
     expect(
       (await failure(addClassTeacher(admin, klass.id, teacher.id))).status,
-    ).toBe(409);
+    ).toBe(STATUS.conflict);
     expect(
       (await failure(addClassSeat(admin, klass.id, student.id))).status,
-    ).toBe(409);
+    ).toBe(STATUS.conflict);
 
     const wrongRole = await failure(
       addClassTeacher(admin, klass.id, student.id),
@@ -209,7 +210,7 @@ describe("classes, teachers and seats", () => {
     const foreignClass = await failure(
       addClassSeat(await other.admin.context(), klass.id, foreignStudent.id),
     );
-    expect(foreignClass.status).toBe(404);
+    expect(foreignClass.status).toBe(STATUS.not_found);
   });
 });
 
@@ -247,12 +248,12 @@ describe("assignments", () => {
     const otherTeacher = await school.teachers[1]!.context();
     expect(
       (await failure(createAssignment(otherTeacher, klass.id, base))).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
 
     const student = await school.students[0]!.context();
     expect(
       (await failure(createAssignment(student, klass.id, base))).status,
-    ).toBe(403);
+    ).toBe(STATUS.forbidden);
   });
 
   it("lets an administrator create one in any class", async () => {
@@ -283,7 +284,7 @@ describe("assignments", () => {
         gradingScaleId: "00000000-0000-7000-8000-000000000000",
       }),
     );
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(codes(error)).toEqual([
       "name_required",
       "must_be_positive",

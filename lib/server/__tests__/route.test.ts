@@ -2,6 +2,7 @@ import { toNextJsHandler } from "better-auth/next-js";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
+import { STATUS } from "@/lib/http-status";
 import { createAuth } from "@/lib/server/auth-factory";
 import { conflict } from "@/lib/server/errors";
 import { createServe, type RouteHandler } from "@/lib/server/route";
@@ -53,7 +54,7 @@ describe("Better Auth over HTTP", () => {
       password: "correct-horse-battery",
       username: "alvarez",
     });
-    expect(signUp.status).toBe(200);
+    expect(signUp.status).toBe(STATUS.ok);
 
     const signIn = await post("sign-in/username", {
       username: "alvarez",
@@ -67,12 +68,12 @@ describe("Better Auth over HTTP", () => {
       { name: "Sandbox", slug: "sandbox" },
       { authorization: `Bearer ${token}` },
     );
-    expect(created.status).toBe(200);
+    expect(created.status).toBe(STATUS.ok);
 
     const response = await call(whoAmI(), "sandbox", {
       headers: new Headers({ authorization: `Bearer ${token}` }),
     });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(STATUS.ok);
     expect(await response.json()).toEqual({
       role: "administrator",
       slug: "sandbox",
@@ -88,7 +89,7 @@ describe("serve", () => {
       headers: school.students[0]!.headers,
     });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(STATUS.ok);
     expect(await response.json()).toEqual({
       role: "student",
       slug: school.organization.slug,
@@ -101,7 +102,7 @@ describe("serve", () => {
 
     const response = await call(whoAmI(), school.organization.slug);
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(STATUS.unauthorized);
     expect(await response.json()).toEqual({
       error: { code: "unauthenticated", message: "Authentication required" },
     });
@@ -116,8 +117,8 @@ describe("serve", () => {
     const foreign = await call(whoAmI(), other.organization.slug, { headers });
     const missing = await call(whoAmI(), "no-such-school", { headers });
 
-    expect(foreign.status).toBe(404);
-    expect(missing.status).toBe(404);
+    expect(foreign.status).toBe(STATUS.not_found);
+    expect(missing.status).toBe(STATUS.not_found);
     expect(await foreign.json()).toEqual(await missing.json());
   });
 
@@ -138,7 +139,7 @@ describe("serve", () => {
       headers: school.admin.headers,
     });
 
-    expect(response.status).toBe(422);
+    expect(response.status).toBe(STATUS.unprocessable_content);
     const body: { error: { code: string; details: { field: string }[] } } =
       await response.json();
     expect(body.error.code).toBe("validation_failed");
@@ -172,9 +173,9 @@ describe("serve", () => {
     });
 
     expect(await ok.json()).toEqual({ text: "my essay" });
-    expect(bad.status).toBe(400);
+    expect(bad.status).toBe(STATUS.bad_request);
     expect((await bad.json()).error.code).toBe("invalid_json");
-    expect(wrongShape.status).toBe(422);
+    expect(wrongShape.status).toBe(STATUS.unprocessable_content);
   });
 
   it("turns an ApiError thrown by a handler into its status and code", async () => {
@@ -187,7 +188,7 @@ describe("serve", () => {
       headers: school.students[0]!.headers,
     });
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(STATUS.conflict);
     expect(await response.json()).toEqual({
       error: {
         code: "submission_limit_reached",
@@ -207,7 +208,7 @@ describe("serve", () => {
       headers: school.students[0]!.headers,
     });
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(STATUS.internal_server_error);
     expect(JSON.stringify(await response.json())).not.toContain("secret");
     expect(log).toHaveBeenCalledOnce();
     log.mockRestore();

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/domain/pagination";
+import { STATUS } from "@/lib/http-status";
 import { validationFailed } from "@/lib/server/errors";
 import type { RouteHandler } from "@/lib/server/route";
 import {
@@ -109,7 +110,7 @@ export const submit: RouteHandler = async ({ ctx, request, input }) => {
       })),
     },
     {
-      status: 201,
+      status: STATUS.created,
       headers: {
         location: `/api/v1/orgs/${ctx.organizationSlug}/submissions/${result.submission.id}`,
       },

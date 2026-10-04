@@ -1,3 +1,5 @@
+import { STATUS, type StatusCode } from "@/lib/http-status";
+
 export interface ErrorDetail {
   field: string;
   code: string;
@@ -6,7 +8,7 @@ export interface ErrorDetail {
 
 export class ApiError extends Error {
   constructor(
-    readonly status: number,
+    readonly status: StatusCode,
     readonly code: string,
     message: string,
     readonly details: ErrorDetail[] = [],
@@ -16,32 +18,46 @@ export class ApiError extends Error {
 }
 
 export const unauthenticated = () =>
-  new ApiError(401, "unauthenticated", "Authentication required");
+  new ApiError(
+    STATUS.unauthorized,
+    "unauthenticated",
+    "Authentication required",
+  );
 
 export const forbidden = () =>
-  new ApiError(403, "forbidden", "You do not have permission to do this");
+  new ApiError(
+    STATUS.forbidden,
+    "forbidden",
+    "You do not have permission to do this",
+  );
 
-export const notFound = () => new ApiError(404, "not_found", "Not found");
+export const notFound = () =>
+  new ApiError(STATUS.not_found, "not_found", "Not found");
 
 export const conflict = (code: string, message: string) =>
-  new ApiError(409, code, message);
+  new ApiError(STATUS.conflict, code, message);
 
 export const preconditionFailed = () =>
   new ApiError(
-    412,
+    STATUS.precondition_failed,
     "precondition_failed",
     "This grade changed since you loaded it",
   );
 
 export const preconditionRequired = () =>
   new ApiError(
-    428,
+    STATUS.precondition_required,
     "precondition_required",
     "Send the grade version you last saw in If-Match",
   );
 
 export const validationFailed = (details: ErrorDetail[]) =>
-  new ApiError(422, "validation_failed", "Request validation failed", details);
+  new ApiError(
+    STATUS.unprocessable_content,
+    "validation_failed",
+    "Request validation failed",
+    details,
+  );
 
 export function errorBody(error: ApiError) {
   return {

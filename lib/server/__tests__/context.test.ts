@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { STATUS } from "@/lib/http-status";
 import { createAuth } from "@/lib/server/auth-factory";
 import {
   requirePermission,
@@ -74,7 +75,7 @@ describe("resolveContext", () => {
         headers: new Headers(),
         organizationSlug: "sandbox",
       }),
-      401,
+      STATUS.unauthorized,
     );
   });
 
@@ -87,7 +88,7 @@ describe("resolveContext", () => {
         headers: outsider,
         organizationSlug: "sandbox",
       }),
-      404,
+      STATUS.not_found,
     );
     await expectApiError(
       resolveContext({
@@ -96,7 +97,7 @@ describe("resolveContext", () => {
         headers: outsider,
         organizationSlug: "no-such-school",
       }),
-      404,
+      STATUS.not_found,
     );
   });
 

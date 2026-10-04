@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { STATUS } from "@/lib/http-status";
 import type { Auth } from "@/lib/server/auth-factory";
 import { resolveContext, type RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
@@ -54,7 +55,7 @@ function createInput(request: Request, params: RouteParams): RouteInput {
     body: async (schema) => {
       const raw: unknown = await request.json().catch(() => {
         throw new ApiError(
-          400,
+          STATUS.bad_request,
           "invalid_json",
           "Request body is not valid JSON",
         );
@@ -80,7 +81,7 @@ function errorResponse(error: unknown, requestId: string): Response {
   return respond(
     Response.json(
       { error: { code: "internal_error", message: "Something went wrong" } },
-      { status: 500 },
+      { status: STATUS.internal_server_error },
     ),
     requestId,
   );

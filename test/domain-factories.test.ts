@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { STATUS } from "@/lib/http-status";
 import { requireTeachesClass } from "@/lib/server/services/academics";
 
 import { assignmentFactory, submissionFactory } from "./factories/academics";
@@ -31,7 +32,7 @@ describe("seedClass", () => {
     await expect(
       requireTeachesClass(teacherOfB, a.klass.id),
     ).rejects.toMatchObject({
-      status: 404,
+      status: STATUS.not_found,
     });
   });
 });

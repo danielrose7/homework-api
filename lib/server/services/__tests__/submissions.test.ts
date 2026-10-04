@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { MAX_FILES_PER_RECORD, MAX_UPLOAD_BYTES } from "@/lib/domain/uploads";
+import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
 import {
   listOwnSubmissions,
@@ -73,7 +74,7 @@ describe("submitAssignment", () => {
     const empty = await failure(
       submitAssignment(ctx, seeded.assignment.id, { text: null, files: [] }),
     );
-    expect(empty.status).toBe(422);
+    expect(empty.status).toBe(STATUS.unprocessable_content);
     expect(codes(empty)).toEqual(["content_required"]);
 
     const many = await failure(
@@ -115,7 +116,7 @@ describe("submitAssignment", () => {
       submitAssignment(ctx, seeded.assignment.id, { text: "two", files: [] }),
     );
 
-    expect(error.status).toBe(409);
+    expect(error.status).toBe(STATUS.conflict);
     expect(error.code).toBe("submission_limit_reached");
   });
 
@@ -160,7 +161,7 @@ describe("submitAssignment", () => {
       submitAssignment(ctx, seeded.assignment.id, { text: "x", files: [] }),
     );
 
-    expect(error.status).toBe(404);
+    expect(error.status).toBe(STATUS.not_found);
   });
 
   it("refuses a dropped student with 403", async () => {
@@ -175,7 +176,7 @@ describe("submitAssignment", () => {
       submitAssignment(ctx, seeded.assignment.id, { text: "x", files: [] }),
     );
 
-    expect(error.status).toBe(403);
+    expect(error.status).toBe(STATUS.forbidden);
     expect(error.code).toBe("seat_not_active");
   });
 
@@ -194,7 +195,7 @@ describe("submitAssignment", () => {
       }),
     );
 
-    expect(error.status).toBe(404);
+    expect(error.status).toBe(STATUS.not_found);
   });
 
   it("treats an assignment in another school as absent", async () => {
@@ -206,7 +207,7 @@ describe("submitAssignment", () => {
       submitAssignment(ctx, other.assignment.id, { text: "x", files: [] }),
     );
 
-    expect(error.status).toBe(404);
+    expect(error.status).toBe(STATUS.not_found);
   });
 
   it("is only for students", async () => {
@@ -219,7 +220,7 @@ describe("submitAssignment", () => {
           files: [],
         }),
       );
-      expect(error.status).toBe(403);
+      expect(error.status).toBe(STATUS.forbidden);
     }
   });
 });
@@ -315,7 +316,7 @@ describe("listOwnSubmissions", () => {
       listOwnSubmissions(ctx, { grade: "Z", pageSize: 0, cursor: "nope" }),
     );
 
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(codes(error)).toEqual([
       "unknown_grade",
       "page_size_out_of_range",
@@ -347,6 +348,6 @@ describe("listOwnSubmissions", () => {
     const error = await failure(
       listOwnSubmissions(await seeded.school.teachers[0]!.context(), {}),
     );
-    expect(error.status).toBe(403);
+    expect(error.status).toBe(STATUS.forbidden);
   });
 });

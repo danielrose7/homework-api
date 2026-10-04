@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { PASS_FAIL, PLUS_MINUS, STANDARD_AF } from "@/lib/domain/grading";
+import { STATUS } from "@/lib/http-status";
 import { createAuth } from "@/lib/server/auth-factory";
 import { ApiError } from "@/lib/server/errors";
 import {
@@ -102,7 +103,7 @@ describe("createGradingScale", () => {
           bands: [...STANDARD_AF],
         }),
       );
-      expect(error.status).toBe(403);
+      expect(error.status).toBe(STATUS.forbidden);
     }
   });
 
@@ -132,7 +133,7 @@ describe("createGradingScale", () => {
         ],
       }),
     );
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(error.details.map((d) => d.code).sort()).toEqual(
       [
         "duplicate_label",
@@ -152,7 +153,7 @@ describe("createGradingScale", () => {
         bands: [...STANDARD_AF],
       }),
     );
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(error.details[0]?.code).toBe("name_taken");
   });
 
@@ -197,11 +198,11 @@ describe("setDefaultGradingScale", () => {
     const error = await failure(
       setDefaultGradingScale(await school.admin.context(), otherScale.id),
     );
-    expect(error.status).toBe(404);
+    expect(error.status).toBe(STATUS.not_found);
     const read = await failure(
       getGradingScale(await school.admin.context(), otherScale.id),
     );
-    expect(read.status).toBe(404);
+    expect(read.status).toBe(STATUS.not_found);
   });
 
   it("is limited to administrators", async () => {
@@ -211,7 +212,7 @@ describe("setDefaultGradingScale", () => {
     const error = await failure(
       setDefaultGradingScale(await school.teachers[0]!.context(), scale.id),
     );
-    expect(error.status).toBe(403);
+    expect(error.status).toBe(STATUS.forbidden);
   });
 });
 

@@ -8,6 +8,8 @@ import {
   validateTerm,
 } from "../terms";
 
+import { STATUS } from "@/lib/http-status";
+
 describe("calendar dates", () => {
   it("accepts real dates only", () => {
     expect(isCalendarDate("2026-09-01")).toBe(true);
@@ -114,7 +116,7 @@ describe("submissionEligibility", () => {
       submissionEligibility({ assignment, seat, attemptsSoFar: 1 }),
     ).toEqual({
       ok: false,
-      status: 409,
+      status: STATUS.conflict,
       code: "submission_limit_reached",
     });
   });
@@ -138,7 +140,7 @@ describe("submissionEligibility", () => {
         submissionEligibility({ assignment: hidden, seat, attemptsSoFar: 0 }),
       ).toMatchObject({
         ok: false,
-        status: 404,
+        status: STATUS.not_found,
       });
     }
   });
@@ -152,7 +154,7 @@ describe("submissionEligibility", () => {
         submissionEligibility({ assignment, seat: bad, attemptsSoFar: 0 }),
       ).toMatchObject({
         ok: false,
-        status: 403,
+        status: STATUS.forbidden,
       });
     }
   });

@@ -1,3 +1,5 @@
+import { STATUS } from "@/lib/http-status";
+
 import {
   MAX_FILES_PER_RECORD,
   validateUpload,
@@ -9,7 +11,14 @@ export const MAX_TEXT_LENGTH = 50_000;
 
 export type EligibilityResult =
   | { ok: true; attemptNumber: number }
-  | { ok: false; status: 403 | 404 | 409; code: string };
+  | {
+      ok: false;
+      status:
+        | typeof STATUS.forbidden
+        | typeof STATUS.not_found
+        | typeof STATUS.conflict;
+      code: string;
+    };
 
 export interface EligibilityInput {
   assignment: {
@@ -31,13 +40,17 @@ export function submissionEligibility(
 ): EligibilityResult {
   const { assignment, seat, attemptsSoFar } = input;
   if (assignment.deletedAt !== null || assignment.publishedAt === null) {
-    return { ok: false, status: 404, code: "not_found" };
+    return { ok: false, status: STATUS.not_found, code: "not_found" };
   }
   if (seat.status !== "active" || seat.deletedAt !== null) {
-    return { ok: false, status: 403, code: "seat_not_active" };
+    return { ok: false, status: STATUS.forbidden, code: "seat_not_active" };
   }
   if (attemptsSoFar >= assignment.maxSubmissions) {
-    return { ok: false, status: 409, code: "submission_limit_reached" };
+    return {
+      ok: false,
+      status: STATUS.conflict,
+      code: "submission_limit_reached",
+    };
   }
   return { ok: true, attemptNumber: attemptsSoFar + 1 };
 }

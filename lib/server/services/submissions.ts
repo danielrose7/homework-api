@@ -14,6 +14,7 @@ import {
 } from "@/lib/domain/submission";
 import { knownGradeNames, UNGRADED } from "@/lib/domain/submission-filters";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { STATUS } from "@/lib/http-status";
 import { recordActivity } from "@/lib/server/activity";
 import {
   requirePermission,
@@ -105,15 +106,15 @@ export function toSubmissionView(row: SubmissionRow): SubmissionView {
 
 function eligibilityError(failure: Extract<EligibilityResult, { ok: false }>) {
   switch (failure.status) {
-    case 404:
+    case STATUS.not_found:
       return notFound();
-    case 403:
+    case STATUS.forbidden:
       return new ApiError(
-        403,
+        STATUS.forbidden,
         failure.code,
         "You are not actively enrolled in this class",
       );
-    case 409:
+    case STATUS.conflict:
       return conflict(
         failure.code,
         "You have used all your submissions for this assignment",

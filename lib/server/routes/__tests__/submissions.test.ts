@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { STATUS } from "@/lib/http-status";
 import { listMine, submit } from "@/lib/server/routes/submissions";
 import { callRoute } from "@/test/http";
 import { seedAssignment, seedSubmission } from "@/test/scenarios/class";
@@ -29,7 +30,7 @@ describe("POST /assignments/{id}/submissions", () => {
       { headers: student.headers, json: { text: "  My answer  " } },
     );
 
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(STATUS.created);
     const body = await json(response);
     expect(body).toMatchObject({
       text: "My answer",
@@ -63,7 +64,7 @@ describe("POST /assignments/{id}/submissions", () => {
       { headers: seeded.school.students[0]!.headers, form },
     );
 
-    expect(response.status).toBe(201);
+    expect(response.status).toBe(STATUS.created);
     const body = await json(response);
     expect(body.text).toBe("see attached");
     expect(body.attachments).toMatchObject([
@@ -90,7 +91,7 @@ describe("POST /assignments/{id}/submissions", () => {
       { headers: seeded.school.students[0]!.headers, form },
     );
 
-    expect(response.status).toBe(422);
+    expect(response.status).toBe(STATUS.unprocessable_content);
     const error = await errorOf(response);
     expect(error.details).toEqual([
       expect.objectContaining({ field: "files.0.file", code: "file_empty" }),
@@ -111,11 +112,15 @@ describe("POST /assignments/{id}/submissions", () => {
         { headers, json: body },
       );
 
-    expect((await send(seeded.assignment.id, {})).status).toBe(422);
+    expect((await send(seeded.assignment.id, {})).status).toBe(
+      STATUS.unprocessable_content,
+    );
     expect(
       (await send(seeded.assignment.id, { text: "x", extra: 1 })).status,
-    ).toBe(422);
-    expect((await send("not-a-uuid", { text: "x" })).status).toBe(422);
+    ).toBe(STATUS.unprocessable_content);
+    expect((await send("not-a-uuid", { text: "x" })).status).toBe(
+      STATUS.unprocessable_content,
+    );
   });
 
   it("answers 400 for malformed JSON", async () => {
@@ -130,7 +135,7 @@ describe("POST /assignments/{id}/submissions", () => {
       { headers: seeded.school.students[0]!.headers, raw: "{nope" },
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(STATUS.bad_request);
     expect((await errorOf(response)).code).toBe("invalid_json");
   });
 
@@ -152,9 +157,9 @@ describe("POST /assignments/{id}/submissions", () => {
       json: { text: "no" },
     });
 
-    expect(again.status).toBe(409);
+    expect(again.status).toBe(STATUS.conflict);
     expect((await errorOf(again)).code).toBe("submission_limit_reached");
-    expect(teacher.status).toBe(403);
+    expect(teacher.status).toBe(STATUS.forbidden);
   });
 
   it("answers 401 without a token", async () => {
@@ -169,7 +174,7 @@ describe("POST /assignments/{id}/submissions", () => {
       { json: { text: "x" } },
     );
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(STATUS.unauthorized);
   });
 });
 
@@ -184,7 +189,7 @@ describe("GET /submissions/me", () => {
 
     const response = await callRoute(listMine, params, { headers });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(STATUS.ok);
     const body = await json(response);
     expect(body.next_cursor).toBeNull();
     expect(body.data).toEqual([
@@ -230,7 +235,7 @@ describe("GET /submissions/me", () => {
       query: { page_size: "500", color: "red", grade: "Z" },
     });
 
-    expect(response.status).toBe(422);
+    expect(response.status).toBe(STATUS.unprocessable_content);
     const fields = (await errorOf(response)).details?.map((d) => d.field);
     expect(fields).toEqual(expect.arrayContaining(["page_size", ""]));
   });
@@ -244,7 +249,7 @@ describe("GET /submissions/me", () => {
       { headers: seeded.school.students[0]!.headers, query: { grade: "Z" } },
     );
 
-    expect(response.status).toBe(422);
+    expect(response.status).toBe(STATUS.unprocessable_content);
     expect((await errorOf(response)).details?.[0]?.code).toBe("unknown_grade");
   });
 
@@ -257,6 +262,6 @@ describe("GET /submissions/me", () => {
       { headers: seeded.school.teachers[0]!.headers },
     );
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(STATUS.forbidden);
   });
 });

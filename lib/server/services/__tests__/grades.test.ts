@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
 import { gradeSubmission } from "@/lib/server/services/grades";
 import {
@@ -101,7 +102,7 @@ describe("authorization", () => {
     const student = await seeded.school.students[0]!.context();
     expect(
       (await failure(gradeSubmission(student, id, { points: "100" }))).status,
-    ).toBe(403);
+    ).toBe(STATUS.forbidden);
   });
 
   it("hides the submission from a teacher who does not teach the class", async () => {
@@ -113,7 +114,7 @@ describe("authorization", () => {
     const outsider = await seeded.school.teachers[1]!.context();
     expect(
       (await failure(gradeSubmission(outsider, id, { points: "100" }))).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
   });
 
   it("hides another school's submission", async () => {
@@ -122,7 +123,7 @@ describe("authorization", () => {
     const foreign = await other.school.teachers[0]!.context();
     expect(
       (await failure(gradeSubmission(foreign, id, { points: "100" }))).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
   });
 
   it("treats unknown and deleted submissions as not found", async () => {
@@ -131,7 +132,7 @@ describe("authorization", () => {
     expect(
       (await failure(gradeSubmission(teacher, missing, { points: "1" })))
         .status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
 
     await testDb().assignmentSubmission.update({
       where: { id: seeded.submission.id },
@@ -143,7 +144,7 @@ describe("authorization", () => {
           gradeSubmission(teacher, seeded.submission.id, { points: "1" }),
         )
       ).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
   });
 });
 
@@ -156,7 +157,7 @@ describe("validation", () => {
         teacherNotes: "x".repeat(5001),
       }),
     );
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(codes(error).sort()).toEqual(["exceeds_max_points", "too_long"]);
     expect(await testDb().submissionGradeEvent.count()).toBe(0);
   });
@@ -212,7 +213,7 @@ describe("regrading and versions", () => {
           gradeSubmission(teacher, id, { points: "80", reason: "Rubric" }),
         )
       ).status,
-    ).toBe(428);
+    ).toBe(STATUS.precondition_required);
 
     const noReason = await failure(
       gradeSubmission(teacher, id, {
@@ -249,7 +250,7 @@ describe("regrading and versions", () => {
         expectedGradedAt: first.gradedAt,
       }),
     );
-    expect(stale.status).toBe(412);
+    expect(stale.status).toBe(STATUS.precondition_failed);
 
     const row = await testDb().assignmentSubmission.findUniqueOrThrow({
       where: { id },
@@ -265,7 +266,7 @@ describe("regrading and versions", () => {
         expectedGradedAt: new Date().toISOString(),
       }),
     );
-    expect(error.status).toBe(412);
+    expect(error.status).toBe(STATUS.precondition_failed);
   });
 
   it("keeps the full history in order, one row per action", async () => {

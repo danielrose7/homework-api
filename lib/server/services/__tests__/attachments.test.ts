@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import { MAX_FILES_PER_RECORD, MAX_UPLOAD_BYTES } from "@/lib/domain/uploads";
+import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
 import {
   attachBlobToSubmission,
@@ -86,7 +87,7 @@ describe("createBlob", () => {
         bytes: text("nope"),
       }),
     );
-    expect(mislabelled.status).toBe(422);
+    expect(mislabelled.status).toBe(STATUS.unprocessable_content);
     expect(codes(mislabelled)).toEqual(["content_type_mismatch"]);
 
     const tooBig = await failure(
@@ -132,7 +133,7 @@ describe("attachBlobToSubmission", () => {
           }),
         )
       ).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
 
     const teacher = await seeded.school.teachers[0]!.context();
     expect(
@@ -144,7 +145,7 @@ describe("attachBlobToSubmission", () => {
           }),
         )
       ).status,
-    ).toBe(403);
+    ).toBe(STATUS.forbidden);
 
     const graded = await submitted({ grade: { points: "90" } });
     const gradedStudent = await graded.seeded.school.students[0]!.context();
@@ -155,7 +156,10 @@ describe("attachBlobToSubmission", () => {
         blobId: gradedBlob.id,
       }),
     );
-    expect(error).toMatchObject({ status: 409, code: "submission_graded" });
+    expect(error).toMatchObject({
+      status: STATUS.conflict,
+      code: "submission_graded",
+    });
   });
 
   it("treats a file from another school like a missing one", async () => {
@@ -167,7 +171,7 @@ describe("attachBlobToSubmission", () => {
     const error = await failure(
       attachBlobToSubmission(student, { submissionId: id, blobId: foreign.id }),
     );
-    expect(error.status).toBe(422);
+    expect(error.status).toBe(STATUS.unprocessable_content);
     expect(error.details[0]).toMatchObject({
       field: "blobId",
       code: "not_found",
@@ -190,7 +194,7 @@ describe("attachBlobToSubmission", () => {
           }),
         )
       ).status,
-    ).toBe(409);
+    ).toBe(STATUS.conflict);
 
     for (let i = 2; i <= MAX_FILES_PER_RECORD; i++) {
       const blob = await createBlob(student, file(`f${i}.txt`, `body ${i}`));
@@ -255,13 +259,13 @@ describe("downloadAttachment", () => {
     const classmate = await seeded.school.students[1]!.context();
     expect(
       (await failure(downloadAttachment(classmate, attachmentId))).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
 
     const other = await seedClass();
     const foreignTeacher = await other.school.teachers[0]!.context();
     expect(
       (await failure(downloadAttachment(foreignTeacher, attachmentId))).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
   });
 
   it("does not serve a detached file", async () => {
@@ -272,6 +276,6 @@ describe("downloadAttachment", () => {
     });
     expect(
       (await failure(downloadAttachment(student, attachmentId))).status,
-    ).toBe(404);
+    ).toBe(STATUS.not_found);
   });
 });

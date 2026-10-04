@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { STATUS } from "@/lib/http-status";
 import { createPrismaClient } from "@/lib/server/db";
 import { resolveContext } from "@/lib/server/context";
 import { ApiError } from "@/lib/server/errors";
@@ -74,7 +75,7 @@ describe("seedSchool", () => {
     const outsider = other.students[0]!;
     const error = await resolveFor(outsider.headers, school.organization.slug);
     if (!(error instanceof ApiError)) throw new Error("expected an ApiError");
-    expect(error.status).toBe(404);
+    expect(error.status).toBe(STATUS.not_found);
   });
 });
 
