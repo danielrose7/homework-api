@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { seedSandbox } from "@/app/sandbox/_server/mutations/seed-sandbox";
@@ -83,6 +85,24 @@ async function resolveVariable(
   }
 }
 
+/** Dotted paths of every key, so a documented sample can be compared with a real response. */
+function keyPaths(value: unknown, prefix = ""): string[] {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return [prefix];
+  }
+  return Object.entries(value).flatMap(([key, child]) =>
+    keyPaths(child, prefix ? `${prefix}.${key}` : key),
+  );
+}
+
+function documentedSample(heading: string): unknown {
+  const source = readFileSync("app/docs/_content/resources.md", "utf8");
+  const section = source.split(`## ${heading}\n`)[1] ?? "";
+  const block = /```json\n([\s\S]*?)```/.exec(section)?.[1];
+  if (!block) throw new Error(`no JSON sample under ${heading}`);
+  return JSON.parse(block);
+}
+
 function formFor(example: RouteExample): FormData | undefined {
   if (example.body?.kind !== "multipart") return undefined;
   const form = new FormData();
@@ -126,6 +146,8 @@ describe("docs examples", () => {
       resolved.set(key, id);
       return id;
     }
+
+    const bodies = new Map<string, unknown>();
 
     for (const example of EXAMPLES) {
       const label = `${example.route}: ${example.title}`;
@@ -178,6 +200,7 @@ describe("docs examples", () => {
       expect(status, `${label}: ${JSON.stringify(body)}`).toBe(
         example.expect.status,
       );
+      bodies.set(example.title, body);
       if (example.expect.code) {
         const { error, code } = body as {
           error?: { code: string };
@@ -186,5 +209,20 @@ describe("docs examples", () => {
         expect(error?.code ?? code, label).toBe(example.expect.code);
       }
     }
+
+    expect(bodies.get("Sign in"), "sign-in body").toMatchObject({
+      token: expect.any(String),
+    });
+    expect(
+      keyPaths(documentedSample("Submission")).sort(),
+      "Submission sample",
+    ).toEqual(keyPaths(bodies.get("Read one of my submissions")).sort());
+    const { attachments } = bodies.get("Submit text and a file") as {
+      attachments: { data: unknown[] };
+    };
+    expect(
+      keyPaths(documentedSample("Attachment")).sort(),
+      "Attachment sample",
+    ).toEqual(keyPaths(attachments.data[0]).sort());
   }, 60_000);
 });

@@ -84,6 +84,14 @@ Route handlers are `defineRoute` definitions, so a test runs one through the rea
   student get `404` for school B's ids and for B's slug, except where the role check legitimately answers `403`
   first, and lists never include B's rows.
 
+## Docs tests
+
+- `test/docs-registry.test.ts`: every route file is documented, with the verb, path and path parameters it has.
+- `test/docs-examples.test.ts`: seeds the Sandbox school in the rollback transaction and runs every docs example
+  through the real routes.
+- `lib/docs/__tests__/snippets.test.ts`: runs the generated curl, Node and Python snippets against an echo server.
+- `test/docs-codebase-links.test.ts`: the codebase guide links to paths that exist.
+
 ## Factory traits
 
 Built (see `test/factories/`):
