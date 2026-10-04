@@ -1,6 +1,7 @@
 import { Factory } from "fishery";
 
 import { createDefaultGradingScale } from "@/lib/server/services/grading-scales";
+import { createDefaultOrganizationPreferences } from "@/lib/server/services/organization-preferences";
 
 import { factoryDb } from "./runtime";
 
@@ -29,6 +30,7 @@ export const organizationFactory = OrganizationFactory.define(
       const db = factoryDb();
       const row = await db.organization.create({ data: build });
       await createDefaultGradingScale(db, row.id);
+      await createDefaultOrganizationPreferences(db, row.id);
       return { ...build, id: row.id };
     });
 

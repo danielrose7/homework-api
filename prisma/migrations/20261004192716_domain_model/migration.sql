@@ -17,6 +17,17 @@ CREATE TYPE "actor_type" AS ENUM ('user', 'system', 'api_key');
 CREATE TYPE "activity_outcome" AS ENUM ('success', 'denied', 'error');
 
 -- CreateTable
+CREATE TABLE "organization_preferences" (
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "timezone" TEXT NOT NULL DEFAULT 'America/New_York',
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "organization_preferences_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "academic_year" (
     "id" UUID NOT NULL,
     "organization_id" UUID NOT NULL,
@@ -272,6 +283,12 @@ CREATE TABLE "storage_attachment" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "organization_preferences_organization_id_key" ON "organization_preferences"("organization_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "organization_preferences_organization_id_id_key" ON "organization_preferences"("organization_id", "id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "academic_year_organization_id_id_key" ON "academic_year"("organization_id", "id");
 
 -- CreateIndex
@@ -390,6 +407,9 @@ CREATE UNIQUE INDEX "storage_attachment_organization_id_id_key" ON "storage_atta
 
 -- CreateIndex
 CREATE UNIQUE INDEX "storage_attachment_live" ON "storage_attachment"("organization_id", "record_type", "record_id", "name", "blob_id") WHERE (deleted_at IS NULL);
+
+-- AddForeignKey
+ALTER TABLE "organization_preferences" ADD CONSTRAINT "organization_preferences_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "academic_year" ADD CONSTRAINT "academic_year_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -137,11 +137,11 @@ Each phase ends with passing tests. Tick as we go.
 4. Submit is JSON `{ "text" }` or multipart (`text` plus repeated `files`); no attachments after submitting.
 5. List filters: `from`/`to` are inclusive dates read in the school's time zone (`organization_preferences`), not
    UTC; `assignment` and `student` are case-insensitive "contains" (student matches display name or username,
-   minimum two characters); newest first; page size 25, maximum 100. Awaiting confirmation of the details of the
-   time zone setting (see the first checklist item).
+   minimum two characters); newest first; page size 25, maximum 100. A school's time zone defaults to
+   `America/New_York`.
 
-- [ ] `organization_preferences` (one row per school, IANA `timezone`), created with the school and with the default
-      scale; edit the domain migration in place and rebuild with `pnpm db:fresh`
+- [x] `organization_preferences` (one row per school, IANA `timezone`, default `America/New_York`), created with the
+      school and with the default scale; edit the domain migration in place and rebuild with `pnpm db:fresh`
 
 - [ ] Route plumbing: mount Better Auth's HTTP handler (`/api/auth/*`) so curl, Python and Node can sign up, sign in
       for a Bearer token and create a school; a small route wrapper that builds the `RequestContext`, parses with Zod and

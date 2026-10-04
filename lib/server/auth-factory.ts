@@ -6,6 +6,7 @@ import { v7 as uuidv7 } from "uuid";
 import type { DbClient } from "@/lib/server/db-types";
 import { ac, roles } from "@/lib/server/permissions";
 import { createDefaultGradingScale } from "@/lib/server/services/grading-scales";
+import { createDefaultOrganizationPreferences } from "@/lib/server/services/organization-preferences";
 
 export function createAuth(db: DbClient) {
   return betterAuth({
@@ -25,6 +26,7 @@ export function createAuth(db: DbClient) {
         organizationHooks: {
           afterCreateOrganization: async ({ organization: created }) => {
             await createDefaultGradingScale(db, created.id);
+            await createDefaultOrganizationPreferences(db, created.id);
           },
         },
       }),

@@ -81,19 +81,20 @@ model Verification {
 }
 
 model Organization {
-  id            String         @id @default(uuid(7)) @db.Uuid
+  id            String                   @id @default(uuid(7)) @db.Uuid
   name          String
   slug          String
   logo          String?
   metadata      String?
-  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime                 @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   members       Member[]
   invitations   Invitation[]
   academicYears AcademicYear[]
   gradingScales GradingScale[]
   activityLogs  ActivityLog[]
   storageBlobs  StorageBlob[]
+  preferences   OrganizationPreferences?
 
   @@unique([slug])
   @@map("organization")
@@ -184,6 +185,19 @@ enum ActivityOutcome {
   error
 
   @@map("activity_outcome")
+}
+
+model OrganizationPreferences {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  timezone       String       @default("America/New_York")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId])
+  @@unique([organizationId, id])
+  @@map("organization_preferences")
 }
 
 model AcademicYear {
