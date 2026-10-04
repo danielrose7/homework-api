@@ -5,14 +5,20 @@ import { z } from "zod";
 import { STATUS } from "@/lib/http-status";
 import { createAuth } from "@/lib/server/auth-factory";
 import { conflict } from "@/lib/server/errors";
-import { createServe, type RouteHandler } from "@/lib/server/route";
+import {
+  createServe,
+  defineRoute,
+  type RouteHandler,
+} from "@/lib/server/route";
 import { testDb, withRollbackDb } from "@/test/rollback-db";
 import { seedSchool } from "@/test/scenarios/school";
 
 withRollbackDb();
 
 function serveWith(handler: RouteHandler) {
-  return createServe({ auth: createAuth(testDb()), db: testDb() })(handler);
+  return createServe({ auth: createAuth(testDb()), db: testDb() })(
+    defineRoute({ resource: "system", handle: handler }),
+  );
 }
 
 function call(

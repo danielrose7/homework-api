@@ -1,5 +1,5 @@
 import type { RequestContext } from "@/lib/server/context";
-import { notFound } from "@/lib/server/errors";
+import { deniedAsNotFound, notFound } from "@/lib/server/errors";
 import { requireTeachesClass } from "@/lib/server/services/academics";
 
 /**
@@ -26,7 +26,7 @@ export async function loadAccessibleSubmission(
   if (!seat) throw notFound();
 
   if (ctx.role === "student") {
-    if (seat.memberId !== ctx.memberId) throw notFound();
+    if (seat.memberId !== ctx.memberId) throw deniedAsNotFound();
   } else {
     await requireTeachesClass(ctx, assignment.classId);
   }

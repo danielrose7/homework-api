@@ -10,6 +10,7 @@ import {
 import type { DbClient } from "@/lib/server/db-types";
 import {
   conflict,
+  deniedAsNotFound,
   forbidden,
   notFound,
   validationFailed,
@@ -319,7 +320,7 @@ export async function requireTeachesClass(
       memberId: ctx.memberId,
     },
   });
-  if (!assignment) throw notFound();
+  if (!assignment) throw deniedAsNotFound();
 }
 
 export type AssignmentKind = "homework" | "exam" | "quiz" | "project";

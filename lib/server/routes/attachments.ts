@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
-import type { RouteHandler } from "@/lib/server/route";
+import { defineRoute } from "@/lib/server/route";
 import {
   downloadAttachment,
   listSubmissionAttachments,
@@ -24,11 +24,15 @@ export function attachmentJson(attachment: AttachmentSummary) {
 const listParams = z.object({ submissionId: z.uuid() });
 const downloadParams = listParams.extend({ attachmentId: z.uuid() });
 
-export const list: RouteHandler = async ({ ctx, input }) => {
-  const { submissionId } = input.params(listParams);
-  const attachments = await listSubmissionAttachments(ctx, submissionId);
-  return Response.json({ data: attachments.map(attachmentJson) });
-};
+export const list = defineRoute({
+  resource: "submission",
+  idParam: "submissionId",
+  handle: async ({ ctx, input }) => {
+    const { submissionId } = input.params(listParams);
+    const attachments = await listSubmissionAttachments(ctx, submissionId);
+    return Response.json({ data: attachments.map(attachmentJson) });
+  },
+});
 
 /** An ASCII `filename` for old clients plus the exact name as RFC 5987 `filename*`. */
 function contentDisposition(filename: string): string {
@@ -40,18 +44,22 @@ function contentDisposition(filename: string): string {
   return `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`;
 }
 
-export const download: RouteHandler = async ({ ctx, input }) => {
-  const { submissionId, attachmentId } = input.params(downloadParams);
-  const file = await downloadAttachment(ctx, submissionId, attachmentId);
+export const download = defineRoute({
+  resource: "attachment",
+  idParam: "attachmentId",
+  handle: async ({ ctx, input }) => {
+    const { submissionId, attachmentId } = input.params(downloadParams);
+    const file = await downloadAttachment(ctx, submissionId, attachmentId);
 
-  return new Response(new Uint8Array(file.bytes), {
-    status: STATUS.ok,
-    headers: {
-      "content-type": file.contentType,
-      "content-length": String(file.byteSize),
-      "content-disposition": contentDisposition(file.filename),
-      "x-content-type-options": "nosniff",
-      "cache-control": "private, no-store",
-    },
-  });
-};
+    return new Response(new Uint8Array(file.bytes), {
+      status: STATUS.ok,
+      headers: {
+        "content-type": file.contentType,
+        "content-length": String(file.byteSize),
+        "content-disposition": contentDisposition(file.filename),
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-store",
+      },
+    });
+  },
+});

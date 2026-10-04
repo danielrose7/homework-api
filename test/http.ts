@@ -1,5 +1,5 @@
 import { createAuth } from "@/lib/server/auth-factory";
-import { createServe, type RouteHandler } from "@/lib/server/route";
+import { createServe, type RouteDefinition } from "@/lib/server/route";
 import { testDb } from "@/test/rollback-db";
 
 type RouteParams = Record<string, string>;
@@ -15,7 +15,7 @@ export interface CallOptions {
 
 /** Runs a handler through `serve` with the rolled-back client, as a real request would reach it. */
 export async function callRoute(
-  handler: RouteHandler,
+  route: RouteDefinition,
   params: RouteParams,
   options: CallOptions = {},
 ): Promise<Response> {
@@ -35,7 +35,7 @@ export async function callRoute(
   } else if (options.form) {
     body = options.form;
   }
-  return serve(handler)(
+  return serve(route)(
     new Request(url, {
       method: options.method ?? (body ? "POST" : "GET"),
       headers,

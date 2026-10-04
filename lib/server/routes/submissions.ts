@@ -4,10 +4,10 @@ import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/domain/pagination";
 import { STATUS } from "@/lib/http-status";
 import { gradeEtag } from "@/lib/server/etag";
 import { validationFailed } from "@/lib/server/errors";
-import type { RouteHandler } from "@/lib/server/route";
+import { defineRoute } from "@/lib/server/route";
 import { attachmentJson } from "@/lib/server/routes/attachments";
 import {
-  getSubmission,
+  readSubmission,
   listOwnSubmissions,
   listSubmissionsOverview,
   MIN_STUDENT_FILTER_LENGTH,
@@ -75,48 +75,52 @@ async function toUpload(file: File): Promise<UploadInput> {
   };
 }
 
-export const submit: RouteHandler = async ({ ctx, request, input }) => {
-  const { assignmentId } = input.params(assignmentParams);
-  const isMultipart = (request.headers.get("content-type") ?? "").startsWith(
-    "multipart/form-data",
-  );
+export const submit = defineRoute({
+  resource: "assignment",
+  idParam: "assignmentId",
+  handle: async ({ ctx, request, input }) => {
+    const { assignmentId } = input.params(assignmentParams);
+    const isMultipart = (request.headers.get("content-type") ?? "").startsWith(
+      "multipart/form-data",
+    );
 
-  let text: string | null;
-  let files: UploadInput[] = [];
-  if (isMultipart) {
-    const form = await request.formData().catch(() => {
-      throw validationFailed([
-        {
-          field: "",
-          code: "invalid_multipart",
-          message: "Request body is not valid multipart form data",
-        },
-      ]);
-    });
-    const parsed = input.parse(multipartSubmission, {
-      text: form.get("text") ?? undefined,
-      files: form.getAll("files"),
-    });
-    text = blankToNull(parsed.text);
-    files = await Promise.all(parsed.files.map(toUpload));
-  } else {
-    text = blankToNull((await input.body(jsonSubmission)).text);
-  }
+    let text: string | null;
+    let files: UploadInput[] = [];
+    if (isMultipart) {
+      const form = await request.formData().catch(() => {
+        throw validationFailed([
+          {
+            field: "",
+            code: "invalid_multipart",
+            message: "Request body is not valid multipart form data",
+          },
+        ]);
+      });
+      const parsed = input.parse(multipartSubmission, {
+        text: form.get("text") ?? undefined,
+        files: form.getAll("files"),
+      });
+      text = blankToNull(parsed.text);
+      files = await Promise.all(parsed.files.map(toUpload));
+    } else {
+      text = blankToNull((await input.body(jsonSubmission)).text);
+    }
 
-  const result = await submitAssignment(ctx, assignmentId, { text, files });
-  return Response.json(
-    {
-      ...submissionJson(result.submission),
-      attachments: result.attachments.map(attachmentJson),
-    },
-    {
-      status: STATUS.created,
-      headers: {
-        location: `/api/v1/orgs/${ctx.organizationSlug}/submissions/${result.submission.id}`,
+    const result = await submitAssignment(ctx, assignmentId, { text, files });
+    return Response.json(
+      {
+        ...submissionJson(result.submission),
+        attachments: result.attachments.map(attachmentJson),
       },
-    },
-  );
-};
+      {
+        status: STATUS.created,
+        headers: {
+          location: `/api/v1/orgs/${ctx.organizationSlug}/submissions/${result.submission.id}`,
+        },
+      },
+    );
+  },
+});
 
 const listQuery = z.strictObject({
   grade: z.string().trim().min(1).optional(),
@@ -130,19 +134,22 @@ const listQuery = z.strictObject({
   cursor: z.string().min(1).optional(),
 });
 
-export const listMine: RouteHandler = async ({ ctx, input }) => {
-  const query = input.query(listQuery);
-  return Response.json(
-    pageJson(
-      await listOwnSubmissions(ctx, {
-        grade: query.grade,
-        assignment: query.assignment,
-        pageSize: query.page_size,
-        cursor: query.cursor,
-      }),
-    ),
-  );
-};
+export const listMine = defineRoute({
+  resource: "submission",
+  handle: async ({ ctx, input }) => {
+    const query = input.query(listQuery);
+    return Response.json(
+      pageJson(
+        await listOwnSubmissions(ctx, {
+          grade: query.grade,
+          assignment: query.assignment,
+          pageSize: query.page_size,
+          cursor: query.cursor,
+        }),
+      ),
+    );
+  },
+});
 
 const overviewQuery = listQuery.extend({
   student: z.string().trim().min(MIN_STUDENT_FILTER_LENGTH).optional(),
@@ -150,31 +157,38 @@ const overviewQuery = listQuery.extend({
   to: z.iso.date().optional(),
 });
 
-export const listAll: RouteHandler = async ({ ctx, input }) => {
-  const query = input.query(overviewQuery);
-  return Response.json(
-    pageJson(
-      await listSubmissionsOverview(ctx, {
-        grade: query.grade,
-        assignment: query.assignment,
-        student: query.student,
-        from: query.from,
-        to: query.to,
-        pageSize: query.page_size,
-        cursor: query.cursor,
-      }),
-    ),
-  );
-};
+export const listAll = defineRoute({
+  resource: "submission",
+  handle: async ({ ctx, input }) => {
+    const query = input.query(overviewQuery);
+    return Response.json(
+      pageJson(
+        await listSubmissionsOverview(ctx, {
+          grade: query.grade,
+          assignment: query.assignment,
+          student: query.student,
+          from: query.from,
+          to: query.to,
+          pageSize: query.page_size,
+          cursor: query.cursor,
+        }),
+      ),
+    );
+  },
+});
 
 const submissionParams = z.object({ submissionId: z.uuid() });
 
-export const getOne: RouteHandler = async ({ ctx, input }) => {
-  const { submissionId } = input.params(submissionParams);
-  const submission = await getSubmission(ctx, submissionId);
-  return Response.json(submissionJson(submission), {
-    headers: submission.gradedAt
-      ? { etag: gradeEtag(submission.gradedAt) }
-      : undefined,
-  });
-};
+export const getOne = defineRoute({
+  resource: "submission",
+  idParam: "submissionId",
+  handle: async ({ ctx, input }) => {
+    const { submissionId } = input.params(submissionParams);
+    const submission = await readSubmission(ctx, submissionId);
+    return Response.json(submissionJson(submission), {
+      headers: submission.gradedAt
+        ? { etag: gradeEtag(submission.gradedAt) }
+        : undefined,
+    });
+  },
+});

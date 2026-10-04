@@ -18,7 +18,11 @@ Rules:
 
 - **IDs only.** `metadata` holds ids and changed field _names_ — never names, notes or grade contents.
 - **Log single-record reads** (submission detail, a student's gradebook). Not list endpoints or searches.
-- **Log authorization denials.**
+- **Log authorization denials.** The route wrapper (`serve`) writes the row, outside the business transaction, when an
+  `ApiError` is marked as a denial: every `403` the guards throw, and the refusals that answer `404` on purpose
+  (`deniedAsNotFound`: another student's work, a class the teacher does not teach). Each route declares the resource
+  it concerns, and the row carries only that resource's id and the HTTP method. Not logged: unauthenticated requests,
+  people who are not members of the school, and ids that do not exist; there is no member to attribute them to.
 - Mutations: log row written in the **same transaction** as the change (via `recordActivity(tx, …)`).
   Reads and denials are written outside the business transaction so a rollback can't erase them.
 - **Append-only:** `app_user` has `INSERT`/`SELECT` only; Prisma extension rejects `update`/`delete`. No triggers.

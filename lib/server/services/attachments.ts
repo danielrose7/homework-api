@@ -9,7 +9,12 @@ import {
 import { issue } from "@/lib/domain/validation";
 import { recordActivity } from "@/lib/server/activity";
 import { requirePermission, type RequestContext } from "@/lib/server/context";
-import { conflict, notFound, validationFailed } from "@/lib/server/errors";
+import {
+  conflict,
+  deniedAsNotFound,
+  notFound,
+  validationFailed,
+} from "@/lib/server/errors";
 import { loadAccessibleSubmission } from "@/lib/server/services/access";
 import { DEFAULT_STORAGE_SERVICE, storageService } from "@/lib/server/storage";
 import { transact } from "@/lib/server/transaction";
@@ -87,7 +92,7 @@ export async function attachBlobToSubmission(
     ctx,
     input.submissionId,
   );
-  if (ctx.role !== "student") throw notFound();
+  if (ctx.role !== "student") throw deniedAsNotFound();
   if (submission.gradedAt !== null) {
     throw conflict("submission_graded", "Graded work can no longer change");
   }

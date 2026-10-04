@@ -26,6 +26,7 @@ import type { DbClient } from "@/lib/server/db-types";
 import {
   ApiError,
   conflict,
+  deniedAsNotFound,
   notFound,
   validationFailed,
 } from "@/lib/server/errors";
@@ -115,6 +116,8 @@ function eligibilityError(failure: Extract<EligibilityResult, { ok: false }>) {
         STATUS.forbidden,
         failure.code,
         "You are not actively enrolled in this class",
+        [],
+        true,
       );
     case STATUS.conflict:
       return conflict(
@@ -151,7 +154,7 @@ export async function submitAssignment(
           memberId: ctx.memberId,
         },
       });
-      if (!seat) throw notFound();
+      if (!seat) throw deniedAsNotFound();
 
       const eligibility = submissionEligibility({
         assignment,
@@ -438,11 +441,10 @@ export async function listSubmissionsOverview(
   );
 }
 
-export async function getSubmission(
+async function loadSubmissionView(
   ctx: RequestContext,
   submissionId: string,
 ): Promise<SubmissionView> {
-  requirePermission(ctx, { submission: ["read"] });
   const { submission } = await loadAccessibleSubmission(ctx, submissionId);
 
   return toSubmissionView(
@@ -451,4 +453,27 @@ export async function getSubmission(
       include: submissionInclude,
     }),
   );
+}
+
+/** The caller's view of one submission, without logging a read; for responses that follow a write. */
+export async function getSubmission(
+  ctx: RequestContext,
+  submissionId: string,
+): Promise<SubmissionView> {
+  requirePermission(ctx, { submission: ["read"] });
+  return loadSubmissionView(ctx, submissionId);
+}
+
+/** A single-record read, so it is logged. */
+export async function readSubmission(
+  ctx: RequestContext,
+  submissionId: string,
+): Promise<SubmissionView> {
+  const view = await getSubmission(ctx, submissionId);
+  await recordActivity(ctx.db, ctx, {
+    action: "read",
+    resourceType: "submission",
+    resourceId: submissionId,
+  });
+  return view;
 }

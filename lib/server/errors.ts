@@ -12,6 +12,7 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly details: ErrorDetail[] = [],
+    readonly denial = false,
   ) {
     super(message);
   }
@@ -29,10 +30,16 @@ export const forbidden = () =>
     STATUS.forbidden,
     "forbidden",
     "You do not have permission to do this",
+    [],
+    true,
   );
 
 export const notFound = () =>
   new ApiError(STATUS.not_found, "not_found", "Not found");
+
+/** A refused access that answers 404 so the caller cannot tell it from a missing record, but is still logged as a denial. */
+export const deniedAsNotFound = () =>
+  new ApiError(STATUS.not_found, "not_found", "Not found", [], true);
 
 export const conflict = (code: string, message: string) =>
   new ApiError(STATUS.conflict, code, message);

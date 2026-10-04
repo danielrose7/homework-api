@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
+import { recordActivity, type ResourceType } from "@/lib/server/activity";
 import type { Auth } from "@/lib/server/auth-factory";
 import { resolveContext, type RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
@@ -29,6 +30,16 @@ export type RouteHandler = (args: {
   request: Request;
   input: RouteInput;
 }) => Promise<Response>;
+
+export interface RouteDefinition {
+  /** What the route is about, so a denied request is logged against it. */
+  resource: ResourceType;
+  /** The path parameter holding that resource's id, when the route has one. */
+  idParam?: string;
+  handle: RouteHandler;
+}
+
+export const defineRoute = (definition: RouteDefinition) => definition;
 
 type RouteParams = Record<string, string | string[] | undefined>;
 
@@ -87,32 +98,58 @@ function errorResponse(error: unknown, requestId: string): Response {
   );
 }
 
+async function logDenial(
+  db: DbClient,
+  ctx: RequestContext,
+  request: Request,
+  definition: RouteDefinition,
+  params: RouteParams,
+) {
+  const id = definition.idParam ? params[definition.idParam] : undefined;
+  try {
+    await recordActivity(db, ctx, {
+      action: "denied",
+      resourceType: definition.resource,
+      resourceId: z.uuid().safeParse(id).success ? (id as string) : null,
+      outcome: "denied",
+      metadata: { method: request.method },
+    });
+  } catch (error) {
+    console.error(`[${ctx.requestId}] could not log a denial`, error);
+  }
+}
+
 export function createServe({ auth, db }: RouteDeps) {
-  return function serve(handler: RouteHandler) {
+  return function serve(definition: RouteDefinition) {
     return async (
       request: Request,
       routeContext: { params: Promise<RouteParams> },
     ): Promise<Response> => {
       const requestId = crypto.randomUUID();
+      let ctx: RequestContext | undefined;
+      let params: RouteParams = {};
       try {
-        const params = await routeContext.params;
+        params = await routeContext.params;
         const organizationSlug = params.orgSlug;
         if (typeof organizationSlug !== "string") throw notFound();
 
-        const ctx = await resolveContext({
+        ctx = await resolveContext({
           auth,
           db,
           headers: request.headers,
           organizationSlug,
           requestId,
         });
-        const response = await handler({
+        const response = await definition.handle({
           ctx,
           request,
           input: createInput(request, params),
         });
         return respond(response, requestId);
       } catch (error) {
+        if (error instanceof ApiError && error.denial && ctx) {
+          await logDenial(db, ctx, request, definition, params);
+        }
         return errorResponse(error, requestId);
       }
     };

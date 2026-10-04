@@ -95,6 +95,8 @@ Recorded as work lands; each is small but worth a look at the gate.
   added in Phase 4 with the restore endpoints.
 - The submit service exists (Phase 3). Race protection and the non-transactional race tests are Phase 4; until then a
   concurrent double submit is caught by the unique attempt number and answered `409`.
+- Denials are logged for school members only: `403`s and the deliberate `404` refusals. A request from a
+  non-member, an unauthenticated one, or one for a missing id leaves no `denied` row.
 - No `Idempotency-Key` on submit; the attempt limit already makes a repeated request a `409`.
 
 ## Phases
@@ -155,7 +157,7 @@ Each phase ends with passing tests. Tick as we go.
 - [x] Teacher: grade route `PUT …/grade` over `gradeSubmission`, returning the grade version as an ETag and honoring
       `If-Match` (`428`/`412`)
 - [ ] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
-- [ ] Log authorization denials to the activity log from the route layer (the guards only throw today)
+- [x] Log authorization denials to the activity log from the route layer (the guards only throw today)
 - [x] Apply the permission-matrix decision in `lib/server/permissions.ts` and document the final role matrix
 - [ ] Pagination, per-route integration tests (including `400`/`422` cases)
 - **Done when:** every bullet in the PDF has a passing test.
