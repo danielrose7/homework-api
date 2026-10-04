@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -80,29 +81,36 @@ model Verification {
 }
 
 model Organization {
-  id          String       @id @default(uuid(7)) @db.Uuid
-  name        String
-  slug        String
-  logo        String?
-  metadata    String?
-  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  members     Member[]
-  invitations Invitation[]
+  id            String         @id @default(uuid(7)) @db.Uuid
+  name          String
+  slug          String
+  logo          String?
+  metadata      String?
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  members       Member[]
+  invitations   Invitation[]
+  academicYears AcademicYear[]
+  gradingScales GradingScale[]
+  activityLogs  ActivityLog[]
 
   @@unique([slug])
   @@map("organization")
 }
 
 model Member {
-  id             String       @id @default(uuid(7)) @db.Uuid
-  organizationId String       @map("organization_id") @db.Uuid
-  userId         String       @map("user_id") @db.Uuid
-  role           String       @default("student")
-  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String                 @id @default(uuid(7)) @db.Uuid
+  organizationId    String                 @map("organization_id") @db.Uuid
+  userId            String                 @map("user_id") @db.Uuid
+  role              String                 @default("student")
+  createdAt         DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization      Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classTeachers     ClassTeacher[]
+  classSeats        ClassSeat[]
+  gradedSubmissions AssignmentSubmission[]
+  gradeEvents       SubmissionGradeEvent[]
 
   @@unique([organizationId, userId])
   @@unique([organizationId, id])
@@ -126,4 +134,344 @@ model Invitation {
   @@index([organizationId])
   @@index([email])
   @@map("invitation")
+}
+
+// Domain tables. Conventions: see docs/plan/data-model.md. Composite (organization_id, id) foreign keys keep a
+// child in the same school as its parent. Calendar days use @db.Date; every instant is Timestamptz(3).
+// CHECK constraints are not expressible here; they live in the migration SQL.
+
+enum AssignmentType {
+  homework
+  exam
+  quiz
+  project
+
+  @@map("assignment_type")
+}
+
+enum GradingMode {
+  points
+  band
+
+  @@map("grading_mode")
+}
+
+enum SeatStatus {
+  active
+  dropped
+
+  @@map("seat_status")
+}
+
+enum StorageBackend {
+  database
+  object_store
+
+  @@map("storage_backend")
+}
+
+enum ActorType {
+  user
+  system
+  api_key
+
+  @@map("actor_type")
+}
+
+enum ActivityOutcome {
+  success
+  denied
+  error
+
+  @@map("activity_outcome")
+}
+
+model AcademicYear {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  name           String
+  startsOn       DateTime     @map("starts_on") @db.Date
+  endsOn         DateTime     @map("ends_on") @db.Date
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?      @map("deleted_by") @db.Uuid
+  deletionReason String?      @map("deletion_reason")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  terms          Term[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, name], where: raw("deleted_at IS NULL"), map: "academic_year_name_live")
+  @@map("academic_year")
+}
+
+model Term {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  academicYearId String       @map("academic_year_id") @db.Uuid
+  name           String
+  startsOn       DateTime     @map("starts_on") @db.Date
+  endsOn         DateTime     @map("ends_on") @db.Date
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?      @map("deleted_by") @db.Uuid
+  deletionReason String?      @map("deletion_reason")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  academicYear   AcademicYear @relation(fields: [organizationId, academicYearId], references: [organizationId, id], onDelete: Restrict)
+  classes        Class[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, academicYearId, name], where: raw("deleted_at IS NULL"), map: "term_name_live")
+  @@index([organizationId, academicYearId])
+  @@map("term")
+}
+
+model GradingScale {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  name           String
+  isDefault      Boolean            @default(false) @map("is_default")
+  supersedesId   String?            @map("supersedes_id") @db.Uuid
+  deletedAt      DateTime?          @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?            @map("deleted_by") @db.Uuid
+  deletionReason String?            @map("deletion_reason")
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  supersedes     GradingScale?      @relation("ScaleVersions", fields: [organizationId, supersedesId], references: [organizationId, id], onDelete: Restrict)
+  supersededBy   GradingScale[]     @relation("ScaleVersions")
+  bands          GradingScaleBand[]
+  classes        Class[]
+  assignments    Assignment[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, name], where: raw("deleted_at IS NULL"), map: "grading_scale_name_live")
+  @@unique([organizationId], where: raw("is_default AND deleted_at IS NULL"), map: "grading_scale_one_default")
+  @@map("grading_scale")
+}
+
+model GradingScaleBand {
+  id              String                 @id @default(uuid(7)) @db.Uuid
+  organizationId  String                 @map("organization_id") @db.Uuid
+  gradingScaleId  String                 @map("grading_scale_id") @db.Uuid
+  label           String
+  groupLabel      String?                @map("group_label")
+  minPercent      Decimal?               @map("min_percent") @db.Decimal(6, 2)
+  gpaPoints       Decimal?               @map("gpa_points") @db.Decimal(3, 2)
+  isPassing       Boolean?               @map("is_passing")
+  countsInAverage Boolean                @default(true) @map("counts_in_average")
+  sortOrder       Int                    @map("sort_order")
+  deletedAt       DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  deletedBy       String?                @map("deleted_by") @db.Uuid
+  deletionReason  String?                @map("deletion_reason")
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  scale           GradingScale           @relation(fields: [organizationId, gradingScaleId], references: [organizationId, id], onDelete: Restrict)
+  submissions     AssignmentSubmission[]
+  gradeEvents     SubmissionGradeEvent[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, gradingScaleId, id])
+  @@unique([organizationId, gradingScaleId, label], where: raw("deleted_at IS NULL"), map: "grading_scale_band_label_live")
+  @@unique([organizationId, gradingScaleId, minPercent], where: raw("deleted_at IS NULL"), map: "grading_scale_band_threshold_live")
+  @@map("grading_scale_band")
+}
+
+model Class {
+  id             String         @id @default(uuid(7)) @db.Uuid
+  organizationId String         @map("organization_id") @db.Uuid
+  termId         String         @map("term_id") @db.Uuid
+  name           String
+  gradingScaleId String?        @map("grading_scale_id") @db.Uuid
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?        @map("deleted_by") @db.Uuid
+  deletionReason String?        @map("deletion_reason")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  term           Term           @relation(fields: [organizationId, termId], references: [organizationId, id], onDelete: Restrict)
+  gradingScale   GradingScale?  @relation(fields: [organizationId, gradingScaleId], references: [organizationId, id], onDelete: Restrict)
+  teachers       ClassTeacher[]
+  seats          ClassSeat[]
+  assignments    Assignment[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, termId, name], where: raw("deleted_at IS NULL"), map: "class_name_live")
+  @@index([organizationId, termId])
+  @@map("class")
+}
+
+model ClassTeacher {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  classId        String    @map("class_id") @db.Uuid
+  memberId       String    @map("member_id") @db.Uuid
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?   @map("deleted_by") @db.Uuid
+  deletionReason String?   @map("deletion_reason")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  class          Class     @relation(fields: [organizationId, classId], references: [organizationId, id], onDelete: Restrict)
+  member         Member    @relation(fields: [organizationId, memberId], references: [organizationId, id], onDelete: Restrict)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, classId, memberId], where: raw("deleted_at IS NULL"), map: "class_teacher_live")
+  @@index([organizationId, memberId])
+  @@map("class_teacher")
+}
+
+model ClassSeat {
+  id             String                 @id @default(uuid(7)) @db.Uuid
+  organizationId String                 @map("organization_id") @db.Uuid
+  classId        String                 @map("class_id") @db.Uuid
+  memberId       String                 @map("member_id") @db.Uuid
+  status         SeatStatus             @default(active)
+  droppedAt      DateTime?              @map("dropped_at") @db.Timestamptz(3)
+  deletedAt      DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?                @map("deleted_by") @db.Uuid
+  deletionReason String?                @map("deletion_reason")
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  class          Class                  @relation(fields: [organizationId, classId], references: [organizationId, id], onDelete: Restrict)
+  member         Member                 @relation(fields: [organizationId, memberId], references: [organizationId, id], onDelete: Restrict)
+  submissions    AssignmentSubmission[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, classId, memberId], where: raw("deleted_at IS NULL"), map: "class_seat_live")
+  @@index([organizationId, memberId])
+  @@map("class_seat")
+}
+
+model Assignment {
+  id             String                 @id @default(uuid(7)) @db.Uuid
+  organizationId String                 @map("organization_id") @db.Uuid
+  classId        String                 @map("class_id") @db.Uuid
+  title          String
+  description    String?
+  type           AssignmentType
+  gradingMode    GradingMode            @default(points) @map("grading_mode")
+  maxPoints      Decimal?               @map("max_points") @db.Decimal(7, 2)
+  gradingScaleId String?                @map("grading_scale_id") @db.Uuid
+  scoreCapPoints Decimal?               @map("score_cap_points") @db.Decimal(7, 2)
+  isBonus        Boolean                @default(false) @map("is_bonus")
+  dueAt          DateTime?              @map("due_at") @db.Timestamptz(3)
+  maxSubmissions Int                    @default(1) @map("max_submissions")
+  publishedAt    DateTime?              @map("published_at") @db.Timestamptz(3)
+  deletedAt      DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?                @map("deleted_by") @db.Uuid
+  deletionReason String?                @map("deletion_reason")
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  class          Class                  @relation(fields: [organizationId, classId], references: [organizationId, id], onDelete: Restrict)
+  gradingScale   GradingScale?          @relation(fields: [organizationId, gradingScaleId], references: [organizationId, id], onDelete: Restrict)
+  submissions    AssignmentSubmission[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, classId])
+  @@map("assignment")
+}
+
+model AssignmentSubmission {
+  id             String                 @id @default(uuid(7)) @db.Uuid
+  organizationId String                 @map("organization_id") @db.Uuid
+  assignmentId   String                 @map("assignment_id") @db.Uuid
+  classSeatId    String                 @map("class_seat_id") @db.Uuid
+  attemptNumber  Int                    @map("attempt_number")
+  textContent    String?                @map("text_content")
+  submittedAt    DateTime               @default(now()) @map("submitted_at") @db.Timestamptz(3)
+  pointsAwarded  Decimal?               @map("points_awarded") @db.Decimal(7, 2)
+  gradingScaleId String?                @map("grading_scale_id") @db.Uuid
+  gradeBandId    String?                @map("grade_band_id") @db.Uuid
+  gradeLabel     String?                @map("grade_label")
+  gradeGroup     String?                @map("grade_group")
+  teacherNotes   String?                @map("teacher_notes")
+  gradedAt       DateTime?              @map("graded_at") @db.Timestamptz(3)
+  gradedBy       String?                @map("graded_by") @db.Uuid
+  deletedAt      DateTime?              @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?                @map("deleted_by") @db.Uuid
+  deletionReason String?                @map("deletion_reason")
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  assignment     Assignment             @relation(fields: [organizationId, assignmentId], references: [organizationId, id], onDelete: Restrict)
+  classSeat      ClassSeat              @relation(fields: [organizationId, classSeatId], references: [organizationId, id], onDelete: Restrict)
+  gradeBand      GradingScaleBand?      @relation(fields: [organizationId, gradingScaleId, gradeBandId], references: [organizationId, gradingScaleId, id], onDelete: Restrict)
+  grader         Member?                @relation(fields: [organizationId, gradedBy], references: [organizationId, id], onDelete: Restrict)
+  attachments    SubmissionAttachment[]
+  gradeEvents    SubmissionGradeEvent[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, assignmentId, classSeatId, attemptNumber])
+  @@index([organizationId, assignmentId, submittedAt])
+  @@index([organizationId, classSeatId])
+  @@map("assignment_submission")
+}
+
+model SubmissionAttachment {
+  id               String               @id @default(uuid(7)) @db.Uuid
+  organizationId   String               @map("organization_id") @db.Uuid
+  submissionId     String               @map("submission_id") @db.Uuid
+  originalFilename String               @map("original_filename")
+  contentType      String               @map("content_type")
+  byteSize         Int                  @map("byte_size")
+  sha256           String
+  storageBackend   StorageBackend       @default(database) @map("storage_backend")
+  storageKey       String?              @map("storage_key")
+  content          Bytes?
+  deletedAt        DateTime?            @map("deleted_at") @db.Timestamptz(3)
+  deletedBy        String?              @map("deleted_by") @db.Uuid
+  deletionReason   String?              @map("deletion_reason")
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  submission       AssignmentSubmission @relation(fields: [organizationId, submissionId], references: [organizationId, id], onDelete: Restrict)
+
+  @@unique([organizationId, id])
+  @@index([organizationId, submissionId])
+  @@map("submission_attachment")
+}
+
+model SubmissionGradeEvent {
+  id             String               @id @default(uuid(7)) @db.Uuid
+  organizationId String               @map("organization_id") @db.Uuid
+  submissionId   String               @map("submission_id") @db.Uuid
+  pointsAwarded  Decimal?             @map("points_awarded") @db.Decimal(7, 2)
+  maxPoints      Decimal?             @map("max_points") @db.Decimal(7, 2)
+  gradingScaleId String               @map("grading_scale_id") @db.Uuid
+  gradeBandId    String               @map("grade_band_id") @db.Uuid
+  gradeLabel     String               @map("grade_label")
+  gradeGroup     String?              @map("grade_group")
+  teacherNotes   String?              @map("teacher_notes")
+  reason         String?
+  gradedBy       String               @map("graded_by") @db.Uuid
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  submission     AssignmentSubmission @relation(fields: [organizationId, submissionId], references: [organizationId, id], onDelete: Restrict)
+  gradeBand      GradingScaleBand     @relation(fields: [organizationId, gradingScaleId, gradeBandId], references: [organizationId, gradingScaleId, id], onDelete: Restrict)
+  grader         Member               @relation(fields: [organizationId, gradedBy], references: [organizationId, id], onDelete: Restrict)
+
+  @@unique([organizationId, id])
+  @@index([organizationId, submissionId, createdAt])
+  @@map("submission_grade_event")
+}
+
+model ActivityLog {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  actorType      ActorType       @map("actor_type")
+  actorUserId    String?         @map("actor_user_id") @db.Uuid
+  actorMemberId  String?         @map("actor_member_id") @db.Uuid
+  actorRole      String?         @map("actor_role")
+  apiKeyId       String?         @map("api_key_id") @db.Uuid
+  action         String
+  resourceType   String          @map("resource_type")
+  resourceId     String?         @map("resource_id") @db.Uuid
+  outcome        ActivityOutcome
+  requestId      String?         @map("request_id")
+  ipAddress      String?         @map("ip_address")
+  userAgent      String?         @map("user_agent")
+  metadata       Json?
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, resourceType, resourceId, createdAt])
+  @@index([organizationId, actorUserId, createdAt])
+  @@index([organizationId, createdAt])
+  @@map("activity_log")
 }

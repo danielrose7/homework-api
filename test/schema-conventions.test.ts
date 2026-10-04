@@ -35,6 +35,7 @@ function parseModels(source: string): ParsedModel[] {
 const models = parseModels(schema);
 
 const APPEND_ONLY = new Set(["ActivityLog", "SubmissionGradeEvent"]);
+const BETTER_AUTH_OWNED = new Set(["Member", "Invitation"]);
 const GLOBAL = new Set([
   "User",
   "Session",
@@ -76,14 +77,25 @@ describe("schema conventions", () => {
         expect(updatedAt).toContain('@map("updated_at")');
       });
 
-      it("stores every DateTime as Timestamptz(3)", () => {
+      it("stores every instant as Timestamptz(3) and calendar days as Date", () => {
+        for (const [field, definition] of model.fields) {
+          if (!/^DateTime\??(\s|$)/.test(definition)) continue;
+          const calendarDay = field.endsWith("On");
+          expect(definition, `${name}.${field}`).toContain(
+            calendarDay ? "@db.Date" : "@db.Timestamptz(3)",
+          );
+        }
+      });
+
+      it("keeps foreign keys from cascading", () => {
+        if (GLOBAL.has(name)) return;
         for (const [field, definition] of model.fields) {
           if (
-            /^DateTime\??\s/.test(definition) ||
-            /^DateTime\??$/.test(definition)
+            definition.includes("@relation(") &&
+            definition.includes("onDelete:")
           ) {
             expect(definition, `${name}.${field}`).toContain(
-              "@db.Timestamptz(3)",
+              "onDelete: Restrict",
             );
           }
         }
