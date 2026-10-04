@@ -145,8 +145,6 @@ CREATE TABLE "assignment" (
     "grading_mode" "grading_mode" NOT NULL DEFAULT 'points',
     "max_points" DECIMAL(7,2),
     "grading_scale_id" UUID,
-    "score_cap_points" DECIMAL(7,2),
-    "is_bonus" BOOLEAN NOT NULL DEFAULT false,
     "due_at" TIMESTAMPTZ(3),
     "max_submissions" INTEGER NOT NULL DEFAULT 1,
     "published_at" TIMESTAMPTZ(3),

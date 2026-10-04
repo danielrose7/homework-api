@@ -5,19 +5,18 @@ Deferred on purpose. Each entry says what it is, what we already prepared, and w
 
 ## Extra credit
 
-**Blocked for now.** Common patterns in other gradebooks: Canvas lets a score exceed the points possible or uses
-a zero-point assignment; Schoology and Blackboard use zero-point items; Brightspace has opt-in "Can exceed" and
-explicit bonus items, plus category and overall caps.
+Out of scope; nothing in the schema or API is reserved for it. Common patterns in other gradebooks: Canvas lets a
+score exceed the points possible or uses a zero-point assignment; Schoology and Blackboard use zero-point items;
+Brightspace has an opt-in "Can exceed" setting and explicit bonus items, plus category and overall caps.
 
-- **Prepared (no migration):** `assignment.score_cap_points` (null = `max_points`) and `assignment.is_bonus`
-  (default false), both rejected by the API today; no DB check on `points_awarded <= max_points`; open-ended top
-  band so scores above 100% resolve; `max_points` snapshotted in every grade event.
-- **Enabling "score above max":** allow `points` up to `score_cap_points` in the grade validator and accept the
-  field on assignment create/update. No schema change.
-- **Enabling bonus items:** needs class averages (below). A bonus assignment adds to the numerator only and skips
-  its own letter grade. Avoid the zero-point-assignment trick, which divides by zero.
-- **Class or overall caps** (`class.max_final_percent` or similar) arrive with averages, because averages need new
-  tables anyway.
+- **Today:** grading rejects points above `max_points` (a validator rule, not a database constraint), the top grade
+  band is open-ended, and every grade event snapshots `max_points`, so adding extra credit later would not rewrite
+  history.
+- **Score above the maximum on a normal assignment:** add a nullable per-assignment cap column (null meaning
+  `max_points`) in a new migration, then let the grade validator allow points up to it.
+- **Bonus items:** needs class averages (below): a bonus assignment adds to the numerator only and skips its own
+  letter grade. Avoid the zero-point-assignment trick, which divides by zero.
+- **Class or overall caps** arrive with averages, because averages need new tables anyway.
 
 ## Late work
 

@@ -307,23 +307,4 @@ describe("assignments", () => {
     expect(run({ maxSubmissions: 1.5 })).toEqual(["invalid_max_submissions"]);
     expect(run({ maxSubmissions: 20 })).toEqual([]);
   });
-
-  it("rejects the reserved extra-credit fields", () => {
-    const issues = validateAssignmentInput({
-      ...base,
-      scoreCapPoints: "60",
-      isBonus: true,
-    });
-    expect(issues.map((i) => i.code)).toEqual([
-      "reserved_field",
-      "reserved_field",
-    ]);
-    expect(
-      validateAssignmentInput({
-        ...base,
-        scoreCapPoints: null,
-        isBonus: false,
-      }),
-    ).toEqual([]);
-  });
 });

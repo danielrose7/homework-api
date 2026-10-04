@@ -80,7 +80,7 @@ describe("lookupBand on the standard A-F scale", () => {
     expect(labelFor(standard, "8.99", 10)).toBe("B");
   });
 
-  it("resolves extra credit above the maximum into the top band", () => {
+  it("resolves a score above the maximum into the top band", () => {
     expect(labelFor(standard, 105, 100)).toBe("A");
   });
 

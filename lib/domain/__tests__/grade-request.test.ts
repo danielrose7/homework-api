@@ -34,7 +34,7 @@ describe("points-mode assignments", () => {
     }
   });
 
-  it("reject points above the maximum (extra credit is blocked)", () => {
+  it("reject points above the maximum", () => {
     expect(
       codes(validateGradeRequest({ points: "50.01" }, pointsContext())),
     ).toEqual(["exceeds_max_points"]);

@@ -334,8 +334,6 @@ export interface AssignmentInput {
   dueAt?: Date | null;
   maxSubmissions?: number;
   publish?: boolean;
-  scoreCapPoints?: unknown;
-  isBonus?: unknown;
 }
 
 export function validateAssignmentInput(
@@ -343,21 +341,6 @@ export function validateAssignmentInput(
 ): ValidationIssue[] {
   const issues = requireName(input.title, "title", 200);
   const mode = input.gradingMode ?? "points";
-
-  if (input.scoreCapPoints !== undefined && input.scoreCapPoints !== null) {
-    issues.push(
-      issue(
-        "scoreCapPoints",
-        "reserved_field",
-        "This field is not available yet",
-      ),
-    );
-  }
-  if (input.isBonus !== undefined && input.isBonus !== false) {
-    issues.push(
-      issue("isBonus", "reserved_field", "This field is not available yet"),
-    );
-  }
 
   const rawMax = input.maxPoints ?? null;
   const hasMax = rawMax !== null;

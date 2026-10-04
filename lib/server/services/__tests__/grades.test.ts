@@ -273,7 +273,7 @@ describe("regrading and versions", () => {
     const a = await gradeSubmission(teacher, id, { points: "55" });
     const b = await gradeSubmission(teacher, id, {
       points: "65",
-      reason: "Extra credit task found",
+      reason: "Rubric corrected",
       expectedGradedAt: a.gradedAt,
     });
     await gradeSubmission(teacher, id, {
@@ -289,7 +289,7 @@ describe("regrading and versions", () => {
     expect(events.map((e) => e.gradeLabel)).toEqual(["F", "D", "A"]);
     expect(events.map((e) => e.reason)).toEqual([
       null,
-      "Extra credit task found",
+      "Rubric corrected",
       "Parent meeting",
     ]);
   });

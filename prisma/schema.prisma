@@ -351,8 +351,6 @@ model Assignment {
   gradingMode    GradingMode            @default(points) @map("grading_mode")
   maxPoints      Decimal?               @map("max_points") @db.Decimal(7, 2)
   gradingScaleId String?                @map("grading_scale_id") @db.Uuid
-  scoreCapPoints Decimal?               @map("score_cap_points") @db.Decimal(7, 2)
-  isBonus        Boolean                @default(false) @map("is_bonus")
   dueAt          DateTime?              @map("due_at") @db.Timestamptz(3)
   maxSubmissions Int                    @default(1) @map("max_submissions")
   publishedAt    DateTime?              @map("published_at") @db.Timestamptz(3)

@@ -40,7 +40,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Retention is indefinite; no purge feature                                                                                                                            | Decided | FERPA-supportive; purge and retention windows are future decisions                                                           |
 | "Incomplete" is a manual-only, neutral grade band (not a status, not null); `ungraded` = no band                                                                     | Decided | Matches the brief's grade list; no `status` column                                                                           |
 | Two-layer validation: Zod at the boundary, `validate*` functions for meaning; both return `422` with all field issues                                                | Decided | `409` is for state conflicts; see api-and-docs.md                                                                            |
-| Extra credit is blocked; `assignment.score_cap_points` and `is_bonus` are reserved so it can be enabled without a migration                                          | Decided | See future-ideas.md                                                                                                          |
+| Extra credit is out of scope; nothing is reserved for it in the schema                                                                                               | Decided | Deferred work: see future-ideas.md                                                                                           |
 | Submission files use an Active Storage-style model: `storage_blob`, `storage_blob_data`, `storage_attachment`; bytes in Postgres for now, selected by `service_name` | Decided | Presigned R2/S3 later without a schema change; see data-model.md                                                             |
 | Resubmission blocked by default (`max_submissions = 1`)                                                                                                              | Decided |                                                                                                                              |
 | Cross-school requests return `404`; `403` only for in-school role failures                                                                                           | Decided |                                                                                                                              |
@@ -157,5 +157,5 @@ Each phase ends with passing tests. Tick as we go.
 Deliberately deferred; none block the required API. Details, options and research live in
 [future-ideas.md](future-ideas.md).
 
-- Extra credit (columns reserved, feature blocked), late work, retention and purge, graded work with no upload,
+- Extra credit, late work, retention and purge, graded work with no upload,
   excused work, an Incomplete deadline, class averages and weighting, RLS, tamper-evident audit log.
