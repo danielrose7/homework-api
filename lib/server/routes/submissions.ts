@@ -2,10 +2,12 @@ import { z } from "zod";
 
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/domain/pagination";
 import { STATUS } from "@/lib/http-status";
+import { gradeEtag } from "@/lib/server/etag";
 import { validationFailed } from "@/lib/server/errors";
 import type { RouteHandler } from "@/lib/server/route";
 import { attachmentJson } from "@/lib/server/routes/attachments";
 import {
+  getSubmission,
   listOwnSubmissions,
   listSubmissionsOverview,
   MIN_STUDENT_FILTER_LENGTH,
@@ -163,4 +165,16 @@ export const listAll: RouteHandler = async ({ ctx, input }) => {
       }),
     ),
   );
+};
+
+const submissionParams = z.object({ submissionId: z.uuid() });
+
+export const getOne: RouteHandler = async ({ ctx, input }) => {
+  const { submissionId } = input.params(submissionParams);
+  const submission = await getSubmission(ctx, submissionId);
+  return Response.json(submissionJson(submission), {
+    headers: submission.gradedAt
+      ? { etag: gradeEtag(submission.gradedAt) }
+      : undefined,
+  });
 };

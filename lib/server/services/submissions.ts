@@ -29,6 +29,7 @@ import {
   notFound,
   validationFailed,
 } from "@/lib/server/errors";
+import { loadAccessibleSubmission } from "@/lib/server/services/access";
 import {
   attachBlobToSubmission,
   createBlob,
@@ -434,5 +435,20 @@ export async function listSubmissionsOverview(
       ...(range.before ? { submittedBefore: range.before } : {}),
     },
     validateOverviewFilters(filters),
+  );
+}
+
+export async function getSubmission(
+  ctx: RequestContext,
+  submissionId: string,
+): Promise<SubmissionView> {
+  requirePermission(ctx, { submission: ["read"] });
+  const { submission } = await loadAccessibleSubmission(ctx, submissionId);
+
+  return toSubmissionView(
+    await ctx.db.assignmentSubmission.findFirstOrThrow({
+      where: { id: submission.id, organizationId: ctx.organizationId },
+      include: submissionInclude,
+    }),
   );
 }
