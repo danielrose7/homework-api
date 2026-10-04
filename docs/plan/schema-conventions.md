@@ -61,8 +61,12 @@ grading-mode and points consistency, grade columns all set or all empty, non-neg
 
 ## Migrations
 
-- Until the first release, **edit the existing migrations in place** and rebuild with `pnpm db:fresh` (it recreates
-  the Docker volume so roles and grants are reapplied). Do not add rename migrations.
+- **Keep the history readable start to end.** Until the first release, change the migration that introduced a table
+  or column rather than adding a follow-up that renames, drops or reworks it, so no table is created in one
+  migration and dropped in the next. If a change touches the generated SQL, regenerate that migration with
+  `prisma migrate dev --create-only` against a database built from the earlier ones, then re-append the hand-written
+  constraints and grants. Rebuild with `pnpm db:fresh` (it recreates the Docker volume so roles and grants are
+  reapplied).
 - Check for drift with `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`.
 - Better Auth's tables are hand-maintained. Re-running its generator overwrites these conventions, so generate to a
   scratch file and diff instead.

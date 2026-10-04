@@ -8,7 +8,7 @@ CREATE TYPE "grading_mode" AS ENUM ('points', 'band');
 CREATE TYPE "seat_status" AS ENUM ('active', 'dropped');
 
 -- CreateEnum
-CREATE TYPE "storage_backend" AS ENUM ('database', 'object_store');
+CREATE TYPE "storage_record_type" AS ENUM ('assignment_submission');
 
 -- CreateEnum
 CREATE TYPE "actor_type" AS ENUM ('user', 'system', 'api_key');
@@ -186,27 +186,6 @@ CREATE TABLE "assignment_submission" (
 );
 
 -- CreateTable
-CREATE TABLE "submission_attachment" (
-    "id" UUID NOT NULL,
-    "organization_id" UUID NOT NULL,
-    "submission_id" UUID NOT NULL,
-    "original_filename" TEXT NOT NULL,
-    "content_type" TEXT NOT NULL,
-    "byte_size" INTEGER NOT NULL,
-    "sha256" TEXT NOT NULL,
-    "storage_backend" "storage_backend" NOT NULL DEFAULT 'database',
-    "storage_key" TEXT,
-    "content" BYTEA,
-    "deleted_at" TIMESTAMPTZ(3),
-    "deleted_by_id" UUID,
-    "deletion_reason" TEXT,
-    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "submission_attachment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "submission_grade_event" (
     "id" UUID NOT NULL,
     "organization_id" UUID NOT NULL,
@@ -245,6 +224,53 @@ CREATE TABLE "activity_log" (
     "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "activity_log_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "storage_blob" (
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "key" TEXT NOT NULL,
+    "filename" TEXT NOT NULL,
+    "content_type" TEXT NOT NULL,
+    "byte_size" INTEGER NOT NULL,
+    "checksum" TEXT NOT NULL,
+    "service_name" TEXT NOT NULL,
+    "metadata" JSONB NOT NULL DEFAULT '{}',
+    "uploaded_by_id" UUID,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "storage_blob_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "storage_blob_data" (
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "blob_id" UUID NOT NULL,
+    "content" BYTEA NOT NULL,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "storage_blob_data_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "storage_attachment" (
+    "id" UUID NOT NULL,
+    "organization_id" UUID NOT NULL,
+    "blob_id" UUID NOT NULL,
+    "record_type" "storage_record_type" NOT NULL,
+    "record_id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "deleted_at" TIMESTAMPTZ(3),
+    "deleted_by_id" UUID,
+    "deletion_reason" TEXT,
+    "created_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "storage_attachment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -329,12 +355,6 @@ CREATE UNIQUE INDEX "assignment_submission_organization_id_id_key" ON "assignmen
 CREATE UNIQUE INDEX "assignment_submission_organization_id_assignment_id_class_s_key" ON "assignment_submission"("organization_id", "assignment_id", "class_seat_id", "attempt_number");
 
 -- CreateIndex
-CREATE INDEX "submission_attachment_organization_id_submission_id_idx" ON "submission_attachment"("organization_id", "submission_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "submission_attachment_organization_id_id_key" ON "submission_attachment"("organization_id", "id");
-
--- CreateIndex
 CREATE INDEX "submission_grade_event_organization_id_submission_id_create_idx" ON "submission_grade_event"("organization_id", "submission_id", "created_at");
 
 -- CreateIndex
@@ -348,6 +368,30 @@ CREATE INDEX "activity_log_organization_id_actor_user_id_created_at_idx" ON "act
 
 -- CreateIndex
 CREATE INDEX "activity_log_organization_id_created_at_idx" ON "activity_log"("organization_id", "created_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "storage_blob_organization_id_id_key" ON "storage_blob"("organization_id", "id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "storage_blob_organization_id_key_key" ON "storage_blob"("organization_id", "key");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "storage_blob_data_organization_id_id_key" ON "storage_blob_data"("organization_id", "id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "storage_blob_data_organization_id_blob_id_key" ON "storage_blob_data"("organization_id", "blob_id");
+
+-- CreateIndex
+CREATE INDEX "storage_attachment_organization_id_record_type_record_id_idx" ON "storage_attachment"("organization_id", "record_type", "record_id");
+
+-- CreateIndex
+CREATE INDEX "storage_attachment_organization_id_blob_id_idx" ON "storage_attachment"("organization_id", "blob_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "storage_attachment_organization_id_id_key" ON "storage_attachment"("organization_id", "id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "storage_attachment_live" ON "storage_attachment"("organization_id", "record_type", "record_id", "name", "blob_id") WHERE (deleted_at IS NULL);
 
 -- AddForeignKey
 ALTER TABLE "academic_year" ADD CONSTRAINT "academic_year_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -401,9 +445,6 @@ ALTER TABLE "assignment_submission" ADD CONSTRAINT "assignment_submission_organi
 ALTER TABLE "assignment_submission" ADD CONSTRAINT "assignment_submission_organization_id_graded_by_id_fkey" FOREIGN KEY ("organization_id", "graded_by_id") REFERENCES "member"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "submission_attachment" ADD CONSTRAINT "submission_attachment_organization_id_submission_id_fkey" FOREIGN KEY ("organization_id", "submission_id") REFERENCES "assignment_submission"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "submission_grade_event" ADD CONSTRAINT "submission_grade_event_organization_id_submission_id_fkey" FOREIGN KEY ("organization_id", "submission_id") REFERENCES "assignment_submission"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -415,22 +456,27 @@ ALTER TABLE "submission_grade_event" ADD CONSTRAINT "submission_grade_event_orga
 -- AddForeignKey
 ALTER TABLE "activity_log" ADD CONSTRAINT "activity_log_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+-- AddForeignKey
+ALTER TABLE "storage_blob" ADD CONSTRAINT "storage_blob_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "storage_blob_data" ADD CONSTRAINT "storage_blob_data_organization_id_blob_id_fkey" FOREIGN KEY ("organization_id", "blob_id") REFERENCES "storage_blob"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "storage_attachment" ADD CONSTRAINT "storage_attachment_organization_id_blob_id_fkey" FOREIGN KEY ("organization_id", "blob_id") REFERENCES "storage_blob"("organization_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 -- Check constraints (not expressible in the Prisma schema)
 
 ALTER TABLE "academic_year" ADD CONSTRAINT "academic_year_dates" CHECK ("ends_on" > "starts_on");
 ALTER TABLE "term" ADD CONSTRAINT "term_dates" CHECK ("ends_on" > "starts_on");
-
 ALTER TABLE "grading_scale_band" ADD CONSTRAINT "grading_scale_band_percent" CHECK ("min_percent" IS NULL OR "min_percent" >= 0);
 ALTER TABLE "grading_scale_band" ADD CONSTRAINT "grading_scale_band_gpa" CHECK ("gpa_points" IS NULL OR "gpa_points" BETWEEN 0 AND 5);
-
 ALTER TABLE "class_seat" ADD CONSTRAINT "class_seat_dropped" CHECK (("status" = 'dropped') = ("dropped_at" IS NOT NULL));
-
 ALTER TABLE "assignment" ADD CONSTRAINT "assignment_grading_mode" CHECK (
   ("grading_mode" = 'points' AND "max_points" IS NOT NULL AND "max_points" > 0)
   OR ("grading_mode" = 'band' AND "max_points" IS NULL)
 );
 ALTER TABLE "assignment" ADD CONSTRAINT "assignment_max_submissions" CHECK ("max_submissions" >= 1);
-
 ALTER TABLE "assignment_submission" ADD CONSTRAINT "submission_attempt" CHECK ("attempt_number" >= 1);
 ALTER TABLE "assignment_submission" ADD CONSTRAINT "submission_grade_together" CHECK (
   ("grade_band_id" IS NULL) = ("grading_scale_id" IS NULL)
@@ -441,20 +487,18 @@ ALTER TABLE "assignment_submission" ADD CONSTRAINT "submission_grade_together" C
 ALTER TABLE "assignment_submission" ADD CONSTRAINT "submission_points" CHECK (
   "points_awarded" IS NULL OR ("grade_band_id" IS NOT NULL AND "points_awarded" >= 0)
 );
-
-ALTER TABLE "submission_attachment" ADD CONSTRAINT "attachment_size" CHECK ("byte_size" >= 0);
-ALTER TABLE "submission_attachment" ADD CONSTRAINT "attachment_storage" CHECK (
-  ("storage_backend" = 'database' AND "content" IS NOT NULL AND "storage_key" IS NULL)
-  OR ("storage_backend" = 'object_store' AND "content" IS NULL AND "storage_key" IS NOT NULL)
-);
-
 ALTER TABLE "submission_grade_event" ADD CONSTRAINT "grade_event_points" CHECK (
   ("points_awarded" IS NULL OR "points_awarded" >= 0)
   AND ("max_points" IS NULL OR "max_points" > 0)
   AND ("points_awarded" IS NULL OR "max_points" IS NOT NULL)
 );
+ALTER TABLE "storage_blob" ADD CONSTRAINT "storage_blob_size" CHECK ("byte_size" >= 0);
+ALTER TABLE "storage_blob" ADD CONSTRAINT "storage_blob_names" CHECK ("filename" <> '' AND "service_name" <> '' AND "key" <> '');
+ALTER TABLE "storage_attachment" ADD CONSTRAINT "storage_attachment_name" CHECK ("name" <> '');
 
--- Append-only history: the runtime role can read and add rows but never change or remove them.
+-- Append-only and immutable tables: the runtime role can read and add rows but never change or remove them.
 
 REVOKE UPDATE, DELETE, TRUNCATE ON "activity_log" FROM "app_user";
 REVOKE UPDATE, DELETE, TRUNCATE ON "submission_grade_event" FROM "app_user";
+REVOKE UPDATE, DELETE, TRUNCATE ON "storage_blob" FROM "app_user";
+REVOKE UPDATE, DELETE, TRUNCATE ON "storage_blob_data" FROM "app_user";

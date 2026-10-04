@@ -116,7 +116,7 @@ Each phase ends with passing tests. Tick as we go.
 - [x] Pure functions: points→grade band lookup, scale validation, term overlap, submission eligibility, grade request validation
 - [x] Service layer with org + role guards: grading scales, academic structure, assignments, grading
 - [x] Domain factories and layered seed helpers (`seedClass`, `seedAssignment`, `seedSubmission`)
-- **Done when:** unit tests cover band boundaries across scale types, scoping, permissions. (305 tests pass.)
+- **Done when:** unit tests cover band boundaries across scale types, scoping, permissions.
 
 ### Phase 3 — Required API (the assignment)
 
