@@ -14,6 +14,10 @@ function requireEnv(name: string): string {
   return value;
 }
 
+/**
+ * App-wide client. Tests must not import it: it is not wrapped in the per-test transaction, so its writes
+ * persist. Use `testDb()` from test/rollback-db instead.
+ */
 export const prisma: PrismaClient =
   globalForPrisma.prisma ?? createPrismaClient(requireEnv("DATABASE_URL"));
 

@@ -14,6 +14,7 @@ export function factoryDb(): DbClient {
   return provider();
 }
 
+/** Better Auth bound to the current test transaction; discarded with it, so writes roll back. */
 export function factoryAuth(): Auth {
   const db = factoryDb();
   let auth = authByDb.get(db);
