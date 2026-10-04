@@ -35,6 +35,80 @@
 Submission response includes: assignment, student, `submitted_at`, `graded_at`, a `grade` object (`label`, `group`, `points_awarded`,
 `max_points`, `percent`, `scale_id`; points fields are `null` for pass/fail-by-band work) that is `null` until graded, plus `teacher_notes`.
 
+## Validation and errors
+
+Every write and every filtered read is validated in two layers. Both produce the same error shape.
+
+1. **Shape (Zod):** types, required fields, formats, lengths, enums, UUIDs, ISO dates, number precision. Runs at
+   the route boundary, including query strings and path params.
+2. **Meaning (`validate*` functions):** rules Zod can't express because they depend on other fields or on data.
+   These are plain functions in the service layer, `validateX(input, context) => ValidationIssue[]`, so they are
+   unit-testable without HTTP. Services run them before writing and re-check anything race-sensitive inside the
+   transaction.
+
+Database constraints (unique keys, check constraints, composite foreign keys) remain the final backstop. A
+violation that slips through is translated to `409` or `422`, never a raw `500`.
+
+### Status codes
+
+| Code          | Meaning                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `400`         | Request can't be parsed (malformed JSON, wrong content type)                                          |
+| `401`         | No or invalid credentials                                                                             |
+| `403`         | Authenticated member of the school, but the role can't do this                                        |
+| `404`         | Resource missing, deleted, or in another school                                                       |
+| `409`         | Valid request that conflicts with current state (over-submission limit, duplicate seat, frozen scale) |
+| `412` / `428` | Stale or missing `If-Match` on a regrade                                                              |
+| `422`         | Parsed fine but the values are invalid: any Zod failure or `validate*` issue                          |
+
+Rule of thumb: if changing the input could make it succeed, it's `422`; if the input is fine but the world is in
+the way, it's `409`.
+
+### Error shape
+
+```json
+{
+  "error": {
+    "code": "validation_failed",
+    "message": "Request validation failed",
+    "details": [
+      {
+        "field": "points",
+        "code": "exceeds_max_points",
+        "message": "Points cannot exceed 50"
+      },
+      {
+        "field": "band",
+        "code": "unknown_band",
+        "message": "No band named \"Pass\" on this scale"
+      }
+    ]
+  }
+}
+```
+
+- All issues are returned at once, not just the first.
+- `field` is a path into the body, query or params (`bands[2].label`, `query.from`). `code` is a stable,
+  documented machine value; `message` is for humans.
+- Zod issues are mapped into this shape so clients see one format.
+- An id in a body that belongs to another school is reported exactly like one that doesn't exist
+  (`code: "not_found"` on that field), so existence isn't leaked.
+
+### Semantic rules by area (starting list)
+
+| Area          | Rules enforced beyond Zod                                                                                                                                                                                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Grade (`PUT`) | Payload matches the assignment's `grading_mode`; `points` is 0 to `max_points` with at most two decimals; `band` names a band on the resolved scale and only a manual-only band in `points` mode; `reason` required on a regrade (optional when replacing an Incomplete); `teacher_notes` length cap |
+| Submission    | Content non-empty and within the size cap; assignment is published and not deleted; student has an active seat in that class                                                                                                                                                                         |
+| Assignment    | `max_points` > 0 in `points` mode and absent in `band` mode; `max_submissions` ≥ 1; referenced scale exists in the same school; mode, `max_points` and scale unchanged once graded (`409`)                                                                                                           |
+| Grading scale | At least one band; a computed band at `min_percent` 0; no duplicate thresholds or labels; labels non-empty and not `ungraded`; `min_percent` ≥ 0; GPA values in range; at most one default                                                                                                           |
+| Term / year   | End after start; terms inside the academic year; no overlap between terms of one year                                                                                                                                                                                                                |
+| Class / seat  | Teacher id is a member with the teacher role; student id is a member with the student role; class belongs to a non-deleted term; duplicate seat is `409`                                                                                                                                             |
+| List filters  | `from` ≤ `to`; ISO dates; `grade` is a known label, group or `ungraded`; page size within bounds; cursor decodes; unknown query params rejected                                                                                                                                                      |
+
+Each rule gets a stable `code`, a unit test on the validator, and a route test asserting the `422` body. The
+OpenAPI spec documents the codes per endpoint.
+
 ## Docs (Phase 5)
 
 - OpenAPI served at `/api/openapi.json`; docs page in-app.

@@ -65,6 +65,9 @@ is true, and then work stops for human review.
   dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection.
 - Grading scales are data (`grading_scale`/`grading_scale_band`). The resolved grade is snapshotted when graded;
   scales are immutable once used.
+- Validate in two layers: Zod at the route boundary, then `validate*` functions in the service layer for rules
+  that depend on other fields or data. Bad input is `422` with every issue listed; state conflicts are `409`.
+  Never let a database error surface as `500` for something the user can fix.
 - Audit/log rows are IDs only — never names, notes, or grade contents.
 
 <!-- BEGIN:nextjs-agent-rules -->

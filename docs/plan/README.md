@@ -38,6 +38,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Soft deletes (`deleted_at`/`deleted_by`/`deletion_reason`); app and API code never hard-delete                                 | Decided | Only dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection                                          |
 | Retention is indefinite; no purge feature                                                                                      | Decided | FERPA-supportive; purge and retention windows are future decisions                                                           |
 | "Incomplete" is a manual-only, neutral grade band (not a status, not null); `ungraded` = no band                               | Decided | Matches the brief's grade list; no `status` column                                                                           |
+| Two-layer validation: Zod at the boundary, `validate*` functions for meaning; both return `422` with all field issues          | Decided | `409` is for state conflicts; see api-and-docs.md                                                                            |
 | Resubmission blocked by default (`max_submissions = 1`)                                                                        | Decided |                                                                                                                              |
 | Cross-school requests return `404`; `403` only for in-school role failures                                                     | Decided |                                                                                                                              |
 | Late work is not enforced or flagged yet                                                                                       | Decided | Future decision: grading implications                                                                                        |
@@ -95,7 +96,8 @@ Each phase ends with passing tests. Tick as we go.
 
 - [ ] Student: submit; list own submissions (grade / assignment-name filters)
 - [ ] Teacher: overview (assignment, date range, student-name filters); grade with points + `teacher_notes`
-- [ ] Pagination, error shape, per-route integration tests
+- [ ] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
+- [ ] Pagination, per-route integration tests (including `400`/`422` cases)
 - **Done when:** every bullet in the PDF has a passing test.
 
 ### Phase 4 — Depth

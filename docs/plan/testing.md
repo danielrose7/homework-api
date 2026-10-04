@@ -5,12 +5,14 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
 
 ## Layers
 
-1. **Unit (pure):** points→grade band lookup (every boundary, exact decimals, extra credit, plus/minus and pass/fail scales, scale resolution order, scale validity rules, grading-mode payload validation), term overlap, submission eligibility, filter parsing.
+1. **Unit (pure):** points→grade band lookup (every boundary, exact decimals, extra credit, plus/minus and pass/fail scales, scale resolution order, scale validity rules, grading-mode payload validation), term overlap, submission eligibility, filter parsing, and every `validate*` function (one case per rule code, plus several simultaneous issues).
 2. **Service/integration (transaction-safe):** each test runs inside a transaction that is rolled back — a
    `jest-prisma`-style clone for Vitest (a Prisma client bound to an interactive transaction, injected into the
    code under test). Factories via **Fishery** (`user`, `organization`, `member`, `term`, `class`, `class_seat`,
    `assignment`, `submission`).
-3. **Route-level:** call route handlers with real Bearer-authenticated requests inside the same rollback harness.
+3. **Route-level:** every write route has a `422` test asserting the full error body, and a `400` test for
+   malformed JSON.
+   call route handlers with real Bearer-authenticated requests inside the same rollback harness.
 4. **Concurrency suite (non-transactional):** parallel requests need separate connections, which a single
    wrapping transaction cannot model. Runs against a separate database/schema, truncates between tests, kept
    small and clearly labelled.
