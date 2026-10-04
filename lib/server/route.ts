@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { RouteDoc } from "@/lib/docs/types";
 import { STATUS } from "@/lib/http-status";
 import { recordActivity, type ResourceType } from "@/lib/server/activity";
 import type { Auth } from "@/lib/server/auth-factory";
@@ -36,10 +37,17 @@ export interface RouteDefinition {
   resource: ResourceType;
   /** The path parameter holding that resource's id, when the route has one. */
   id_param?: string;
+  doc?: RouteDoc;
   handle: RouteHandler;
 }
 
-export const defineRoute = (definition: RouteDefinition) => definition;
+export type DocumentedRoute = RouteDefinition & { doc: RouteDoc };
+
+export function defineRoute(definition: DocumentedRoute): DocumentedRoute;
+export function defineRoute(definition: RouteDefinition): RouteDefinition;
+export function defineRoute(definition: RouteDefinition) {
+  return definition;
+}
 
 type RouteParams = Record<string, string | string[] | undefined>;
 

@@ -7,7 +7,7 @@ import {
 } from "./uploads";
 import { issue, type ValidationIssue } from "./validation";
 
-const MAX_TEXT_LENGTH = 50_000;
+export const MAX_TEXT_LENGTH = 50_000;
 
 export type EligibilityResult =
   | { ok: true; attempt_number: number }
