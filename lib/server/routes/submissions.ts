@@ -4,6 +4,7 @@ import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/domain/pagination";
 import { STATUS } from "@/lib/http-status";
 import { validationFailed } from "@/lib/server/errors";
 import type { RouteHandler } from "@/lib/server/route";
+import { attachmentJson } from "@/lib/server/routes/attachments";
 import {
   listOwnSubmissions,
   submitAssignment,
@@ -102,12 +103,7 @@ export const submit: RouteHandler = async ({ ctx, request, input }) => {
   return Response.json(
     {
       ...submissionJson(result.submission),
-      attachments: result.attachments.map((attachment) => ({
-        id: attachment.attachmentId,
-        filename: attachment.filename,
-        content_type: attachment.contentType,
-        byte_size: attachment.byteSize,
-      })),
+      attachments: result.attachments.map(attachmentJson),
     },
     {
       status: STATUS.created,

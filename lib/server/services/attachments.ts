@@ -176,17 +176,21 @@ export async function listSubmissionAttachments(
 
 export async function downloadAttachment(
   ctx: RequestContext,
+  submissionId: string,
   attachmentId: string,
 ) {
   requirePermission(ctx, { submission: ["read"] });
+  await loadAccessibleSubmission(ctx, submissionId);
 
   const attachment = await ctx.db.storageAttachment.findFirst({
-    where: { id: attachmentId, organizationId: ctx.organizationId },
+    where: {
+      id: attachmentId,
+      organizationId: ctx.organizationId,
+      recordType: "assignment_submission",
+      recordId: submissionId,
+    },
   });
-  if (!attachment || attachment.recordType !== "assignment_submission") {
-    throw notFound();
-  }
-  await loadAccessibleSubmission(ctx, attachment.recordId);
+  if (!attachment) throw notFound();
 
   const blob = await ctx.db.storageBlob.findFirst({
     where: { id: attachment.blobId, organizationId: ctx.organizationId },
