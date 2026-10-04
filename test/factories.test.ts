@@ -44,10 +44,21 @@ describe("memberFactory", () => {
 });
 
 describe("seedSchool", () => {
+  it("seeds as many teachers and students as asked, including none", async () => {
+    const big = await seedSchool({ teachers: 2, students: 3 });
+    expect(big.teachers).toHaveLength(2);
+    expect(big.students).toHaveLength(3);
+
+    const empty = await seedSchool({ teachers: 0, students: 0 });
+    expect(empty.teachers).toHaveLength(0);
+    expect(empty.students).toHaveLength(0);
+    expect((await empty.admin.context()).role).toBe("administrator");
+  });
+
   it("returns signed-in personas with the right roles", async () => {
     const school = await seedSchool();
-    expect(school.teachers).toHaveLength(2);
-    expect(school.students).toHaveLength(3);
+    expect(school.teachers).toHaveLength(1);
+    expect(school.students).toHaveLength(1);
 
     const adminContext = await school.admin.context();
     const studentContext = await school.students[0]!.context();

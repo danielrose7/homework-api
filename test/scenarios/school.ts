@@ -59,13 +59,13 @@ export async function seedSchool(
     await memberFactory.administrator().create(inSchool),
   );
   const teachers: Persona[] = [];
-  for (let i = 0; i < (options.teachers ?? 2); i++) {
+  for (let i = 0; i < (options.teachers ?? 1); i++) {
     teachers.push(
       await persona(await memberFactory.teacher().create(inSchool)),
     );
   }
   const students: Persona[] = [];
-  for (let i = 0; i < (options.students ?? 3); i++) {
+  for (let i = 0; i < (options.students ?? 1); i++) {
     students.push(
       await persona(await memberFactory.student().create(inSchool)),
     );
