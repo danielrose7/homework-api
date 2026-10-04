@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
-import { requireTeachesClass } from "@/modules/academics/queries/access";
+import { requireTeachesClass } from "@/lib/server/access";
 
 import { assignmentFactory, submissionFactory } from "./factories/academics";
 import { testDb, withRollbackDb } from "./rollback-db";

@@ -13,7 +13,7 @@ import { requirePermission, type RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
 import { notFound, validationFailed } from "@/lib/server/errors";
 import { transact } from "@/lib/server/transaction";
-import { requireTeachesClass } from "@/modules/academics/queries/access";
+import { requireTeachesClass } from "@/lib/server/access";
 import { loadGradingScale } from "@/modules/grading-scales/queries/load-grading-scale";
 import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
 

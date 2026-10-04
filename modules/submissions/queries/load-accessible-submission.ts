@@ -1,6 +1,6 @@
 import type { RequestContext } from "@/lib/server/context";
 import { deniedAsNotFound, notFound } from "@/lib/server/errors";
-import { requireTeachesClass } from "@/modules/academics/queries/access";
+import { requireTeachesClass } from "@/lib/server/access";
 
 /**
  * Loads a submission the caller may see: its own for a student, one from a class they teach for a teacher, any for
