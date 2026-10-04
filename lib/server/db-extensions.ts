@@ -10,10 +10,15 @@ const SOFT_DELETABLE = new Set([
   "ClassSeat",
   "Assignment",
   "AssignmentSubmission",
-  "SubmissionAttachment",
+  "StorageAttachment",
 ]);
 
-const APPEND_ONLY = new Set(["ActivityLog", "SubmissionGradeEvent"]);
+const APPEND_ONLY = new Set([
+  "ActivityLog",
+  "SubmissionGradeEvent",
+  "StorageBlob",
+  "StorageBlobData",
+]);
 
 type Where = Record<string, unknown> | undefined;
 

@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import { describe, expect, it } from "vitest";
 
 import { assignmentFactory, gradingScaleFactory } from "./factories/academics";
@@ -165,43 +163,6 @@ describe("check constraints", () => {
       "term_dates",
     );
   });
-
-  it("require stored attachments to carry their bytes", async () => {
-    const { submission } = await seedSubmission();
-    await expectViolation(
-      testDb().submissionAttachment.create({
-        data: {
-          organizationId: submission.organizationId,
-          submissionId: submission.id,
-          originalFilename: "essay.txt",
-          contentType: "text/plain",
-          byteSize: 5,
-          sha256: createHash("sha256").update("hello").digest("hex"),
-          storageBackend: "database",
-          content: null,
-        },
-      }),
-      "attachment_storage",
-    );
-  });
-
-  it("accept an attachment whose bytes are stored in the database", async () => {
-    const { submission } = await seedSubmission();
-    const bytes = Buffer.from("hello");
-    const row = await testDb().submissionAttachment.create({
-      data: {
-        organizationId: submission.organizationId,
-        submissionId: submission.id,
-        originalFilename: "essay.txt",
-        contentType: "text/plain",
-        byteSize: bytes.length,
-        sha256: createHash("sha256").update(bytes).digest("hex"),
-        storageBackend: "database",
-        content: bytes,
-      },
-    });
-    expect(row.byteSize).toBe(5);
-  });
 });
 
 describe("uniqueness", () => {
@@ -319,5 +280,151 @@ describe("soft deletes", () => {
       include: { assignments: { where: { deletedAt: null } } },
     });
     expect(filtered.assignments.map((a) => a.id)).toEqual([assignment.id]);
+  });
+});
+
+describe("file storage", () => {
+  async function blobFor(organizationId: string) {
+    return testDb().storageBlob.create({
+      data: {
+        organizationId,
+        key: crypto.randomUUID(),
+        filename: "essay.txt",
+        contentType: "text/plain",
+        byteSize: 5,
+        checksum: "abc",
+        serviceName: "database",
+      },
+    });
+  }
+
+  it("keeps a blob's bytes in a separate row and loads them only on request", async () => {
+    const { school } = await seedClass();
+    const blob = await blobFor(school.organization.id);
+    await testDb().storageBlobData.create({
+      data: {
+        organizationId: school.organization.id,
+        blobId: blob.id,
+        content: Buffer.from("hello"),
+      },
+    });
+
+    const listed = await testDb().storageBlob.findFirstOrThrow({
+      where: { id: blob.id },
+    });
+    expect("content" in listed).toBe(false);
+    const data = await testDb().storageBlobData.findFirstOrThrow({
+      where: { blobId: blob.id },
+    });
+    expect(Buffer.from(data.content).toString()).toBe("hello");
+  });
+
+  it("allows one data row per blob", async () => {
+    const { school } = await seedClass();
+    const blob = await blobFor(school.organization.id);
+    const data = {
+      organizationId: school.organization.id,
+      blobId: blob.id,
+      content: Buffer.from("x"),
+    };
+    await testDb().storageBlobData.create({ data });
+    await expectViolation(
+      testDb().storageBlobData.create({ data }),
+      "storage_blob_data_organization_id_blob_id_key",
+    );
+  });
+
+  it("rejects a negative size", async () => {
+    const { school } = await seedClass();
+    await expectViolation(
+      testDb().storageBlob.create({
+        data: {
+          organizationId: school.organization.id,
+          key: "k",
+          filename: "a.txt",
+          contentType: "text/plain",
+          byteSize: -1,
+          checksum: "abc",
+          serviceName: "database",
+        },
+      }),
+      "storage_blob_size",
+    );
+  });
+
+  it("rejects attaching another school's blob", async () => {
+    const a = await seedSubmission();
+    const b = await seedClass();
+    const foreign = await blobFor(b.school.organization.id);
+    await expectViolation(
+      testDb().storageAttachment.create({
+        data: {
+          organizationId: a.submission.organizationId,
+          blobId: foreign.id,
+          recordType: "assignment_submission",
+          recordId: a.submission.id,
+          name: "files",
+        },
+      }),
+      "storage_attachment_organization_id_blob_id_fkey",
+    );
+  });
+
+  it("rejects attaching the same blob to the same record twice", async () => {
+    const { submission } = await seedSubmission();
+    const blob = await blobFor(submission.organizationId);
+    const data = {
+      organizationId: submission.organizationId,
+      blobId: blob.id,
+      recordType: "assignment_submission" as const,
+      recordId: submission.id,
+      name: "files",
+    };
+    await testDb().storageAttachment.create({ data });
+    await expectViolation(
+      testDb().storageAttachment.create({ data }),
+      "storage_attachment_live",
+    );
+  });
+
+  it("makes blobs and their bytes immutable for the runtime role", async () => {
+    const { school } = await seedClass();
+    const blob = await blobFor(school.organization.id);
+
+    await expect(
+      testDb().storageBlob.update({
+        where: { id: blob.id },
+        data: { filename: "x" },
+      }),
+    ).rejects.toThrow(/append-only/);
+    await expect(
+      testDb().$executeRaw`UPDATE "storage_blob" SET "filename" = 'x'`,
+    ).rejects.toThrow(/permission denied/);
+  });
+
+  it("soft-deletes attachments but never the blob", async () => {
+    const { submission } = await seedSubmission();
+    const blob = await blobFor(submission.organizationId);
+    const attachment = await testDb().storageAttachment.create({
+      data: {
+        organizationId: submission.organizationId,
+        blobId: blob.id,
+        recordType: "assignment_submission",
+        recordId: submission.id,
+        name: "files",
+      },
+    });
+    await testDb().storageAttachment.update({
+      where: { id: attachment.id },
+      data: { deletedAt: new Date(), deletionReason: "Wrong file" },
+    });
+    expect(
+      await testDb().storageAttachment.findFirst({
+        where: { id: attachment.id },
+      }),
+    ).toBeNull();
+    expect(
+      await testDb().storageBlob.findFirst({ where: { id: blob.id } }),
+    ).not.toBeNull();
   });
 });

@@ -93,6 +93,7 @@ model Organization {
   academicYears AcademicYear[]
   gradingScales GradingScale[]
   activityLogs  ActivityLog[]
+  storageBlobs  StorageBlob[]
 
   @@unique([slug])
   @@map("organization")
@@ -163,11 +164,10 @@ enum SeatStatus {
   @@map("seat_status")
 }
 
-enum StorageBackend {
-  database
-  object_store
+enum StorageRecordType {
+  assignment_submission
 
-  @@map("storage_backend")
+  @@map("storage_record_type")
 }
 
 enum ActorType {
@@ -395,7 +395,6 @@ model AssignmentSubmission {
   classSeat      ClassSeat              @relation(fields: [organizationId, classSeatId], references: [organizationId, id], onDelete: Restrict)
   gradeBand      GradingScaleBand?      @relation(fields: [organizationId, gradingScaleId, gradeBandId], references: [organizationId, gradingScaleId, id], onDelete: Restrict)
   grader         Member?                @relation(fields: [organizationId, gradedBy], references: [organizationId, id], onDelete: Restrict)
-  attachments    SubmissionAttachment[]
   gradeEvents    SubmissionGradeEvent[]
 
   @@unique([organizationId, id])
@@ -403,29 +402,6 @@ model AssignmentSubmission {
   @@index([organizationId, assignmentId, submittedAt])
   @@index([organizationId, classSeatId])
   @@map("assignment_submission")
-}
-
-model SubmissionAttachment {
-  id               String               @id @default(uuid(7)) @db.Uuid
-  organizationId   String               @map("organization_id") @db.Uuid
-  submissionId     String               @map("submission_id") @db.Uuid
-  originalFilename String               @map("original_filename")
-  contentType      String               @map("content_type")
-  byteSize         Int                  @map("byte_size")
-  sha256           String
-  storageBackend   StorageBackend       @default(database) @map("storage_backend")
-  storageKey       String?              @map("storage_key")
-  content          Bytes?
-  deletedAt        DateTime?            @map("deleted_at") @db.Timestamptz(3)
-  deletedBy        String?              @map("deleted_by") @db.Uuid
-  deletionReason   String?              @map("deletion_reason")
-  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt        DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  submission       AssignmentSubmission @relation(fields: [organizationId, submissionId], references: [organizationId, id], onDelete: Restrict)
-
-  @@unique([organizationId, id])
-  @@index([organizationId, submissionId])
-  @@map("submission_attachment")
 }
 
 model SubmissionGradeEvent {
@@ -474,4 +450,66 @@ model ActivityLog {
   @@index([organizationId, actorUserId, createdAt])
   @@index([organizationId, createdAt])
   @@map("activity_log")
+}
+
+// Active Storage-style file storage. A blob is immutable file metadata plus where its bytes live
+// (service_name); attachments link a blob to any record polymorphically; the bytes of database-hosted blobs sit
+// in a separate row so listing blobs never loads file contents. Moving a blob to object storage later means
+// copying its bytes out and changing service_name.
+
+model StorageBlob {
+  id             String              @id @default(uuid(7)) @db.Uuid
+  organizationId String              @map("organization_id") @db.Uuid
+  key            String
+  filename       String
+  contentType    String              @map("content_type")
+  byteSize       Int                 @map("byte_size")
+  checksum       String
+  serviceName    String              @map("service_name")
+  metadata       Json                @default("{}")
+  uploadedBy     String?             @map("uploaded_by") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  data           StorageBlobData?
+  attachments    StorageAttachment[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, key])
+  @@map("storage_blob")
+}
+
+model StorageBlobData {
+  id             String      @id @default(uuid(7)) @db.Uuid
+  organizationId String      @map("organization_id") @db.Uuid
+  blobId         String      @map("blob_id") @db.Uuid
+  content        Bytes
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  blob           StorageBlob @relation(fields: [organizationId, blobId], references: [organizationId, id], onDelete: Restrict)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, blobId])
+  @@map("storage_blob_data")
+}
+
+model StorageAttachment {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  blobId         String            @map("blob_id") @db.Uuid
+  recordType     StorageRecordType @map("record_type")
+  recordId       String            @map("record_id") @db.Uuid
+  name           String
+  deletedAt      DateTime?         @map("deleted_at") @db.Timestamptz(3)
+  deletedBy      String?           @map("deleted_by") @db.Uuid
+  deletionReason String?           @map("deletion_reason")
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  blob           StorageBlob       @relation(fields: [organizationId, blobId], references: [organizationId, id], onDelete: Restrict)
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, recordType, recordId, name, blobId], where: raw("deleted_at IS NULL"), map: "storage_attachment_live")
+  @@index([organizationId, recordType, recordId])
+  @@index([organizationId, blobId])
+  @@map("storage_attachment")
 }

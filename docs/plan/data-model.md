@@ -42,7 +42,9 @@
 | `class_seat`                                      | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at`                                                                                                                                                                                                            |
 | `assignment`                                      | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `grading_mode` (`points`/`band`), `max_points` (null in `band` mode), optional `grading_scale_id` override, reserved `score_cap_points` and `is_bonus` (see Reserved columns), `due_at`, `max_submissions` (default 1), `published_at` |
 | `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded` (null in `band` mode), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group`, `teacher_notes`, `graded_at`, `graded_by`                                                    |
-| `submission_attachment`                           | org, submission, `original_filename`, `content_type`, `byte_size`, `sha256`, `storage_backend` (`database`/`object_store`), `storage_key` (null for `database`), `content` bytea (null for `object_store`); immutable once created; soft-deletable                                                        |
+| `storage_blob`                                    | org, `key`, `filename`, `content_type`, `byte_size`, `checksum` (sha256), `service_name` (where the bytes live), `metadata` json, `uploaded_by`; immutable                                                                                                                                                |
+| `storage_blob_data`                               | org, blob (one-to-one), `content` bytea; only for `service_name = database`; immutable                                                                                                                                                                                                                    |
+| `storage_attachment`                              | org, blob, polymorphic `record_type` + `record_id` + `name`; soft-deletable                                                                                                                                                                                                                               |
 | `submission_grade_event`                          | append-only grade history — see audit-and-grade-history.md                                                                                                                                                                                                                                                |
 | `activity_log`                                    | append-only audit log — see audit-and-grade-history.md                                                                                                                                                                                                                                                    |
 
@@ -130,32 +132,34 @@ Rules:
   "regrade all" action that writes grade events with a reason.
 - Each grade event stores `max_points` at grading time as a snapshot.
 
-## Submission contents and attachments
+## Submission contents and attachments (Active Storage style)
 
-A submission is text, files, or both. Options considered:
+Modelled on Rails Active Storage, which separates _what a file is_ from _what it is attached to_ and from _where
+its bytes live_:
 
-1. **`multipart/form-data` on the submit endpoint.** One request, easy `curl -F`, Python and Node examples. Files are
-   stored in Postgres (`bytea`), so the submission and its files commit in one transaction and the over-submission
-   guard covers them. Costs: database size, and request-body limits on some hosts (Vercel caps bodies at 4.5 MB).
-2. **Presigned upload to R2/S3.** `POST /uploads` returns a presigned `PUT` URL and an attachment id; the client
-   uploads straight to the bucket, then the submission references the ids. Right for production and large files.
-   Costs: a two-step flow, orphaned uploads to clean up, and a bucket (mockable for this take-home).
-3. **Seeded blobs in the database** for the demo: small fixture files inserted by the seed script.
+| Rails                            | Here                 | Role                                                                       |
+| -------------------------------- | -------------------- | -------------------------------------------------------------------------- |
+| `active_storage_blobs`           | `storage_blob`       | File metadata: key, filename, content type, size, checksum, `service_name` |
+| `active_storage_attachments`     | `storage_attachment` | Polymorphic link: `record_type`, `record_id`, `name`, blob                 |
+| database storage service table   | `storage_blob_data`  | The bytes, one row per blob, kept out of blob listings                     |
+| `active_storage_variant_records` | not built            | No image processing                                                        |
 
-**Proposed (decide at the Phase 2/3 gate):** model `submission_attachment` now, independent of where bytes live
-(`storage_backend` plus `storage_key` or `content`), behind a small `AttachmentStore` interface.
-
-- Phase 3 implements the `database` backend with `multipart/form-data` (and plain JSON for text-only). Seeds and
-  tests use the same backend, so the demo needs no external service.
-- The `object_store` backend and the presigned-URL flow are documented in future-ideas.md and can be mocked;
-  enabling them needs no migration.
-- Rules for the validators (`422`): at least text or one file; per-file size cap (default 5 MB), file-count cap,
-  allowed content types, non-empty files, filename sanitized (no paths), checksum computed server-side.
-- Attachments are immutable. A change is a new attempt where `max_submissions` allows it.
-- Downloads are `GET …/submissions/{id}/attachments/{attachmentId}`, streamed with `Content-Disposition: attachment`
-  and `X-Content-Type-Options: nosniff`, and logged as a `read` in the activity log (a FERPA access record). List
-  queries never select `content`.
-- Soft-deleting a submission hides its attachments; object-store keys are retained (retention is indefinite).
+- **Service name, not a flag.** `storage_blob.service_name` selects a `StorageService` in code
+  (`lib/server/storage`). Only `database` exists. Moving to R2/S3 means a new service, copying a blob's bytes out of
+  `storage_blob_data`, and changing its `service_name`; no schema change.
+- **Immutable blobs.** The runtime role can only insert and read blobs and their bytes (grants plus the client
+  extension). Replacing a file means a new blob and a new attachment.
+- **Polymorphic attachments.** `record_type` is an enum (today only `assignment_submission`); `record_id` has no
+  foreign key, as in Rails, so the service verifies the record in the same school. Detaching is a soft delete; the
+  blob is kept (retention is indefinite).
+- **Two steps.** Upload creates an unattached blob, then attach links it, like a Rails direct upload. Phase 3's
+  multipart submit will do both in the submission's transaction.
+- **Validation (`422`):** file name required and sanitized to its last path segment; non-empty; at most 5 MB; content
+  type on an allow-list; bytes must match the declared type (PDF, PNG, JPEG, GIF, ZIP and text are sniffed); at most 5
+  files per record per name. Attaching to graded work is a `409`; attaching the same blob twice is a `409`.
+- **Access.** A student sees their own submission's files, a teacher those of classes they teach, an administrator
+  any in the school; everything else is `404`. Each download writes a `read` to the activity log with ids only.
+- List queries never select `content`.
 
 ## Submission concurrency (block over-submission)
 

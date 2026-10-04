@@ -58,8 +58,9 @@ A per-school `prev_hash` / `row_hash` chain on `activity_log`, possible because 
 
 ## Presigned uploads to R2/S3
 
-`storage_backend = object_store` on `submission_attachment` is modelled already. Enabling it means an
-`AttachmentStore` implementation that signs `PUT`/`GET` URLs, a `POST /uploads` endpoint that reserves an
-attachment id, a cleanup job for uploads never attached to a submission, private buckets with short-lived signed
-reads, and object keys that carry no personal data. Mockable with an in-memory store for demos. Virus scanning and
-content-type sniffing belong here too.
+The Active Storage-style tables already allow it: `storage_blob.service_name` picks the storage service. Enabling it
+means a new `StorageService` that signs `PUT`/`GET` URLs, a `POST /uploads` endpoint that creates an unattached blob
+and returns the upload URL (Rails calls this a direct upload), a job to clear blobs that never get attached, private
+buckets with short-lived signed reads, and object keys that carry no personal data. A one-off copy moves existing
+bytes out of `storage_blob_data` and flips `service_name`. Mockable with an in-memory service for demos. Virus
+scanning belongs here too.
