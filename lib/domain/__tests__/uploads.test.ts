@@ -43,6 +43,39 @@ describe("bytesMatchContentType", () => {
     ).toBe(true);
   });
 
+  it("recognises WebP, HEIC, HEIF and AVIF", () => {
+    expect(
+      bytesMatchContentType(
+        "image/webp",
+        text("RIFF\u0000\u0000\u0000\u0000WEBPVP8 "),
+      ),
+    ).toBe(true);
+    expect(
+      bytesMatchContentType(
+        "image/heic",
+        text("\u0000\u0000\u0000\u0018ftypheic"),
+      ),
+    ).toBe(true);
+    expect(
+      bytesMatchContentType(
+        "image/heif",
+        text("\u0000\u0000\u0000\u0018ftypmif1"),
+      ),
+    ).toBe(true);
+    expect(
+      bytesMatchContentType(
+        "image/avif",
+        text("\u0000\u0000\u0000\u0018ftypavif"),
+      ),
+    ).toBe(true);
+    expect(bytesMatchContentType("image/webp", text("RIFF....WAVE"))).toBe(
+      false,
+    );
+    expect(bytesMatchContentType("image/heic", text("....ftypavif"))).toBe(
+      false,
+    );
+  });
+
   it("rejects mislabelled files", () => {
     expect(bytesMatchContentType("application/pdf", text("<html>"))).toBe(
       false,

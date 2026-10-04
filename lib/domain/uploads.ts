@@ -11,6 +11,10 @@ export const ALLOWED_CONTENT_TYPES = [
   "image/png",
   "image/jpeg",
   "image/gif",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/avif",
   "application/zip",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
@@ -19,6 +23,25 @@ const startsWith = (bytes: Uint8Array, signature: readonly number[]) =>
   signature.every((value, index) => bytes[index] === value);
 
 const ascii = (text: string) => [...text].map((char) => char.charCodeAt(0));
+
+const HEIF_BRANDS: Record<string, readonly string[]> = {
+  "image/heic": ["heic", "heix", "heim", "heis", "hevc", "hevx", "mif1"],
+  "image/heif": [
+    "heic",
+    "heix",
+    "heim",
+    "heis",
+    "hevc",
+    "hevx",
+    "mif1",
+    "msf1",
+  ],
+  "image/avif": ["avif", "avis", "mif1"],
+};
+
+const hasIsoBrand = (bytes: Uint8Array, brands: readonly string[]) =>
+  startsWith(bytes.subarray(4, 8), ascii("ftyp")) &&
+  brands.some((brand) => startsWith(bytes.subarray(8), ascii(brand)));
 
 function isUtf8Text(bytes: Uint8Array): boolean {
   if (bytes.includes(0)) return false;
@@ -49,6 +72,15 @@ export function bytesMatchContentType(
       return (
         startsWith(bytes, ascii("GIF87a")) || startsWith(bytes, ascii("GIF89a"))
       );
+    case "image/webp":
+      return (
+        startsWith(bytes, ascii("RIFF")) &&
+        startsWith(bytes.subarray(8), ascii("WEBP"))
+      );
+    case "image/heic":
+    case "image/heif":
+    case "image/avif":
+      return hasIsoBrand(bytes, HEIF_BRANDS[contentType] ?? []);
     case "application/zip":
     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
       return startsWith(bytes, [0x50, 0x4b, 0x03, 0x04]);
