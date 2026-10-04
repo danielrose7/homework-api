@@ -28,8 +28,8 @@ so a demo script can say "sign in as Ms. Alvarez".
 
 ## Reset
 
-- **CLI:** `pnpm db:reset` truncates every table through the owner connection and re-seeds. `pnpm db:seed` refuses a database that already has data. `pnpm db:fresh`, which exists today, is the
-  heavier tool: it recreates the Docker volume and rebuilds the database from the migrations.
+- **CLI:** `pnpm db:reset` truncates every table through the owner connection and re-seeds. `pnpm db:seed` refuses a database that already has data. `pnpm db:fresh` is the
+  heavier tool: it recreates the Docker volume, then `pnpm db:setup` rebuilds the database from the migrations and seeds it.
 - **Button:** a "Reset sandbox data" control in the UI that calls `POST /sandbox/api/reset` after a confirmation dialog.
 - Truncates every table and re-runs the seed, including Better Auth tables, so any signed-in session is
   invalidated; the UI then drops back to the persona sign-in.

@@ -64,7 +64,7 @@ is true, and then work stops for human review.
 - pnpm only (no npm/yarn).
 - Keep the migration history clean from start to end. Before the first release, edit the migration that introduced
   a thing instead of adding a follow-up that renames, drops or reworks it (nothing is created in one migration and
-  changed in the next). Then rebuild the local database with `pnpm db:fresh` (it recreates the Docker volume, so roles and grants are reapplied). Confirm there is
+  changed in the next). Then rebuild the local database with `pnpm db:fresh` (it recreates the Docker volume, then runs `pnpm db:setup`: roles and grants, migrations, generate, seed). Confirm there is
   no drift with `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`.
 - Schema naming and structure rules are in `docs/plan/schema-conventions.md`; read it before touching
   `prisma/schema.prisma`. In particular, a column that points at another row ends in `_id` (`graded_by_id`), and its

@@ -13,12 +13,12 @@
     "test": "vitest run && vitest run --config vitest.race.config.mts",
     "test:race": "vitest run --config vitest.race.config.mts",
     "test:watch": "vitest",
-    "db:up": "docker compose up -d --wait",
+    "db:setup": "tsx scripts/setup.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "tsx scripts/seed.ts",
     "db:reset": "tsx scripts/reset.ts",
-    "db:fresh": "docker compose down -v && docker compose up -d --wait && prisma migrate deploy && prisma generate"
+    "db:fresh": "docker compose down -v && pnpm db:setup"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

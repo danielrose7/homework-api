@@ -59,7 +59,7 @@ These are what make a later RLS migration a policy-writing exercise rather than 
 
 ## DB roles
 
-Created by `db/init/01-roles.sql` for the local Docker database:
+Created by `scripts/roles.sql`, applied idempotently by `pnpm db:setup` over the superuser `ADMIN_DATABASE_URL`:
 
 | Role           | Purpose                            | Privileges       |
 | -------------- | ---------------------------------- | ---------------- |
