@@ -9,7 +9,9 @@ Separate from the test factories. CI data is random and disposable; seed data is
 so a demo script can say "sign in as Ms. Alvarez".
 
 - `pnpm db:seed` loads a fixed starting point; `pnpm db:reset` truncates and re-seeds.
-- One school (e.g. "Riverside Academy", slug `riverside`) with an academic year and two terms (one current).
+- One school named **Sandbox**, slug `sandbox`, with an academic year and two terms (one current). The seed script,
+  the docs examples and the reset button all refer to it by that name. The slug is reserved so a real school
+  can't take it.
 - Administrator, 2–3 teachers, ~8 students with fixed names, emails and a shared dev password.
 - Three grading scales: "Standard A–F" (school default), "Plus/minus" (one class override) and "Pass/Fail"
   (one assignment graded directly as Pass or Fail, with no points, inside a lettered class; plus one points-based
