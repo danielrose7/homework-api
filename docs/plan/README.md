@@ -80,9 +80,9 @@ Recorded as work lands; each is small but worth a look at the gate.
 - Partial unique indexes use Prisma's `partialIndexes` preview feature (7.4+), so they live in `schema.prisma`
   and migrate cleanly. Check constraints and the grants still live in hand-written migration SQL.
 - `deleted_by_id` is a plain uuid column on every soft-deletable table, not a foreign key (an audit pointer, like
-  the activity log). `graded_by_id` is a real composite foreign key to the member.
+  the activity log). `graded_by_id` is a real composite foreign key to the member. Becoming relations is tracked in Phase 4.
 - Grading requires the `grade: update` permission for everyone (teachers and administrators); `grade: create` is
-  unused.
+  unused. Settling this is tracked in Phase 3.
 - Submission attempt numbers must be allocated as `max(attempt_number) + 1` over all rows including soft-deleted
   ones, while the limit counts only live rows, because the attempt number is unique unconditionally.
 - Top-level reads hide soft-deleted rows; an administrator restore flow needs an unfiltered read path, to be
@@ -133,6 +133,8 @@ Each phase ends with passing tests. Tick as we go.
       `gradeSubmission`, returning the grade version as an ETag and honoring `If-Match` (`428`/`412`)
 - [ ] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
 - [ ] Log authorization denials to the activity log from the route layer (the guards only throw today)
+- [ ] Settle the permission matrix as the routes wire it up: grading uses only `grade: update`, so either use
+      `grade: create` for a first grade or remove it from `lib/server/permissions.ts`; document the final role matrix
 - [ ] Pagination, per-route integration tests (including `400`/`422` cases)
 - **Done when:** every bullet in the PDF has a passing test.
 
@@ -145,6 +147,9 @@ Each phase ends with passing tests. Tick as we go.
       including soft-deleted ones
 - [ ] Grade history and activity endpoints (regrade logic and version checks already live in `gradeSubmission`)
 - [ ] Soft-delete (`DELETE`) and administrator restore endpoints, with an unfiltered read path for deleted rows
+- [ ] Turn `deleted_by_id` (every soft-deletable table) and `storage_blob.uploaded_by_id` into real composite relations
+      to the member (`deletedBy`, `uploadedBy`), as `graded_by_id` already is, when these endpoints start writing them;
+      edit the domain migration in place
 - [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
 - [ ] Seed script and demo reset (see demo-and-seed.md)
 
