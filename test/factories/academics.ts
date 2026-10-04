@@ -9,7 +9,7 @@ import {
   type Band,
   type BandInput,
 } from "@/lib/domain/grading";
-import { applyGrade } from "@/lib/server/services/grades";
+import { applyGrade } from "@/modules/submissions/mutations/grade-submission";
 import {
   addBands,
   resolveGradingScale,

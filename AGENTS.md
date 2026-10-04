@@ -2,6 +2,8 @@
 
 Take-home API for Stride (school homework submission + grading). The living plan is in `docs/plan/` — read
 `docs/plan/README.md` first, tick checklist items and update the decision log as work lands.
+Application layout and dependency rules are in `docs/architecture.md`; follow them when adding or moving routes,
+queries, mutations and serializers.
 
 ## Stack
 

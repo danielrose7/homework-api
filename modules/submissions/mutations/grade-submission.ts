@@ -1,7 +1,7 @@
 import {
-  percentOf,
   findManualBand,
   lookupBand,
+  percentOf,
   type Band,
 } from "@/lib/domain/grading";
 import {
@@ -47,7 +47,6 @@ interface ApplyGradeParams {
   reason: string | null;
 }
 
-/** Writes the current grade and its history row. No authorization or validation; callers do that. */
 export async function applyGrade(
   tx: DbClient,
   params: ApplyGradeParams,

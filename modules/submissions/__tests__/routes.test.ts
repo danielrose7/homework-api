@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
-import { listAll, listMine, submit } from "@/lib/server/routes/submissions";
+import { submitRoute as submit } from "@/app/api/v1/orgs/[orgSlug]/assignments/[assignmentId]/submissions/route";
+import { listOwnRoute as listMine } from "@/app/api/v1/orgs/[orgSlug]/submissions/me/route";
+import { listSubmissionsRoute as listAll } from "@/app/api/v1/orgs/[orgSlug]/submissions/route";
 import { callRoute } from "@/test/http";
 import { seedAssignment, seedSubmission } from "@/test/scenarios/class";
 import { testDb, withRollbackDb } from "@/test/rollback-db";

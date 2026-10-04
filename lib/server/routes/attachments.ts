@@ -1,13 +1,15 @@
 import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
+import type { RequestContext } from "@/lib/server/context";
 import { listJson } from "@/lib/server/list-json";
 import { defineRoute } from "@/lib/server/route";
-import { orgPath } from "@/lib/server/routes/submissions";
 import {
   downloadAttachment,
   listSubmissionAttachments,
 } from "@/lib/server/services/attachments";
+
+const orgPath = (ctx: RequestContext) => `/api/v1/orgs/${ctx.organizationSlug}`;
 
 type AttachmentSummary = Awaited<
   ReturnType<typeof listSubmissionAttachments>

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
-import { grade } from "@/lib/server/routes/grades";
-import { getOne } from "@/lib/server/routes/submissions";
+import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/grade/route";
+import { getSubmissionRoute as getOne } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/route";
 import { callRoute } from "@/test/http";
 import { seedSubmission } from "@/test/scenarios/class";
 import { withRollbackDb } from "@/test/rollback-db";

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
-import { gradeSubmission } from "@/lib/server/services/grades";
+import { gradeSubmission } from "@/modules/submissions/mutations/grade-submission";
 import {
   assignmentFactory,
   gradingScaleFactory,

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
 import { download, list } from "@/lib/server/routes/attachments";
-import { submitAssignment } from "@/lib/server/services/submissions";
+import { submitAssignment } from "@/modules/submissions/mutations/submit-assignment";
 import { callRoute } from "@/test/http";
 import { seedAssignment } from "@/test/scenarios/class";
 import { testDb, withRollbackDb } from "@/test/rollback-db";

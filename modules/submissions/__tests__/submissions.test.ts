@@ -3,11 +3,9 @@ import { describe, expect, it } from "vitest";
 import { MAX_FILES_PER_RECORD, MAX_UPLOAD_BYTES } from "@/lib/domain/uploads";
 import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
-import {
-  listOwnSubmissions,
-  listSubmissionsOverview,
-  submitAssignment,
-} from "@/lib/server/services/submissions";
+import { listSubmissionsOverview } from "@/modules/submissions/queries/list-submissions-overview";
+import { listOwnSubmissions } from "@/modules/submissions/queries/list-own-submissions";
+import { submitAssignment } from "@/modules/submissions/mutations/submit-assignment";
 import { seedAssignment, seedSubmission } from "@/test/scenarios/class";
 import { testDb, withRollbackDb } from "@/test/rollback-db";
 
