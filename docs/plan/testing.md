@@ -36,6 +36,21 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
   none are passed), so `submissionFactory.create()` alone yields a valid row.
 - Sequences for emails and names; no real faker data in assertions.
 
+## Baseline scenarios
+
+Tests don't rebuild a school by hand. `test/scenarios/` holds layered helpers, each building on the one below, so a
+test starts from the layer it needs:
+
+1. `baselineSchool()`: a school, an administrator, two teachers and three students, each a real Better Auth user
+   who has signed in (Bearer headers plus a `context()` that resolves a `RequestContext`).
+2. `baselineTwoSchools()`: two of the above, for isolation tests.
+3. Phase 2 adds `baselineClass()` (term, class, teacher assignment, seats) and `baselineAssignment()`; Phase 3 adds
+   submitted and graded variants.
+
+Factories never share state between tests (everything rolls back) and run queries one at a time, because
+concurrent queries on a single transaction connection are deprecated in `pg`. Factory users are created through
+Better Auth sign-up, so every one has a real password hash and can sign in with its username.
+
 ## Route test helpers
 
 Setup helpers build a ready-to-use context so a route test is a few lines:
