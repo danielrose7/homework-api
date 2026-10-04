@@ -3,6 +3,20 @@
 Take-home API for Stride (school homework submission + grading). The living plan is in `docs/plan/` — read
 `docs/plan/README.md` first, tick checklist items and update the decision log as work lands.
 
+## Stack
+
+Choices are settled (see the decision log in `docs/plan/README.md`); don't swap them without asking.
+
+- Next.js App Router, TypeScript (strict), pnpm.
+- Postgres 17 (docker-compose, port 5433) with **Prisma 7.10** and the `pg` driver adapter. Not Drizzle.
+- **Better Auth**, self-hosted: email+password, organization, bearer and API key plugins.
+- **Plain REST** route handlers under `/api/v1` using GET/POST/PUT/PATCH/DELETE. Not tRPC. Zod schemas are the
+  source of truth for validation, types and the generated OpenAPI spec.
+- shadcn/ui for the UI; `useOptimistic` + `startTransition` against the same REST API.
+- Vitest + Fishery. Integration tests run in rolled-back transactions; concurrency tests are a separate,
+  non-transactional suite.
+- Prettier defaults for formatting.
+
 ## Code comments
 
 Comments are sparse by design. Loud or redundant comments drift out of date, and later edits (human or LLM)
@@ -35,6 +49,7 @@ then trust the stale text over the code.
 - All DB access goes through `withTenant` once it exists; no raw-SQL writes in app code (`updated_at` is set by
   the Prisma client).
 - Every domain table: UUIDv7 id, `organization_id`, `createdAt`/`updatedAt` (see `docs/plan/data-model.md`).
+- The API never hard-deletes: `DELETE` is a soft delete (`deletedAt`/`deletedBy`/`deletionReason`).
 - Letter grades are computed from points, never stored.
 - Audit/log rows are IDs only — never names, notes, or grade contents.
 
