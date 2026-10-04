@@ -51,7 +51,7 @@ describe("foundation", () => {
       headers,
       body: {
         organizationId: school!.id,
-        permissions: { grade: ["create"] },
+        permissions: { submission: ["create"] },
       },
     });
     expect(denied.success).toBe(false);

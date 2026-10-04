@@ -7,7 +7,7 @@ export const statements = {
   class: ["create", "read", "update", "delete"],
   assignment: ["create", "read", "update", "delete"],
   submission: ["create", "read", "readAll", "delete"],
-  grade: ["create", "read", "update"],
+  grade: ["read", "update"],
   activity: ["read"],
 } as const;
 
@@ -30,7 +30,7 @@ export const teacher = ac.newRole({
   class: ["read", "update"],
   assignment: ["create", "read", "update", "delete"],
   submission: ["read", "readAll"],
-  grade: ["create", "read", "update"],
+  grade: ["read", "update"],
 });
 
 export const student = ac.newRole({

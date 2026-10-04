@@ -16,6 +16,20 @@ without reshaping tables; isolation today is enforced in the service layer and b
   is discouraged). Keys are not required for the assignment.
 - **Organization plugin:** school = organization (unique slug). Custom roles via `createAccessControl`:
   `administrator`, `teacher`, `student`. Server checks via `auth.api.hasPermission()`.
+- **Role matrix** (`lib/server/permissions.ts`). `create`, `read`, `update`, `delete`
+  unless noted. Teachers act only on classes they teach, and students only on their own work; those checks are in the
+  services, not the matrix. Grading is one `grade: update` for everyone who may grade; there is no `grade: create`.
+
+  | Resource                               | Administrator                | Teacher                      | Student      |
+  | -------------------------------------- | ---------------------------- | ---------------------------- | ------------ |
+  | `gradingScale`                         | create, read, update, delete | read                         | read         |
+  | `class`                                | create, read, update, delete | read, update                 | read         |
+  | `assignment`                           | create, read, update, delete | create, read, update, delete | read         |
+  | `submission`                           | read, readAll, delete        | read, readAll                | create, read |
+  | `grade`                                | read, update                 | read, update                 | read         |
+  | `activity`                             | read                         | none                         | none         |
+  | `member`, `invitation`, `organization` | manage                       | none                         | none         |
+
 - **Org comes from the URL** (`/api/v1/orgs/{slug}/…`), not the session's "active organization" — stateless
   requests, self-contained curl examples. Resolve slug → org → verify membership on every request.
 - Better Auth ids generated as UUIDv7 via `advanced.database.generateId`.
