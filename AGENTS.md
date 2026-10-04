@@ -82,6 +82,9 @@ is true, and then work stops for human review.
 - HTTP statuses come from the `STATUS` map in `lib/http-status.ts` (`STATUS.unprocessable_content`, Rails-style names),
   never a bare number, in code and in tests.
 - Audit/log rows are IDs only — never names, notes, or grade contents.
+- The codebase guide on the docs page links to files on `main` at github.com/danielrose7/homework-api. When you move,
+  rename or delete a file or folder, grep the guide (and `docs/`) for its old path and update the links in the same
+  commit. Links may lag a little behind `main`, but a path you changed must not be left dangling.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
