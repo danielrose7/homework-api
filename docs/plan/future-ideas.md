@@ -82,6 +82,18 @@ back in `If-Match` on `PUT …/grade`: `412` when it is stale, `428` when it is 
 quoted ETag (a `*` would let a regrade skip the check). `If-Unmodified-Since` does not work because HTTP dates have
 one-second precision. A `version` integer in the body is the Stripe/Django-friendly alternative.
 
+## More Stripe-style API conventions
+
+Left out of the first pass at the API shape:
+
+- `object` fields on nested objects (`student`, `grade`, `assignment`), not just on top-level resources.
+- An `Idempotency-Key` header on `POST`, so a retried submit returns the original response. The attempt limit
+  already turns a repeat into a `409`.
+- Expandable references (`?expand[]=assignment`) so a list can return ids by default and embed objects on request.
+- `ending_before` for paging backwards, and `previous` links.
+- Unix timestamps instead of ISO 8601; kept as ISO so school time zones stay readable.
+- Versioning by date header (`Stripe-Version`) rather than `/v1` in the path.
+
 ## Presigned uploads to R2/S3
 
 The Active Storage-style tables already allow it: `storage_blob.service_name` picks the storage service. Enabling it
