@@ -61,8 +61,9 @@ is true, and then work stops for human review.
 - Before the first release, edit the existing migrations in place instead of adding new ones, then rebuild the local
   database with `pnpm db:fresh` (it recreates the Docker volume, so roles and grants are reapplied). Confirm there is
   no drift with `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`.
-- Columns that point at another table end in `_id` (`graded_by_id`, `deleted_by_id`); the Prisma relation field drops
-  the suffix (`gradedBy`).
+- Schema naming and structure rules are in `docs/plan/schema-conventions.md`; read it before touching
+  `prisma/schema.prisma`. In particular, a column that points at another row ends in `_id` (`graded_by_id`), and its
+  Prisma relation drops the suffix (`gradedBy`). `test/schema-conventions.test.ts` enforces this.
 - Services take an explicit `RequestContext` and scope every query by `organizationId`. No RLS for now, but keep
   the schema RLS-ready. No raw-SQL writes in app code (`updated_at` is set by the Prisma client).
 - Every domain table: UUIDv7 id, `organization_id`, `createdAt`/`updatedAt` (see `docs/plan/data-model.md`).

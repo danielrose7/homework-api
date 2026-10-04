@@ -101,6 +101,38 @@ describe("schema conventions", () => {
         }
       });
 
+      it("names every pointer to another row with an _id suffix", () => {
+        for (const [field, definition] of model.fields) {
+          if (field === "id" || !definition.includes("@db.Uuid")) continue;
+          expect(
+            field.endsWith("Id"),
+            `${name}.${field} should end in Id`,
+          ).toBe(true);
+          expect(definition, `${name}.${field}`).toMatch(
+            /@map\("[a-z_]+_id"\)/,
+          );
+        }
+      });
+
+      it("names a relation after its column without the Id suffix", () => {
+        for (const [field, definition] of model.fields) {
+          const relation = definition.match(
+            /@relation\((?:"\w+",\s*)?fields: \[([^\]]+)\]/,
+          );
+          if (!relation?.[1]) continue;
+          const pointer =
+            relation[1]
+              .split(",")
+              .map((part) => part.trim())
+              .at(-1) ?? "";
+          if (pointer === "organizationId" || !pointer.endsWith("Id")) continue;
+          expect(
+            field,
+            `${name}.${field} relates through ${pointer}`,
+          ).not.toMatch(/Id$/);
+        }
+      });
+
       it("maps to a snake_case table", () => {
         expect(model.attributes.some((a) => a.startsWith("@@map("))).toBe(true);
       });

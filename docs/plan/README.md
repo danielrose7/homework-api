@@ -7,16 +7,16 @@ purpose. Be ready to discuss, defend and extend every part.
 
 This directory is the living plan. Update it as we go (tick boxes, add to the decision log).
 
-| Doc                                                      | Contents                                                              |
-| -------------------------------------------------------- | --------------------------------------------------------------------- |
-| [data-model.md](data-model.md)                           | Tables, conventions (UUIDv7, timestamps, org scoping), grading rules  |
-| [auth-and-tenancy.md](auth-and-tenancy.md)               | Better Auth, roles, request context, DB roles, RLS-ready schema rules |
-| [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                 |
-| [audit-and-grade-history.md](audit-and-grade-history.md) | HIPAA-style `activity_log`, grade events, regrade concurrency         |
-| [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                 |
-| [future-ideas.md](future-ideas.md)                       | Deferred features, options considered, and what is already prepared   |
-| [testing.md](testing.md)                                 | Rollback-per-test, Fishery, guard tests, race tests                   |
-| [api-and-docs.md](api-and-docs.md)                       | REST design, OpenAPI, tabbed examples, UI                             |
+| Doc                                                      | Contents                                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [schema-conventions.md](schema-conventions.md)           | Naming, keys, timestamps, tenancy, deletes: the rules every model follows |
+| [data-model.md](data-model.md)                           | Tables, conventions (UUIDv7, timestamps, org scoping), grading rules      |
+| [auth-and-tenancy.md](auth-and-tenancy.md)               | Better Auth, roles, request context, DB roles, RLS-ready schema rules     |
+| [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                     |
+| [audit-and-grade-history.md](audit-and-grade-history.md) | HIPAA-style `activity_log`, grade events, regrade concurrency             |
+| [future-ideas.md](future-ideas.md)                       | Deferred features, options considered, and what is already prepared       |
+| [testing.md](testing.md)                                 | Rollback-per-test, Fishery, guard tests, race tests                       |
+| [api-and-docs.md](api-and-docs.md)                       | REST design, OpenAPI, tabbed examples, UI                                 |
 
 ## Assignment requirements → where they land
 

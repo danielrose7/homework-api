@@ -2,6 +2,8 @@
 
 ## Conventions (all tables)
 
+The short checklist lives in [schema-conventions.md](schema-conventions.md); this section explains the reasoning.
+
 - **PK:** UUIDv7 — `@id @default(uuid(7))` (verify the installed Prisma supports it; otherwise generate in a
   client extension like `../goji-health`'s `newId()`).
 - **Timestamps:** every model has
