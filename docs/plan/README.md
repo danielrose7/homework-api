@@ -51,7 +51,8 @@ Each phase ends with passing tests. Tick as we go.
 ### Phase 1 — Foundation
 
 - [x] `git init`, `AGENTS.md`
-- [ ] pnpm, Next.js, strict TypeScript + `typecheck` script, Prettier, shadcn init
+- [x] pnpm, Next.js, strict TypeScript + `typecheck` script, Prettier
+- [ ] shadcn init
 - [ ] `docker-compose` Postgres; env handling
 - [ ] Prisma setup; two connection strings (`DATABASE_URL` app role, migration URL owner)
 - [ ] Better Auth: email+password, organization plugin (custom roles), bearer plugin, UUIDv7 ids
