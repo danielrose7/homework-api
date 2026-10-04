@@ -13,14 +13,14 @@ export interface Persona {
   context: () => Promise<RequestContext>;
 }
 
-export interface BaselineSchool {
+export interface SeededSchool {
   organization: OrganizationRecord;
   admin: Persona;
   teachers: Persona[];
   students: Persona[];
 }
 
-export interface BaselineOptions {
+export interface SeedSchoolOptions {
   teachers?: number;
   students?: number;
   organization?: Partial<OrganizationRecord>;
@@ -49,9 +49,9 @@ async function persona(member: MemberRecord): Promise<Persona> {
   };
 }
 
-export async function baselineSchool(
-  options: BaselineOptions = {},
-): Promise<BaselineSchool> {
+export async function seedSchool(
+  options: SeedSchoolOptions = {},
+): Promise<SeededSchool> {
   const organization = await organizationFactory.create(options.organization);
   const inSchool = { organizationId: organization.id };
 
@@ -72,10 +72,4 @@ export async function baselineSchool(
   }
 
   return { organization, admin, teachers, students };
-}
-
-export async function baselineTwoSchools() {
-  const school = await baselineSchool();
-  const other = await baselineSchool();
-  return { school, other };
 }

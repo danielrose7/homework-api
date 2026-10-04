@@ -91,7 +91,7 @@ Each phase ends with passing tests. Tick as we go.
 - [x] `RequestContext` type and member/role guard helpers
 - [x] Vitest + rollback-per-test Prisma client
 - [x] Fishery factories for user, organization, member (traits agreed first; persistence in `onCreate`); domain factories arrive with their tables in Phase 2
-- [x] Baseline scenario helpers: `baselineSchool()` and `baselineTwoSchools()` return signed-in personas; later phases layer term, class and assignment on top
+- [x] Baseline scenario helpers: `seedSchool()` returns signed-in personas (call it twice for an `other` school); later phases layer term, class and assignment on top
 - **Done when:** a test signs up a user, creates an org, checks a role, and rolls back cleanly.
 
 ### Phase 2 — Data model and domain logic

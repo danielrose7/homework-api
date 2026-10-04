@@ -41,9 +41,9 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
 Tests don't rebuild a school by hand. `test/scenarios/` holds layered helpers, each building on the one below, so a
 test starts from the layer it needs:
 
-1. `baselineSchool()`: a school, an administrator, two teachers and three students, each a real Better Auth user
+1. `seedSchool()`: a school, an administrator, two teachers and three students, each a real Better Auth user
    who has signed in (Bearer headers plus a `context()` that resolves a `RequestContext`).
-2. `baselineTwoSchools()`: two of the above, for isolation tests.
+2. For isolation tests, call `seedSchool()` twice and treat the second as `other`.
 3. Phase 2 adds `baselineClass()` (term, class, teacher assignment, seats) and `baselineAssignment()`; Phase 3 adds
    submitted and graded variants.
 

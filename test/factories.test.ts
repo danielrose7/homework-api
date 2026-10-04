@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+import { createPrismaClient } from "@/lib/server/db";
 import { ApiError } from "@/lib/server/errors";
 
 import { factoryAuth } from "./factories/runtime";
 import { memberFactory } from "./factories/member";
 import { userFactory } from "./factories/user";
+import { testEnv } from "./env.ts";
 import { withRollbackDb, testDb } from "./rollback-db";
-import { baselineSchool, baselineTwoSchools } from "./scenarios/school";
+import { seedSchool } from "./scenarios/school";
 
 withRollbackDb();
 
@@ -41,9 +43,9 @@ describe("memberFactory", () => {
   });
 });
 
-describe("baselineSchool", () => {
+describe("seedSchool", () => {
   it("returns signed-in personas with the right roles", async () => {
-    const school = await baselineSchool();
+    const school = await seedSchool();
     expect(school.teachers).toHaveLength(2);
     expect(school.students).toHaveLength(3);
 
@@ -55,7 +57,8 @@ describe("baselineSchool", () => {
   });
 
   it("keeps two schools apart: a member of one is a stranger to the other", async () => {
-    const { school, other } = await baselineTwoSchools();
+    const school = await seedSchool();
+    const other = await seedSchool();
     const outsider = other.students[0]!;
     const error = await resolveFor(outsider.headers, school.organization.slug);
     if (!(error instanceof ApiError)) throw new Error("expected an ApiError");
@@ -75,3 +78,22 @@ async function resolveFor(headers: Headers, slug: string) {
     (error: unknown) => error,
   );
 }
+
+describe("isolation", () => {
+  it("keeps factory and Better Auth writes inside the test transaction", async () => {
+    const school = await seedSchool();
+    expect(await testDb().user.count()).toBeGreaterThan(0);
+
+    const otherConnection = createPrismaClient(testEnv.appUrl);
+    try {
+      expect(await otherConnection.user.count()).toBe(0);
+      expect(
+        await otherConnection.organization.findUnique({
+          where: { slug: school.organization.slug },
+        }),
+      ).toBeNull();
+    } finally {
+      await otherConnection.$disconnect();
+    }
+  });
+});
