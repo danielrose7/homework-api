@@ -64,15 +64,15 @@ violation that slips through is translated to `409` or `422`, never a raw `500`.
 
 ### Status codes
 
-| Code          | Meaning                                                                                               |
-| ------------- | ----------------------------------------------------------------------------------------------------- |
-| `400`         | Request can't be parsed (malformed JSON, wrong content type)                                          |
-| `401`         | No or invalid credentials                                                                             |
-| `403`         | Authenticated member of the school, but the role can't do this                                        |
-| `404`         | Resource missing, deleted, or in another school                                                       |
-| `409`         | Valid request that conflicts with current state (over-submission limit, duplicate seat, frozen scale) |
-| `412` / `428` | Stale or missing `If-Match` on a regrade                                                              |
-| `422`         | Parsed fine but the values are invalid: any Zod failure or `validate*` issue                          |
+| Code          | Meaning                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------- |
+| `400`         | Request can't be parsed (malformed JSON, wrong content type, an `If-Match` that is not one quoted ETag) |
+| `401`         | No or invalid credentials                                                                               |
+| `403`         | Authenticated member of the school, but the role can't do this                                          |
+| `404`         | Resource missing, deleted, or in another school                                                         |
+| `409`         | Valid request that conflicts with current state (over-submission limit, duplicate seat, frozen scale)   |
+| `412` / `428` | Stale or missing `If-Match` on a regrade                                                                |
+| `422`         | Parsed fine but the values are invalid: any Zod failure or `validate*` issue                            |
 
 Rule of thumb: if changing the input could make it succeed, it's `422`; if the input is fine but the world is in
 the way, it's `409`.

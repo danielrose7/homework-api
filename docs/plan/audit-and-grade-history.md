@@ -46,7 +46,7 @@ the latest event's `created_at`. Events are the source of truth for history.
 
 `PUT …/grade` sets the current grade and appends a grade event. The client sends `If-Match` with the ETag it
 last received, which is the quoted ISO-8601 `graded_at` at millisecond precision (`"2026-10-04T10:00:00.123Z"`).
-First grade sends `If-Match: *` semantics via no existing grade. Mismatch → `412 Precondition Failed`; header
+A first grade sends no `If-Match`; sending one is a `412`, since there is nothing to match. `If-Match: *` and any value that is not a single quoted ETag are a `400` (`invalid_if_match`), because a wildcard would let a regrade skip the check. Mismatch → `412 Precondition Failed`; header
 absent on a regrade → `428 Precondition Required`. (`If-Unmodified-Since` is unusable: HTTP dates are
 1-second precision.) Grading runs in a transaction with a row lock on the submission. Relies on `Timestamptz(3)` (see data-model.md).
 
