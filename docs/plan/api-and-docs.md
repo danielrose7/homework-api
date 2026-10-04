@@ -9,6 +9,10 @@
 - Consistent error shape: `{ error: { code, message, details? } }`; `409` for conflicts, `412`/`428` for failed/missing preconditions, a resource in another school returns `404`
   (existence isn't leaked); `403` only when the caller is a member of the school but lacks the role.
 - Pagination: cursor-based on `(created_at, id)`; filters as query params.
+- JSON field names are `snake_case`. Timestamps in responses are ISO 8601 with an offset.
+- Dates and times are the school's, not UTC: `from`/`to` are calendar dates, both inclusive, read in the time zone
+  stored in `organization_preferences` (IANA name). `from` starts at 00:00 and `to` ends at 24:00 in that zone, so
+  a day with a daylight-saving change is still one whole day.
 
 ### Verb conventions
 

@@ -66,6 +66,12 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Fishery factories persist in `onCreate`; traits agreed together before writing                                                                                       | Decided | See testing.md                                                                                                               |
 | Route tests build context through setup helpers                                                                                                                      | Decided | See testing.md                                                                                                               |
 | Demo seed data is separate from CI factories                                                                                                                         | Decided | Deterministic, readable names; see demo-and-seed.md                                                                          |
+| Grading uses one permission, `grade: update`, for teachers and administrators; `grade: create` is removed                                                            | Decided | Phase 3 applies it in `lib/server/permissions.ts`                                                                            |
+| No member-provisioning or invitation endpoints; people are created by the seed script. The API covers what the PDF brief needs, give or take                         | Decided | Better Auth's own routes stay mounted for sign-in and school creation                                                        |
+| JSON fields use `snake_case` (`teacher_notes`, `submitted_at`)                                                                                                       | Decided | Matches the brief and Python clients                                                                                         |
+| Submit takes JSON `{ "text" }` or multipart (`text` plus repeated `files`); attachments cannot be added after submitting                                             | Decided |                                                                                                                              |
+| Any JSON stored in the database is `JSONB` (Prisma `Json`)                                                                                                           | Decided | `storage_blob.metadata` and `activity_log.metadata` already are                                                              |
+| Each school has a time zone in a new `organization_preferences` table; date filters and date-only inputs are read in it, not UTC                                     | Decided | Timestamps in responses stay ISO 8601 with an offset; see api-and-docs.md                                                    |
 
 ## Deviations from the plan
 
@@ -123,19 +129,19 @@ Each phase ends with passing tests. Tick as we go.
 
 ### Phase 3 — Required API (the assignment)
 
-**Decide before starting** (recommendation in italics; nothing here is decided until confirmed):
+**Decisions** (recorded in the decision log):
 
-1. Permission matrix: use `grade: create` for a first grade, or remove it. _Remove it; grading is one `update`._
-2. How people get into a school over HTTP: _administrator-provisioned. `POST /orgs/{slug}/members` creates the Better
-   Auth user (username + password) and the member in one call; no email invitations, since there is no sender. Any
-   signed-in user may create a school, as Better Auth allows by default._
-3. JSON field casing: _`snake_case` (`teacher_notes`, `submitted_at`), matching the brief and friendly to Python
-   clients._
-4. Submit request: _JSON `{ "text" }` or multipart with a `text` field and repeated `files`; attachments cannot be
-   added after submitting._
-5. List filters: _`from`/`to` are UTC dates, both inclusive, on `submitted_at`; `assignment` and `student` are
-   case-insensitive "contains" (student matches display name or username, minimum two characters); newest first;
-   page size 25, maximum 100._
+1. `grade: create` is removed; grading is one `grade: update`.
+2. No member endpoints; the seed script creates people. Only the routes the PDF brief needs.
+3. JSON fields are `snake_case`.
+4. Submit is JSON `{ "text" }` or multipart (`text` plus repeated `files`); no attachments after submitting.
+5. List filters: `from`/`to` are inclusive dates read in the school's time zone (`organization_preferences`), not
+   UTC; `assignment` and `student` are case-insensitive "contains" (student matches display name or username,
+   minimum two characters); newest first; page size 25, maximum 100. Awaiting confirmation of the details of the
+   time zone setting (see the first checklist item).
+
+- [ ] `organization_preferences` (one row per school, IANA `timezone`), created with the school and with the default
+      scale; edit the domain migration in place and rebuild with `pnpm db:fresh`
 
 - [ ] Route plumbing: mount Better Auth's HTTP handler (`/api/auth/*`) so curl, Python and Node can sign up, sign in
       for a Bearer token and create a school; a small route wrapper that builds the `RequestContext`, parses with Zod and
