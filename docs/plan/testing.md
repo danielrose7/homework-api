@@ -19,6 +19,7 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
 5. **Guard tests:**
    - every domain Prisma model has `created_at` + `@updatedAt` unless allowlisted (`activity_log`, `submission_grade_event`)
    - every tenant table has `organization_id`, composite FK to its parents
+   - dynamic API route segments and route-owned Zod object fields use `snake_case`
 6. **Soft-delete tests:** default reads exclude deleted rows (including via relation includes); partial unique
    indexes allow re-creating a deleted natural key; DELETE requires a reason on education records; no code path
    outside dev tooling hard-deletes.
