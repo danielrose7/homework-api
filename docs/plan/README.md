@@ -45,7 +45,9 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Resubmission blocked by default (`max_submissions = 1`)                                                                                                              | Decided |                                                                                                                              |
 | Cross-school requests return `404`; `403` only for in-school role failures                                                                                           | Decided |                                                                                                                              |
 | Late work is not enforced or flagged yet                                                                                                                             | Decided | Future decision: grading implications                                                                                        |
-| Stale-grade check uses `If-Match` ETag derived from `graded_at` (412/428), not `If-Unmodified-Since`                                                                 | Decided | HTTP dates have 1s precision                                                                                                 |
+| No ETag or `If-Match`; a regrade is last-write-wins, with a required `reason` and a full grade history                                                               | Decided | Replaces the stale-grade check; optimistic concurrency is in future-ideas.md                                                 |
+| API shape follows Django/Rails conventions, and Stripe where those are silent: an `object` field on resources, Stripe list objects, `type` on errors                 | Decided | ISO 8601 timestamps stay; `PUT …/grade` stays; see api-and-docs.md                                                           |
+| Lists answer `{ object: "list", url, has_more, data }`; page with `limit` (default 25, max 100) and `starting_after=<id>`                                            | Decided | Replaces the opaque `cursor`/`next_cursor` and `page_size`                                                                   |
 | `class_enrollment` renamed `class_seat`                                                                                                                              | Decided |                                                                                                                              |
 | `feedback` renamed `teacher_notes`                                                                                                                                   | Decided | Matches the spec wording                                                                                                     |
 | Timestamps (not revision numbers) for grade history + concurrency                                                                                                    | Decided | `Timestamptz(3)` everywhere to avoid ms/µs mismatch                                                                          |
@@ -96,7 +98,7 @@ Recorded as work lands; each is small but worth a look at the gate.
 - Denials are logged for school members only: `403`s and the deliberate `404` refusals. A request from a
   non-member, an unauthenticated one, or one for a missing id leaves no `denied` row.
 - `GET /submissions/{id}` was not in the route plan. It was added because submit returns a `Location` pointing at it
-  and because it is where a client reads the grade `ETag`; reading it is a logged single-record read.
+  and because a client needs to read one record after a write; reading it is a logged single-record read.
 - No `Idempotency-Key` on submit; the attempt limit already makes a repeated request a `409`.
 
 ## Phases
@@ -154,8 +156,7 @@ Each phase ends with passing tests. Tick as we go.
       `submissionEligibility` in one transaction); list own submissions (grade / assignment-name filters)
 - [x] Attachments: list and download routes (downloads are logged reads)
 - [x] Teacher: overview (assignment, date range, student-name filters), scoped to the classes a teacher teaches
-- [x] Teacher: grade route `PUT …/grade` over `gradeSubmission`, returning the grade version as an ETag and honoring
-      `If-Match` (`428`/`412`)
+- [x] Teacher: grade route `PUT …/grade` over `gradeSubmission`, returning the updated submission
 - [x] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
 - [x] Log authorization denials to the activity log from the route layer (the guards only throw today)
 - [x] Apply the permission-matrix decision in `lib/server/permissions.ts` and document the final role matrix
@@ -240,4 +241,5 @@ Deliberately deferred; none block the required API. Details, options and researc
 [future-ideas.md](future-ideas.md).
 
 - Extra credit, late work, retention and purge, graded work with no upload,
-  excused work, an Incomplete deadline, class averages and weighting, RLS, tamper-evident audit log, rate limits.
+  excused work, an Incomplete deadline, class averages and weighting, RLS, tamper-evident audit log, rate limits,
+  optimistic concurrency on regrades.

@@ -110,7 +110,11 @@ describe("serve", () => {
 
     expect(response.status).toBe(STATUS.unauthorized);
     expect(await response.json()).toEqual({
-      error: { code: "unauthenticated", message: "Authentication required" },
+      error: {
+        type: "authentication_error",
+        code: "unauthenticated",
+        message: "Authentication required",
+      },
     });
     expect(response.headers.get("x-request-id")).toBeTruthy();
   });
@@ -197,6 +201,7 @@ describe("serve", () => {
     expect(response.status).toBe(STATUS.conflict);
     expect(await response.json()).toEqual({
       error: {
+        type: "invalid_request_error",
         code: "submission_limit_reached",
         message: "Already submitted",
       },

@@ -91,7 +91,13 @@ function errorResponse(error: unknown, requestId: string): Response {
   console.error(`[${requestId}] unhandled error`, error);
   return respond(
     Response.json(
-      { error: { code: "internal_error", message: "Something went wrong" } },
+      {
+        error: {
+          type: "api_error",
+          code: "internal_error",
+          message: "Something went wrong",
+        },
+      },
       { status: STATUS.internal_server_error },
     ),
     requestId,

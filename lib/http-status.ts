@@ -7,9 +7,7 @@ export const STATUS = {
   forbidden: 403,
   not_found: 404,
   conflict: 409,
-  precondition_failed: 412,
   unprocessable_content: 422,
-  precondition_required: 428,
   internal_server_error: 500,
 } as const;
 

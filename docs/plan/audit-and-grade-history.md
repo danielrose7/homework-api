@@ -42,18 +42,18 @@ Columns: `organization_id`, `submission_id`, `points_awarded` (nullable), `teach
 The submission row holds the **current** grade (denormalized for fast filtering); `submission.graded_at` equals
 the latest event's `created_at`. Events are the source of truth for history.
 
-## Regrade concurrency (timestamps, not revision numbers)
+## Concurrent regrades
 
-`PUT …/grade` sets the current grade and appends a grade event. The client sends `If-Match` with the ETag it
-last received, which is the quoted ISO-8601 `graded_at` at millisecond precision (`"2026-10-04T10:00:00.123Z"`).
-A first grade sends no `If-Match`; sending one is a `412`, since there is nothing to match. `If-Match: *` and any value that is not a single quoted ETag are a `400` (`invalid_if_match`), because a wildcard would let a regrade skip the check. Mismatch → `412 Precondition Failed`; header
-absent on a regrade → `428 Precondition Required`. (`If-Unmodified-Since` is unusable: HTTP dates are
-1-second precision.) Grading runs in a transaction with a row lock on the submission. Relies on `Timestamptz(3)` (see data-model.md).
+`PUT …/grade` sets the current grade and appends a grade event. There is no ETag or `If-Match`: the last write
+wins, and nothing is lost because every grade stays in the history. Grading runs in a transaction with a row lock
+on the submission, so two teachers grading at once are applied one after the other, and the second one needs a
+`reason` because by then the submission is already graded. Optimistic concurrency (a version check that refuses a
+stale regrade) is in [future-ideas.md](future-ideas.md). Relies on `Timestamptz(3)` (see data-model.md).
 
 ## Tests
 
 - Event created per grade; history immutable; reason required on regrade.
-- Stale ETag → `412`; missing → `428`; concurrent regrades: one wins.
+- Concurrent regrades are applied one after the other; both stay in the history.
 - Rolled-back mutation leaves no log row; denied/read logs survive rollback.
 - `app_user` cannot `UPDATE`/`DELETE` the append-only tables (grant test, not just the Prisma extension).
 - ms-precision round-trip of `graded_at` compares equal.

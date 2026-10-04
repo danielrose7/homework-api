@@ -74,6 +74,14 @@ per-request context, and a leak test.
 
 A per-school `prev_hash` / `row_hash` chain on `activity_log`, possible because the table is strictly append-only.
 
+## Optimistic concurrency on regrades
+
+Regrading is last-write-wins today. To refuse a regrade made from a stale screen, send a version with each
+submission (an `ETag` of the quoted ISO 8601 `graded_at`, which `Timestamptz(3)` round-trips exactly) and require it
+back in `If-Match` on `PUT …/grade`: `412` when it is stale, `428` when it is missing, `400` when it is not one
+quoted ETag (a `*` would let a regrade skip the check). `If-Unmodified-Since` does not work because HTTP dates have
+one-second precision. A `version` integer in the body is the Stripe/Django-friendly alternative.
+
 ## Presigned uploads to R2/S3
 
 The Active Storage-style tables already allow it: `storage_blob.service_name` picks the storage service. Enabling it

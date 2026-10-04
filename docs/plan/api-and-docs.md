@@ -11,10 +11,14 @@
   request id) to the error shape below. Every response carries `x-request-id`. `createServe(deps)` takes the auth and
   database explicitly so route tests can pass the rolled-back client.
 - Auth: `Authorization: Bearer <token>` (or `x-api-key`). Org from the path; membership + role checked per request.
-- Consistent error shape: `{ error: { code, message, details? } }`; `409` for conflicts, `412`/`428` for failed/missing preconditions, a resource in another school returns `404`
+- Consistent error shape: `{ error: { type, code, message, param?, details? } }`; `409` for conflicts, a resource in another school returns `404`
   (existence isn't leaked); `403` only when the caller is a member of the school but lacks the role.
-- Pagination: cursor-based on `(submitted_at, id)`, newest first. Lists answer `{ data: [...], next_cursor }`; send
-  `cursor` and `page_size` (default 25, maximum 100). Filters are query params, and unknown ones are rejected.
+- Resources carry an `object` field naming their type (`"submission"`, `"attachment"`), as Stripe's do.
+- Lists are Stripe list objects: `{ "object": "list", "url": "/api/v1/orgs/sandbox/submissions", "has_more": false, "data": [...] }`.
+  Page with `limit` (default 25, maximum 100) and `starting_after=<id of the last item you have>`; ordering is
+  newest first on `(submitted_at, id)`. A `starting_after` that is not in the list is a `422`. Filters are query
+  params, and unknown ones are rejected. There is no total count.
+- Nested collections on a create response, such as the `attachments` of a new submission, are list objects too.
 - JSON field names are `snake_case`. Validation error `field`s use the same names (`teacher_notes`, `files.1.content_type`), however the service named them. Timestamps in responses are ISO 8601 with an offset.
 - Dates and times are the school's, not UTC: `from`/`to` are calendar dates, both inclusive, read in the time zone
   stored in `organization_preferences` (IANA name). `from` starts at 00:00 and `to` ends at 24:00 in that zone, so
@@ -37,8 +41,8 @@
 | `POST /assignments/{id}/submissions`                                                                                                 | student                                     | Submit as JSON `{ text }` or multipart (`text`, repeated `files`); `409` over the limit                     |
 | `GET /submissions/me?grade=&assignment=`                                                                                             | student                                     | Own submissions; grade ∈ `A–F`, `incomplete`, `ungraded`                                                    |
 | `GET /submissions?assignment=&from=&to=&student=&grade=`                                                                             | teacher (own classes), admin                | Overview; `student` is at least 2 characters; `from`/`to` are school-time days                              |
-| `GET /submissions/{id}`                                                                                                              | student (own), teacher (own classes), admin | One submission; sends the grade version as an `ETag` once graded                                            |
-| `PUT /submissions/{id}/grade`                                                                                                        | teacher (own classes), admin                | Set current grade (`points` or `band`, plus `teacher_notes`); `If-Match` → `412` if stale, `428` if missing |
+| `GET /submissions/{id}`                                                                                                              | student (own), teacher (own classes), admin | One submission                                                                                              |
+| `PUT /submissions/{id}/grade`                                                                                                        | teacher (own classes), admin                | Set current grade (`points` or `band`, plus `teacher_notes`, `reason` on a regrade); returns the submission |
 | `GET /submissions/{id}/history`                                                                                                      | teacher/admin                               | Grade events                                                                                                |
 | `GET /assignments/{id}/missing`                                                                                                      | teacher/admin                               | Enrolled students with no submission                                                                        |
 | `GET /activity`                                                                                                                      | admin                                       | Audit log                                                                                                   |
@@ -64,26 +68,31 @@ violation that slips through is translated to `409` or `422`, never a raw `500`.
 
 ### Status codes
 
-| Code          | Meaning                                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------------------- |
-| `400`         | Request can't be parsed (malformed JSON, wrong content type, an `If-Match` that is not one quoted ETag) |
-| `401`         | No or invalid credentials                                                                               |
-| `403`         | Authenticated member of the school, but the role can't do this                                          |
-| `404`         | Resource missing, deleted, or in another school                                                         |
-| `409`         | Valid request that conflicts with current state (over-submission limit, duplicate seat, frozen scale)   |
-| `412` / `428` | Stale or missing `If-Match` on a regrade                                                                |
-| `422`         | Parsed fine but the values are invalid: any Zod failure or `validate*` issue                            |
+| Code  | Meaning                                                                                               |
+| ----- | ----------------------------------------------------------------------------------------------------- |
+| `400` | Request can't be parsed (malformed JSON, wrong content type)                                          |
+| `401` | No or invalid credentials                                                                             |
+| `403` | Authenticated member of the school, but the role can't do this                                        |
+| `404` | Resource missing, deleted, or in another school                                                       |
+| `409` | Valid request that conflicts with current state (over-submission limit, duplicate seat, frozen scale) |
+| `422` | Parsed fine but the values are invalid: any Zod failure or `validate*` issue                          |
 
 Rule of thumb: if changing the input could make it succeed, it's `422`; if the input is fine but the world is in
 the way, it's `409`.
 
 ### Error shape
 
+`type` groups errors the way Stripe's does: `invalid_request_error` (400, 404, 409, 422), `authentication_error`
+(401), `permission_error` (403) and `api_error` (500). `param` is the first issue's `field`, for clients that show
+one error; `details` still lists them all.
+
 ```json
 {
   "error": {
+    "type": "invalid_request_error",
     "code": "validation_failed",
     "message": "Request validation failed",
+    "param": "points",
     "details": [
       {
         "field": "points",
@@ -117,7 +126,7 @@ the way, it's `409`.
 | Grading scale | At least one band; a computed band at `min_percent` 0; no duplicate thresholds or labels; labels non-empty and not `ungraded`; `min_percent` ≥ 0; GPA values in range; at most one default                                                                                                           |
 | Term / year   | End after start; terms inside the academic year; no overlap between terms of one year                                                                                                                                                                                                                |
 | Class / seat  | Teacher id is a member with the teacher role; student id is a member with the student role; class belongs to a non-deleted term; duplicate seat is `409`                                                                                                                                             |
-| List filters  | `from` ≤ `to`; ISO dates; `grade` is a known label, group or `ungraded`; page size within bounds; cursor decodes; unknown query params rejected                                                                                                                                                      |
+| List filters  | `from` ≤ `to`; ISO dates; `grade` is a known label, group or `ungraded`; `limit` within bounds; `starting_after` is in the list; unknown query params rejected                                                                                                                                       |
 
 Each rule gets a stable `code`, a unit test on the validator, and a route test asserting the `422` body. The
 OpenAPI spec documents the codes per endpoint.

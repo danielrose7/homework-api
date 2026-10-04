@@ -273,7 +273,7 @@ describe("listOwnSubmissions", () => {
       "Reading log",
       "Fractions worksheet",
     ]);
-    expect(page.nextCursor).toBeNull();
+    expect(page.hasMore).toBe(false);
     const graded = page.items[2]!;
     expect(graded.grade).toMatchObject({
       label: "A",
@@ -309,36 +309,40 @@ describe("listOwnSubmissions", () => {
     ]);
   });
 
-  it("rejects an unknown grade, a bad page size and a bad cursor together", async () => {
+  it("rejects an unknown grade, a bad limit and a bad starting_after together", async () => {
     const seeded = await manyGraded();
     const ctx = await seeded.school.students[0]!.context();
 
     const error = await failure(
-      listOwnSubmissions(ctx, { grade: "Z", pageSize: 0, cursor: "nope" }),
+      listOwnSubmissions(ctx, {
+        grade: "Z",
+        limit: 0,
+        startingAfter: crypto.randomUUID(),
+      }),
     );
 
     expect(error.status).toBe(STATUS.unprocessable_content);
     expect(codes(error)).toEqual([
       "unknown_grade",
-      "page_size_out_of_range",
-      "invalid_cursor",
+      "limit_out_of_range",
+      "unknown_starting_after",
     ]);
   });
 
-  it("pages with a cursor without skipping or repeating", async () => {
+  it("pages with starting_after without skipping or repeating", async () => {
     const seeded = await manyGraded();
     const ctx = await seeded.school.students[0]!.context();
 
-    const first = await listOwnSubmissions(ctx, { pageSize: 2 });
+    const first = await listOwnSubmissions(ctx, { limit: 2 });
     const second = await listOwnSubmissions(ctx, {
-      pageSize: 2,
-      cursor: first.nextCursor!,
+      limit: 2,
+      startingAfter: first.items.at(-1)!.id,
     });
 
     expect(first.items).toHaveLength(2);
-    expect(first.nextCursor).not.toBeNull();
+    expect(first.hasMore).toBe(true);
     expect(second.items).toHaveLength(1);
-    expect(second.nextCursor).toBeNull();
+    expect(second.hasMore).toBe(false);
     expect(
       new Set([...first.items, ...second.items].map((s) => s.id)).size,
     ).toBe(3);

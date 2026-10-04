@@ -185,7 +185,6 @@ describe("Incomplete", () => {
 
     const replaced = await gradeSubmission(teacher, id, {
       points: "88",
-      expectedGradedAt: first.gradedAt,
     });
     expect(replaced.grade.label).toBe("B");
     expect(
@@ -202,31 +201,19 @@ describe("Incomplete", () => {
   });
 });
 
-describe("regrading and versions", () => {
-  it("requires the version you saw and a reason", async () => {
+describe("regrading", () => {
+  it("requires a reason to regrade", async () => {
     const { teacher, id } = await ungraded();
     const first = await gradeSubmission(teacher, id, { points: "70" });
 
-    expect(
-      (
-        await failure(
-          gradeSubmission(teacher, id, { points: "80", reason: "Rubric" }),
-        )
-      ).status,
-    ).toBe(STATUS.precondition_required);
-
     const noReason = await failure(
-      gradeSubmission(teacher, id, {
-        points: "80",
-        expectedGradedAt: first.gradedAt,
-      }),
+      gradeSubmission(teacher, id, { points: "80" }),
     );
     expect(codes(noReason)).toEqual(["reason_required"]);
 
     const second = await gradeSubmission(teacher, id, {
       points: "80",
       reason: "Rubric applied late",
-      expectedGradedAt: first.gradedAt,
     });
     expect(second.grade.label).toBe("B");
     expect(new Date(second.gradedAt).getTime()).toBeGreaterThanOrEqual(
@@ -234,53 +221,16 @@ describe("regrading and versions", () => {
     );
   });
 
-  it("rejects a stale version with 412 and leaves the grade alone", async () => {
-    const { teacher, id } = await ungraded();
-    const first = await gradeSubmission(teacher, id, { points: "70" });
-    await gradeSubmission(teacher, id, {
-      points: "90",
-      reason: "Second look",
-      expectedGradedAt: first.gradedAt,
-    });
-
-    const stale = await failure(
-      gradeSubmission(teacher, id, {
-        points: "50",
-        reason: "From an old screen",
-        expectedGradedAt: first.gradedAt,
-      }),
-    );
-    expect(stale.status).toBe(STATUS.precondition_failed);
-
-    const row = await testDb().assignmentSubmission.findUniqueOrThrow({
-      where: { id },
-    });
-    expect(row.gradeLabel).toBe("A");
-  });
-
-  it("refuses a version for a submission that has no grade yet", async () => {
-    const { teacher, id } = await ungraded();
-    const error = await failure(
-      gradeSubmission(teacher, id, {
-        points: "70",
-        expectedGradedAt: new Date().toISOString(),
-      }),
-    );
-    expect(error.status).toBe(STATUS.precondition_failed);
-  });
-
   it("keeps the full history in order, one row per action", async () => {
     const { teacher, id } = await ungraded();
-    const a = await gradeSubmission(teacher, id, { points: "55" });
-    const b = await gradeSubmission(teacher, id, {
+    await gradeSubmission(teacher, id, { points: "55" });
+    await gradeSubmission(teacher, id, {
       points: "65",
       reason: "Rubric corrected",
-      expectedGradedAt: a.gradedAt,
     });
     await gradeSubmission(teacher, id, {
       points: "95",
       reason: "Parent meeting",
-      expectedGradedAt: b.gradedAt,
     });
 
     const events = await testDb().submissionGradeEvent.findMany({
@@ -307,7 +257,6 @@ describe("regrading and versions", () => {
     const second = await gradeSubmission(teacher, id, {
       points: "91",
       reason: "Checking scale",
-      expectedGradedAt: first.gradedAt,
     });
     expect(second.grade.label).toBe("A");
     expect(second.grade.scaleId).toBe(first.grade.scaleId);

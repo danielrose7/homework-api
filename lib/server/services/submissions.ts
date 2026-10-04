@@ -1,10 +1,5 @@
 import { percentOf } from "@/lib/domain/grading";
-import {
-  decodeCursor,
-  encodeCursor,
-  DEFAULT_PAGE_SIZE,
-  MAX_PAGE_SIZE,
-} from "@/lib/domain/pagination";
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/domain/pagination";
 import { instantsForDayRange, validateDayRange } from "@/lib/domain/local-days";
 import { issue, type ValidationIssue } from "@/lib/domain/validation";
 import {
@@ -222,13 +217,13 @@ export interface SubmissionFilters {
   student?: string;
   submittedFrom?: Date;
   submittedBefore?: Date;
-  pageSize?: number;
-  cursor?: string;
+  limit?: number;
+  startingAfter?: string;
 }
 
 export interface SubmissionPage {
   items: SubmissionView[];
-  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 async function gradeFilterIssue(
@@ -275,20 +270,37 @@ export async function runSubmissionQuery(
     ...earlierIssues,
     ...(await gradeFilterIssue(ctx.db, ctx.organizationId, filters.grade)),
   ];
-  const pageSize = filters.pageSize ?? DEFAULT_PAGE_SIZE;
-  if (pageSize < 1 || pageSize > MAX_PAGE_SIZE) {
+  const limit = filters.limit ?? DEFAULT_PAGE_SIZE;
+  if (limit < 1 || limit > MAX_PAGE_SIZE) {
     issues.push(
       issue(
-        "page_size",
-        "page_size_out_of_range",
-        `Page size must be between 1 and ${MAX_PAGE_SIZE}`,
+        "limit",
+        "limit_out_of_range",
+        `Limit must be between 1 and ${MAX_PAGE_SIZE}`,
       ),
     );
   }
-  const cursor =
-    filters.cursor === undefined ? null : decodeCursor(filters.cursor);
-  if (filters.cursor !== undefined && cursor === null) {
-    issues.push(issue("cursor", "invalid_cursor", "That cursor is not valid"));
+  const after =
+    filters.startingAfter === undefined
+      ? null
+      : await ctx.db.assignmentSubmission.findFirst({
+          where: {
+            AND: [
+              { organizationId: ctx.organizationId },
+              scope,
+              { id: filters.startingAfter },
+            ],
+          },
+          select: { id: true, submittedAt: true },
+        });
+  if (filters.startingAfter !== undefined && after === null) {
+    issues.push(
+      issue(
+        "starting_after",
+        "unknown_starting_after",
+        "No submission with that id in this list",
+      ),
+    );
   }
   if (issues.length > 0) throw validationFailed(issues);
 
@@ -335,29 +347,24 @@ export async function runSubmissionQuery(
         filters.submittedBefore === undefined
           ? {}
           : { submittedAt: { lt: filters.submittedBefore } },
-        cursor === null
+        after === null
           ? {}
           : {
               OR: [
-                { submittedAt: { lt: cursor.submittedAt } },
-                { submittedAt: cursor.submittedAt, id: { lt: cursor.id } },
+                { submittedAt: { lt: after.submittedAt } },
+                { submittedAt: after.submittedAt, id: { lt: after.id } },
               ],
             },
       ],
     },
     include: submissionInclude,
     orderBy: [{ submittedAt: "desc" }, { id: "desc" }],
-    take: pageSize + 1,
+    take: limit + 1,
   });
 
-  const page = rows.slice(0, pageSize);
-  const last = page.at(-1);
   return {
-    items: page.map(toSubmissionView),
-    nextCursor:
-      rows.length > pageSize && last
-        ? encodeCursor({ submittedAt: last.submittedAt, id: last.id })
-        : null,
+    items: rows.slice(0, limit).map(toSubmissionView),
+    hasMore: rows.length > limit,
   };
 }
 
@@ -432,8 +439,8 @@ export async function listSubmissionsOverview(
       grade: filters.grade,
       assignment: filters.assignment,
       student: filters.student,
-      pageSize: filters.pageSize,
-      cursor: filters.cursor,
+      limit: filters.limit,
+      startingAfter: filters.startingAfter,
       ...(range.from ? { submittedFrom: range.from } : {}),
       ...(range.before ? { submittedBefore: range.before } : {}),
     },

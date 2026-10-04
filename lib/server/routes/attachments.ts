@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
+import { listJson } from "@/lib/server/list-json";
 import { defineRoute } from "@/lib/server/route";
+import { orgPath } from "@/lib/server/routes/submissions";
 import {
   downloadAttachment,
   listSubmissionAttachments,
@@ -14,6 +16,7 @@ type AttachmentSummary = Awaited<
 export function attachmentJson(attachment: AttachmentSummary) {
   return {
     id: attachment.attachmentId,
+    object: "attachment" as const,
     filename: attachment.filename,
     content_type: attachment.contentType,
     byte_size: attachment.byteSize,
@@ -30,7 +33,12 @@ export const list = defineRoute({
   handle: async ({ ctx, input }) => {
     const { submissionId } = input.params(listParams);
     const attachments = await listSubmissionAttachments(ctx, submissionId);
-    return Response.json({ data: attachments.map(attachmentJson) });
+    return Response.json(
+      listJson(
+        `${orgPath(ctx)}/submissions/${submissionId}/attachments`,
+        attachments.map(attachmentJson),
+      ),
+    );
   },
 });
 

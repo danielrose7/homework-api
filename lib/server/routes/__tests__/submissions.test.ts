@@ -34,12 +34,13 @@ describe("POST /assignments/{id}/submissions", () => {
     expect(response.status).toBe(STATUS.created);
     const body = await json(response);
     expect(body).toMatchObject({
+      object: "submission",
       text: "My answer",
       attempt_number: 1,
       grade: null,
       graded_at: null,
       teacher_notes: null,
-      attachments: [],
+      attachments: { object: "list", has_more: false, data: [] },
     });
     expect(response.headers.get("location")).toBe(
       `/api/v1/orgs/${seeded.school.organization.slug}/submissions/${body.id}`,
@@ -68,7 +69,7 @@ describe("POST /assignments/{id}/submissions", () => {
     expect(response.status).toBe(STATUS.created);
     const body = await json(response);
     expect(body.text).toBe("see attached");
-    expect(body.attachments).toMatchObject([
+    expect((body.attachments as Json).data).toMatchObject([
       { filename: "a.txt", content_type: "text/plain", byte_size: 5 },
       { filename: "b.txt", content_type: "text/plain", byte_size: 6 },
     ]);
@@ -180,7 +181,7 @@ describe("POST /assignments/{id}/submissions", () => {
 });
 
 describe("GET /submissions/me", () => {
-  it("returns a page with snake_case fields and a cursor", async () => {
+  it("returns a list object with snake_case fields", async () => {
     const seeded = await seedSubmission({
       grade: { points: "92" },
       notes: "Nice work",
@@ -192,10 +193,15 @@ describe("GET /submissions/me", () => {
 
     expect(response.status).toBe(STATUS.ok);
     const body = await json(response);
-    expect(body.next_cursor).toBeNull();
+    expect(body).toMatchObject({
+      object: "list",
+      has_more: false,
+      url: `/api/v1/orgs/${seeded.school.organization.slug}/submissions/me`,
+    });
     expect(body.data).toEqual([
       expect.objectContaining({
         id: seeded.submission.id,
+        object: "submission",
         attempt_number: 1,
         teacher_notes: "Nice work",
         grade: expect.objectContaining({
@@ -249,12 +255,12 @@ describe("GET /submissions/me", () => {
 
     const response = await callRoute(listMine, params, {
       headers,
-      query: { page_size: "500", color: "red", grade: "Z" },
+      query: { limit: "500", color: "red", grade: "Z" },
     });
 
     expect(response.status).toBe(STATUS.unprocessable_content);
     const fields = (await errorOf(response)).details?.map((d) => d.field);
-    expect(fields).toEqual(expect.arrayContaining(["page_size", ""]));
+    expect(fields).toEqual(expect.arrayContaining(["limit", ""]));
   });
 
   it("answers 422 for a grade the school does not use", async () => {
@@ -373,7 +379,7 @@ describe("paging over HTTP", () => {
     return first;
   }
 
-  it("walks every submission once by following next_cursor", async () => {
+  it("walks every submission once by following starting_after", async () => {
     const seeded = await threeSubmissions();
     const params = { orgSlug: seeded.school.organization.slug };
 
@@ -382,36 +388,37 @@ describe("paging over HTTP", () => {
       [listAll, seeded.school.teachers[0]!],
     ] as const) {
       const seen: string[] = [];
-      let cursor: string | undefined;
+      let after: string | undefined;
       let pages = 0;
       do {
         const response = await callRoute(route, params, {
           headers: persona.headers,
-          query: { page_size: "2", ...(cursor ? { cursor } : {}) },
+          query: { limit: "2", ...(after ? { starting_after: after } : {}) },
         });
         expect(response.status).toBe(STATUS.ok);
         const body = await json(response);
-        seen.push(...(body.data as Json[]).map((row) => row.id as string));
-        cursor = (body.next_cursor as string | null) ?? undefined;
+        const ids = (body.data as Json[]).map((row) => row.id as string);
+        seen.push(...ids);
+        after = body.has_more ? ids.at(-1) : undefined;
         pages += 1;
-      } while (cursor);
+      } while (after);
 
       expect(pages).toBe(2);
       expect(new Set(seen).size).toBe(3);
     }
   });
 
-  it("answers 422 for a cursor that is not ours and for page sizes out of range", async () => {
+  it("answers 422 for a starting_after that is not in the list and for limits out of range", async () => {
     const seeded = await seedSubmission();
     const params = { orgSlug: seeded.school.organization.slug };
     const headers = seeded.school.students[0]!.headers;
 
     const queries: Record<string, string>[] = [
-      { cursor: "garbage" },
-      { cursor: Buffer.from("not-a-date|id").toString("base64url") },
-      { page_size: "0" },
-      { page_size: "101" },
-      { page_size: "ten" },
+      { starting_after: "garbage" },
+      { starting_after: crypto.randomUUID() },
+      { limit: "0" },
+      { limit: "101" },
+      { limit: "ten" },
     ];
     for (const query of queries) {
       const response = await callRoute(listMine, params, { headers, query });

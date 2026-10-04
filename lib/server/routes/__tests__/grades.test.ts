@@ -5,7 +5,7 @@ import { grade } from "@/lib/server/routes/grades";
 import { getOne } from "@/lib/server/routes/submissions";
 import { callRoute } from "@/test/http";
 import { seedSubmission } from "@/test/scenarios/class";
-import { testDb, withRollbackDb } from "@/test/rollback-db";
+import { withRollbackDb } from "@/test/rollback-db";
 
 withRollbackDb();
 
@@ -24,16 +24,11 @@ async function setup() {
     submissionId: seeded.submission.id,
   };
   const teacher = seeded.school.teachers[0]!.headers;
-  const withIfMatch = (value: string) => {
-    const headers = new Headers(teacher);
-    headers.set("if-match", value);
-    return headers;
-  };
-  return { seeded, params, teacher, withIfMatch };
+  return { seeded, params, teacher };
 }
 
 describe("PUT /submissions/{id}/grade", () => {
-  it("grades an ungraded submission and returns the version as an ETag", async () => {
+  it("grades an ungraded submission and returns it", async () => {
     const { params, teacher } = await setup();
 
     const response = await callRoute(grade, params, {
@@ -53,7 +48,7 @@ describe("PUT /submissions/{id}/grade", () => {
         percent: "92.00",
       },
     });
-    expect(response.headers.get("etag")).toBe(`"${body.graded_at}"`);
+    expect(body.object).toBe("submission");
   });
 
   it("accepts points as a string too", async () => {
@@ -69,37 +64,23 @@ describe("PUT /submissions/{id}/grade", () => {
     expect((await json(response)).grade).toMatchObject({ label: "B" });
   });
 
-  it("requires the current ETag, with a reason, to regrade", async () => {
-    const { seeded, params, teacher, withIfMatch } = await setup();
+  it("requires a reason to regrade", async () => {
+    const { params, teacher } = await setup();
     await callRoute(grade, params, {
       method: "PUT",
       headers: teacher,
       json: { points: 92 },
     });
-    await testDb().assignmentSubmission.update({
-      where: { id: seeded.submission.id },
-      data: { gradedAt: new Date(Date.now() - 60_000) },
-    });
-    const current = await callRoute(getOne, params, { headers: teacher });
-    const etag = current.headers.get("etag")!;
-    const regrade = (headers: Headers, extra: Json = {}) =>
+    const regrade = (extra: Json = {}) =>
       callRoute(grade, params, {
         method: "PUT",
-        headers,
+        headers: teacher,
         json: { points: 71, ...extra },
       });
 
-    const missing = await regrade(teacher, { reason: "Recount" });
-    const stale = await regrade(withIfMatch('"2020-01-01T00:00:00.000Z"'), {
-      reason: "Recount",
-    });
-    const noReason = await regrade(withIfMatch(etag));
-    const ok = await regrade(withIfMatch(etag), { reason: "Recount" });
-    const again = await regrade(withIfMatch(etag), { reason: "Recount" });
+    const noReason = await regrade();
+    const ok = await regrade({ reason: "Recount" });
 
-    expect(missing.status).toBe(STATUS.precondition_required);
-    expect((await errorOf(missing)).code).toBe("precondition_required");
-    expect(stale.status).toBe(STATUS.precondition_failed);
     expect(noReason.status).toBe(STATUS.unprocessable_content);
     expect((await errorOf(noReason)).details?.[0]).toMatchObject({
       field: "reason",
@@ -107,34 +88,6 @@ describe("PUT /submissions/{id}/grade", () => {
     });
     expect(ok.status).toBe(STATUS.ok);
     expect((await json(ok)).grade).toMatchObject({ label: "C" });
-    expect(ok.headers.get("etag")).not.toBe(etag);
-    expect(again.status).toBe(STATUS.precondition_failed);
-  });
-
-  it("answers 412 when a first grade sends an ETag", async () => {
-    const { params, withIfMatch } = await setup();
-
-    const response = await callRoute(grade, params, {
-      method: "PUT",
-      headers: withIfMatch('"2026-01-01T00:00:00.000Z"'),
-      json: { points: 90 },
-    });
-
-    expect(response.status).toBe(STATUS.precondition_failed);
-  });
-
-  it("answers 400 for an If-Match that is not one quoted ETag", async () => {
-    const { params, withIfMatch } = await setup();
-
-    for (const value of ["*", "abc", 'W/"2026-01-01T00:00:00.000Z"', '""']) {
-      const response = await callRoute(grade, params, {
-        method: "PUT",
-        headers: withIfMatch(value),
-        json: { points: 90 },
-      });
-      expect(response.status).toBe(STATUS.bad_request);
-      expect((await errorOf(response)).code).toBe("invalid_if_match");
-    }
   });
 
   it("answers 422 with every issue, named as the client sent them", async () => {
@@ -201,7 +154,7 @@ describe("PUT /submissions/{id}/grade", () => {
 });
 
 describe("GET /submissions/{id}", () => {
-  it("shows the owner their submission, with an ETag once graded", async () => {
+  it("shows the owner their submission", async () => {
     const { seeded, params, teacher } = await setup();
     const student = seeded.school.students[0]!.headers;
 
@@ -214,9 +167,7 @@ describe("GET /submissions/{id}", () => {
     const after = await callRoute(getOne, params, { headers: student });
 
     expect(before.status).toBe(STATUS.ok);
-    expect(before.headers.get("etag")).toBeNull();
     expect((await json(before)).grade).toBeNull();
-    expect(after.headers.get("etag")).toMatch(/^"\d{4}-.*Z"$/);
     expect(await json(after)).toMatchObject({ teacher_notes: "Nice work" });
   });
 

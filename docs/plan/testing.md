@@ -75,7 +75,7 @@ Route handlers are `defineRoute` definitions, so a test runs one through the rea
   by a superuser.
 - Seed/reset scripts for local dev are separate from test data; see demo-and-seed.md.
 - Race tests to write: N parallel submits with `max_submissions = 1` → exactly one success, rest `409`;
-  idempotent retry returns the original; concurrent regrades → one `412`.
+  idempotent retry returns the original; concurrent regrades → both applied in order, two history rows.
 
 ## Factory traits
 

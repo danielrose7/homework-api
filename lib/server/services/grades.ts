@@ -11,23 +11,13 @@ import {
 import { recordActivity } from "@/lib/server/activity";
 import { requirePermission, type RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
-import {
-  notFound,
-  preconditionFailed,
-  preconditionRequired,
-  validationFailed,
-} from "@/lib/server/errors";
+import { notFound, validationFailed } from "@/lib/server/errors";
 import { requireTeachesClass } from "@/lib/server/services/academics";
 import {
   loadScale,
   resolveGradingScale,
 } from "@/lib/server/services/grading-scales";
 import { transact } from "@/lib/server/transaction";
-
-export interface GradeCommand extends GradeRequest {
-  /** The `gradedAt` the caller last saw. Required when the submission is already graded. */
-  expectedGradedAt?: string | null;
-}
 
 export interface GradeResult {
   submissionId: string;
@@ -121,7 +111,7 @@ export async function applyGrade(
 export async function gradeSubmission(
   ctx: RequestContext,
   submissionId: string,
-  command: GradeCommand,
+  command: GradeRequest,
 ): Promise<GradeResult> {
   requirePermission(ctx, { grade: ["update"] });
 
@@ -146,15 +136,6 @@ export async function gradeSubmission(
     });
     if (!klass) throw notFound();
     await requireTeachesClass(scoped, assignment.classId);
-
-    const currentVersion = submission.gradedAt?.toISOString() ?? null;
-    if (currentVersion !== null) {
-      if (command.expectedGradedAt == null) throw preconditionRequired();
-      if (command.expectedGradedAt !== currentVersion)
-        throw preconditionFailed();
-    } else if (command.expectedGradedAt != null) {
-      throw preconditionFailed();
-    }
 
     const scale = submission.gradingScaleId
       ? await loadScale(tx, ctx.organizationId, submission.gradingScaleId)

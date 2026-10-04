@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
-import { gradeEtag, parseIfMatch } from "@/lib/server/etag";
 import { defineRoute } from "@/lib/server/route";
 import { submissionJson } from "@/lib/server/routes/submissions";
 import { gradeSubmission } from "@/lib/server/services/grades";
@@ -21,25 +20,18 @@ const gradeBody = z.strictObject({
 export const grade = defineRoute({
   resource: "submission",
   idParam: "submissionId",
-  handle: async ({ ctx, request, input }) => {
+  handle: async ({ ctx, input }) => {
     const { submissionId } = input.params(params);
     const body = await input.body(gradeBody);
-    const expectedGradedAt = parseIfMatch(request.headers.get("if-match"));
 
     await gradeSubmission(ctx, submissionId, {
       points: body.points,
       band: body.band,
       teacherNotes: body.teacher_notes,
       reason: body.reason,
-      expectedGradedAt,
     });
 
     const submission = await getSubmission(ctx, submissionId);
-    return Response.json(submissionJson(submission), {
-      status: STATUS.ok,
-      headers: submission.gradedAt
-        ? { etag: gradeEtag(submission.gradedAt) }
-        : undefined,
-    });
+    return Response.json(submissionJson(submission), { status: STATUS.ok });
   },
 });

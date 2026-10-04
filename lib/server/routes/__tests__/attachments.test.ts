@@ -48,9 +48,13 @@ describe("GET /submissions/{id}/attachments", () => {
       );
       expect(response.status).toBe(STATUS.ok);
       expect(await response.json()).toEqual({
+        object: "list",
+        url: `/api/v1/orgs/${orgSlug}/submissions/${submissionId}/attachments`,
+        has_more: false,
         data: [
           {
             id: attachmentId,
+            object: "attachment",
             filename: "essay.txt",
             content_type: "text/plain",
             byte_size: 14,

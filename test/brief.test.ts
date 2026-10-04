@@ -203,6 +203,7 @@ describe("brief: teachers", () => {
     const [row] = (await json(mine)).data as Json[];
     expect(row).toEqual({
       id,
+      object: "submission",
       assignment: { id: expect.any(String), title: "Fractions" },
       student: {
         member_id: maya.member.id,

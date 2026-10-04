@@ -20,6 +20,11 @@ describe("errorBody", () => {
       ]),
     );
 
+    expect(body.error).toMatchObject({
+      type: "invalid_request_error",
+      code: "validation_failed",
+      param: "max_points",
+    });
     expect(body.error.details).toEqual([
       { field: "max_points", code: "too_large", message: "Too large" },
     ]);

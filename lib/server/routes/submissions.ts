@@ -2,8 +2,9 @@ import { z } from "zod";
 
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/domain/pagination";
 import { STATUS } from "@/lib/http-status";
-import { gradeEtag } from "@/lib/server/etag";
 import { validationFailed } from "@/lib/server/errors";
+import { listJson } from "@/lib/server/list-json";
+import type { RequestContext } from "@/lib/server/context";
 import { defineRoute } from "@/lib/server/route";
 import { attachmentJson } from "@/lib/server/routes/attachments";
 import {
@@ -17,9 +18,13 @@ import {
 } from "@/lib/server/services/submissions";
 import type { UploadInput } from "@/lib/domain/uploads";
 
+export const orgPath = (ctx: RequestContext) =>
+  `/api/v1/orgs/${ctx.organizationSlug}`;
+
 export function submissionJson(view: SubmissionView) {
   return {
     id: view.id,
+    object: "submission" as const,
     assignment: view.assignment,
     student: {
       member_id: view.student.memberId,
@@ -45,11 +50,8 @@ export function submissionJson(view: SubmissionView) {
   };
 }
 
-export function pageJson(page: SubmissionPage) {
-  return {
-    data: page.items.map(submissionJson),
-    next_cursor: page.nextCursor,
-  };
+export function pageJson(url: string, page: SubmissionPage) {
+  return listJson(url, page.items.map(submissionJson), page.hasMore);
 }
 
 const jsonSubmission = z.strictObject({ text: z.string() });
@@ -107,16 +109,18 @@ export const submit = defineRoute({
     }
 
     const result = await submitAssignment(ctx, assignmentId, { text, files });
+    const base = orgPath(ctx);
     return Response.json(
       {
         ...submissionJson(result.submission),
-        attachments: result.attachments.map(attachmentJson),
+        attachments: listJson(
+          `${base}/submissions/${result.submission.id}/attachments`,
+          result.attachments.map(attachmentJson),
+        ),
       },
       {
         status: STATUS.created,
-        headers: {
-          location: `/api/v1/orgs/${ctx.organizationSlug}/submissions/${result.submission.id}`,
-        },
+        headers: { location: `${base}/submissions/${result.submission.id}` },
       },
     );
   },
@@ -125,13 +129,13 @@ export const submit = defineRoute({
 const listQuery = z.strictObject({
   grade: z.string().trim().min(1).optional(),
   assignment: z.string().trim().min(1).optional(),
-  page_size: z.coerce
+  limit: z.coerce
     .number()
     .int()
     .min(1)
     .max(MAX_PAGE_SIZE)
     .default(DEFAULT_PAGE_SIZE),
-  cursor: z.string().min(1).optional(),
+  starting_after: z.uuid().optional(),
 });
 
 export const listMine = defineRoute({
@@ -140,11 +144,12 @@ export const listMine = defineRoute({
     const query = input.query(listQuery);
     return Response.json(
       pageJson(
+        `${orgPath(ctx)}/submissions/me`,
         await listOwnSubmissions(ctx, {
           grade: query.grade,
           assignment: query.assignment,
-          pageSize: query.page_size,
-          cursor: query.cursor,
+          limit: query.limit,
+          startingAfter: query.starting_after,
         }),
       ),
     );
@@ -163,14 +168,15 @@ export const listAll = defineRoute({
     const query = input.query(overviewQuery);
     return Response.json(
       pageJson(
+        `${orgPath(ctx)}/submissions`,
         await listSubmissionsOverview(ctx, {
           grade: query.grade,
           assignment: query.assignment,
           student: query.student,
           from: query.from,
           to: query.to,
-          pageSize: query.page_size,
-          cursor: query.cursor,
+          limit: query.limit,
+          startingAfter: query.starting_after,
         }),
       ),
     );
@@ -185,10 +191,6 @@ export const getOne = defineRoute({
   handle: async ({ ctx, input }) => {
     const { submissionId } = input.params(submissionParams);
     const submission = await readSubmission(ctx, submissionId);
-    return Response.json(submissionJson(submission), {
-      headers: submission.gradedAt
-        ? { etag: gradeEtag(submission.gradedAt) }
-        : undefined,
-    });
+    return Response.json(submissionJson(submission));
   },
 });

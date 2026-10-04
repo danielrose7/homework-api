@@ -44,20 +44,6 @@ export const deniedAsNotFound = () =>
 export const conflict = (code: string, message: string) =>
   new ApiError(STATUS.conflict, code, message);
 
-export const preconditionFailed = () =>
-  new ApiError(
-    STATUS.precondition_failed,
-    "precondition_failed",
-    "This grade changed since you loaded it",
-  );
-
-export const preconditionRequired = () =>
-  new ApiError(
-    STATUS.precondition_required,
-    "precondition_required",
-    "Send the grade version you last saw in If-Match",
-  );
-
 export const validationFailed = (details: ErrorDetail[]) =>
   new ApiError(
     STATUS.unprocessable_content,
@@ -76,19 +62,31 @@ export function wireField(field: string): string {
     .join(".");
 }
 
+function errorType(status: StatusCode) {
+  switch (status) {
+    case STATUS.unauthorized:
+      return "authentication_error";
+    case STATUS.forbidden:
+      return "permission_error";
+    case STATUS.internal_server_error:
+      return "api_error";
+    default:
+      return "invalid_request_error";
+  }
+}
+
 export function errorBody(error: ApiError) {
+  const details = error.details.map((detail) => ({
+    ...detail,
+    field: wireField(detail.field),
+  }));
   return {
     error: {
+      type: errorType(error.status),
       code: error.code,
       message: error.message,
-      ...(error.details.length > 0
-        ? {
-            details: error.details.map((detail) => ({
-              ...detail,
-              field: wireField(detail.field),
-            })),
-          }
-        : {}),
+      ...(details[0]?.field ? { param: details[0].field } : {}),
+      ...(details.length > 0 ? { details } : {}),
     },
   };
 }
