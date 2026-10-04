@@ -103,6 +103,10 @@ Recorded as work lands; each is small but worth a look at the gate.
   non-member, an unauthenticated one, or one for a missing id leaves no `denied` row.
 - `GET /submissions/{id}` was not in the route plan. It was added because submit returns a `Location` pointing at it
   and because a client needs to read one record after a write; reading it is a logged single-record read.
+- All demo UI and dev-only routes live under `/sandbox`, as server and client components co-located in
+  `app/sandbox` (private `_components` and `_lib` folders). The reset endpoint is `POST /sandbox/api/reset`, not
+  `/api/v1/dev/reset`, so nothing demo-specific sits in the public API namespace. The whole segment answers `404`
+  unless `DEMO_MODE=true`. The seed and reset logic stay in `modules/demo` because the CLI scripts share them.
 - No `Idempotency-Key` on submit; the attempt limit already makes a repeated request a `409`.
 
 ## Phases
@@ -198,7 +202,7 @@ Each phase ends with passing tests. Tick as we go.
       edit the domain migration in place
 - [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
 - [x] Seed script and `pnpm db:seed` / `pnpm db:reset` (see demo-and-seed.md)
-- [ ] Demo reset endpoint and UI button (Phase 6)
+- [x] Demo reset endpoint (`POST /sandbox/api/reset`) and confirmed UI button
 
 ### Phase 5 — Docs
 
@@ -226,8 +230,9 @@ Each phase ends with passing tests. Tick as we go.
    scales)._
 4. Monospace font: _the system monospace stack behind one CSS variable; no web font._
 
-- [ ] Dev-flavored monospace UI (shadcn), `useOptimistic` + `startTransition`, via the REST API
-- [ ] Persona sign-in, API request viewer, reset button (demo-and-seed.md)
+- [x] Dev-flavored monospace UI, `useOptimistic` + `startTransition`, via the REST API (all under `/sandbox`)
+- [x] Persona sign-in, network log with copy-as-cURL, reset button with confirmation (demo-and-seed.md)
+- [ ] Browser walk-through of every screen; component tests are not planned
 
 ### Phase 7 — Polish
 

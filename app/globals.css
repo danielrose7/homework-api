@@ -18,6 +18,17 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --color-method-get: var(--method-get);
+  --color-method-post: var(--method-post);
+  --color-method-put: var(--method-put);
+  --color-code-key: var(--code-key);
+  --color-code-str: var(--code-str);
+  --color-code-num: var(--code-num);
+  --color-code-lit: var(--code-lit);
+  --font-app: var(--font-app);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -49,6 +60,17 @@
 }
 
 :root {
+  --font-app: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --good: oklch(0.52 0.13 155);
+  --warn: oklch(0.55 0.13 70);
+  --info: oklch(0.5 0.08 250);
+  --method-get: oklch(0.52 0.13 155);
+  --method-post: oklch(0.55 0.13 60);
+  --method-put: oklch(0.5 0.17 265);
+  --code-key: oklch(0.5 0.17 265);
+  --code-str: oklch(0.52 0.13 155);
+  --code-num: oklch(0.55 0.13 60);
+  --code-lit: oklch(0.5 0.15 320);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -84,6 +106,16 @@
 }
 
 .dark {
+  --good: oklch(0.78 0.14 155);
+  --warn: oklch(0.8 0.13 75);
+  --info: oklch(0.78 0.08 250);
+  --method-get: oklch(0.78 0.14 155);
+  --method-post: oklch(0.8 0.13 75);
+  --method-put: oklch(0.75 0.13 265);
+  --code-key: oklch(0.75 0.13 265);
+  --code-str: oklch(0.78 0.14 155);
+  --code-num: oklch(0.8 0.13 75);
+  --code-lit: oklch(0.78 0.12 320);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

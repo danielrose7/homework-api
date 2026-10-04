@@ -30,7 +30,7 @@ so a demo script can say "sign in as Ms. Alvarez".
 
 - **CLI:** `pnpm db:reset` truncates every table through the owner connection and re-seeds. `pnpm db:seed` refuses a database that already has data. `pnpm db:fresh`, which exists today, is the
   heavier tool: it recreates the Docker volume and rebuilds the database from the migrations.
-- **Button:** a "Reset demo data" control in the UI that calls `POST /api/v1/dev/reset`.
+- **Button:** a "Reset demo data" control in the UI that calls `POST /sandbox/api/reset` after a confirmation dialog.
 - Truncates every table and re-runs the seed, including Better Auth tables, so any signed-in session is
   invalidated; the UI then drops back to the persona sign-in.
 - The endpoint is **disabled unless `DEMO_MODE=true`** and always returns `404` otherwise, so it cannot exist in a
@@ -48,6 +48,9 @@ so a demo script can say "sign in as Ms. Alvarez".
   on screen in demo mode).
 - **Request inspector:** a collapsible panel showing the REST call each action makes (method, URL, status,
   JSON), plus a copy-as-curl button. The UI talks to the public API, so what you see is what a client would send.
+- Everything lives under `/sandbox` (Console, App, Data, Brief checks) and is hidden unless `DEMO_MODE=true`. The Data
+  tab is a server component that reads tables through the owner connection; the other tabs are plain clients of the
+  public API, so the network log shows real calls.
 - Links to the OpenAPI docs and the activity log from the nav.
 - Optimistic updates (`useOptimistic` + `startTransition`) on submit and grade.
 
