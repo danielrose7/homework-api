@@ -14,6 +14,7 @@ This directory is the living plan. Update it as we go (tick boxes, add to the de
 | [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                 |
 | [audit-and-grade-history.md](audit-and-grade-history.md) | HIPAA-style `activity_log`, grade events, regrade concurrency         |
 | [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                 |
+| [future-ideas.md](future-ideas.md)                       | Deferred features, options considered, and what is already prepared   |
 | [testing.md](testing.md)                                 | Rollback-per-test, Fishery, guard tests, race tests                   |
 | [api-and-docs.md](api-and-docs.md)                       | REST design, OpenAPI, tabbed examples, UI                             |
 
@@ -39,6 +40,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Retention is indefinite; no purge feature                                                                                      | Decided | FERPA-supportive; purge and retention windows are future decisions                                                           |
 | "Incomplete" is a manual-only, neutral grade band (not a status, not null); `ungraded` = no band                               | Decided | Matches the brief's grade list; no `status` column                                                                           |
 | Two-layer validation: Zod at the boundary, `validate*` functions for meaning; both return `422` with all field issues          | Decided | `409` is for state conflicts; see api-and-docs.md                                                                            |
+| Extra credit is blocked; `assignment.score_cap_points` and `is_bonus` are reserved so it can be enabled without a migration    | Decided | See future-ideas.md                                                                                                          |
 | Resubmission blocked by default (`max_submissions = 1`)                                                                        | Decided |                                                                                                                              |
 | Cross-school requests return `404`; `403` only for in-school role failures                                                     | Decided |                                                                                                                              |
 | Late work is not enforced or flagged yet                                                                                       | Decided | Future decision: grading implications                                                                                        |
@@ -126,12 +128,10 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] README: setup, design decisions, how to run tests
 - [ ] CI; final test-suite pass
 
-## Future decisions
+## Future ideas
 
-Deliberately deferred; none block the required API.
+Deliberately deferred; none block the required API. Details, options and research live in
+[future-ideas.md](future-ideas.md).
 
-- Late-work policy (blocking, flagging, grade penalties).
-- Retention windows, purge, records holds, user tombstoning.
-- Teacher-recorded grades with no student upload (`assignment.submission_mode`; see data-model.md).
-- Excused work (Canvas and Google Classroom both have it) and an Incomplete resolve-by deadline.
-- Class averages and weighting.
+- Extra credit (columns reserved, feature blocked), late work, retention and purge, graded work with no upload,
+  excused work, an Incomplete deadline, class averages and weighting, RLS, tamper-evident audit log.
