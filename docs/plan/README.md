@@ -74,6 +74,17 @@ Recorded as work lands; each is small but worth a look at the gate.
   deletes users or schools). Our domain tables will use `RESTRICT`.
 - Tests use a separate `homework_test` database created by Vitest global setup, and test files run serially.
 - `package.json` sets `"type": "module"`.
+- Partial unique indexes use Prisma's `partialIndexes` preview feature (7.4+), so they live in `schema.prisma`
+  and migrate cleanly. Check constraints and the grants still live in hand-written migration SQL.
+- `deleted_by` is a plain uuid column on every soft-deletable table, not a foreign key (an audit pointer, like
+  the activity log). `graded_by` is a real composite foreign key to the member.
+- Grading requires the `grade: update` permission for everyone (teachers and administrators); `grade: create` is
+  unused.
+- Submission attempt numbers must be allocated as `max(attempt_number) + 1` over all rows including soft-deleted
+  ones, while the limit counts only live rows, because the attempt number is unique unconditionally.
+- Top-level reads hide soft-deleted rows; an administrator restore flow needs an unfiltered read path, to be
+  added in Phase 4 with the restore endpoints.
+- The submit service and the race-protection tests are Phase 3/4; only submission eligibility rules exist now.
 
 ## Phases
 
@@ -96,15 +107,16 @@ Each phase ends with passing tests. Tick as we go.
 
 ### Phase 2 — Data model and domain logic
 
-- [ ] Full schema + migrations (see data-model.md), composite org FKs, `RESTRICT`
-- [ ] DB roles + grants migration (`app_owner`, `app_user`, `app_readonly`)
-- [ ] `submission_grade_event`, `activity_log`, `recordActivity`, append-only extension
-- [ ] Soft-delete columns, Prisma read filter, partial unique indexes
-- [ ] Grading scale + band tables, school default created on org creation, scale resolution
-- [ ] `grading_mode` on assignments, nullable points, check constraints (hand-written SQL)
-- [ ] Pure functions: points→grade band lookup, scale validation, term overlap, submission eligibility
-- [ ] Service layer with org + role guards
-- **Done when:** unit tests cover band boundaries across scale types, scoping, permissions.
+- [x] Full schema + migrations (see data-model.md), composite org FKs, `RESTRICT`
+- [x] DB roles + grants migration: the append-only tables are narrowed to `INSERT`/`SELECT` for `app_user`
+- [x] `submission_grade_event`, `activity_log`, `recordActivity`, append-only extension
+- [x] Soft-delete columns, Prisma read filter, partial unique indexes
+- [x] Grading scale + band tables, school default created on org creation, scale resolution
+- [x] `grading_mode` on assignments, nullable points, check constraints (hand-written SQL)
+- [x] Pure functions: points→grade band lookup, scale validation, term overlap, submission eligibility, grade request validation
+- [x] Service layer with org + role guards: grading scales, academic structure, assignments, grading
+- [x] Domain factories and layered seed helpers (`seedClass`, `seedAssignment`, `seedSubmission`)
+- **Done when:** unit tests cover band boundaries across scale types, scoping, permissions. (305 tests pass.)
 
 ### Phase 3 — Required API (the assignment)
 

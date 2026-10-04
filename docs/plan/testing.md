@@ -45,8 +45,10 @@ test starts from the layer it needs:
    zero is allowed), each a real Better Auth user
    who has signed in (Bearer headers plus a `context()` that resolves a `RequestContext`).
 2. For isolation tests, call `seedSchool()` twice and treat the second as `other`.
-3. Phase 2 adds `baselineClass()` (term, class, teacher assignment, seats) and `baselineAssignment()`; Phase 3 adds
-   submitted and graded variants.
+3. `seedClass()`: adds a current term, a class every seeded teacher teaches and every seeded student attends.
+4. `seedAssignment()`: adds a published points-graded homework (override with `{ assignment: {...} }`).
+5. `seedSubmission()`: adds the first student's submission, optionally graded: `{ grade: { points: "92" } }` or
+   `{ grade: { band: "Incomplete" } }`.
 
 Factories never share state between tests (everything rolls back) and run queries one at a time, because
 concurrent queries on a single transaction connection are deprecated in `pg`. Factory users are created through
