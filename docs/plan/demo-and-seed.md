@@ -17,7 +17,7 @@ so a demo script can say "sign in as Ms. Alvarez".
 - Usernames are short and memorable (`alvarez`, `chen`, `maya`) with one shared dev password.
 - 3–4 classes across subjects, with seats, and a spread of assignments of every type.
 - Submissions in every interesting state, deliberately: ungraded, graded A–F (one per letter), `incomplete`,
-  late, never submitted (the "missing" view has something to show), a regraded submission with history, a
+  never submitted (the "missing" view has something to show), a regraded submission with history, a
   soft-deleted assignment to demonstrate restore.
 - Fixed UUIDv7s are not needed; the script prints a summary of ids and credentials at the end.
 - Dates are relative to "now" so due dates and terms stay plausible whenever the DB is reset.

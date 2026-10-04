@@ -49,7 +49,8 @@ then trust the stale text over the code.
 - Services take an explicit `RequestContext` and scope every query by `organizationId`. No RLS for now, but keep
   the schema RLS-ready. No raw-SQL writes in app code (`updated_at` is set by the Prisma client).
 - Every domain table: UUIDv7 id, `organization_id`, `createdAt`/`updatedAt` (see `docs/plan/data-model.md`).
-- The API never hard-deletes: `DELETE` is a soft delete (`deletedAt`/`deletedBy`/`deletionReason`).
+- App and API code never hard-delete: `DELETE` is a soft delete (`deletedAt`/`deletedBy`/`deletionReason`). Only
+  dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection.
 - Grading scales are data (`grading_scale`/`grading_scale_band`). The resolved grade is snapshotted when graded;
   scales are immutable once used.
 - Audit/log rows are IDs only — never names, notes, or grade contents.

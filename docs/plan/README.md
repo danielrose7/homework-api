@@ -35,7 +35,12 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | ------------------------------------------------------------------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Next.js + Prisma + Postgres + Better Auth (self-hosted)                                                                        | Decided |                                                                                                                              |
 | REST route handlers + OpenAPI generated from Zod, **no tRPC**                                                                  | Decided | tRPC can't be called cleanly from Python/curl. Standard verbs: GET / POST / PUT / PATCH / DELETE                             |
-| Soft deletes (`deleted_at`/`deleted_by`/`deletion_reason`) with a separate, logged purge path                                  | Decided | FERPA-supportive; see data-model.md. Retention periods are district/state policy, not hard-coded                             |
+| Soft deletes (`deleted_at`/`deleted_by`/`deletion_reason`); app and API code never hard-delete                                 | Decided | Only dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection                                          |
+| Retention is indefinite; no purge feature                                                                                      | Decided | FERPA-supportive; purge and retention windows are future decisions                                                           |
+| "Incomplete" is a manual-only, neutral grade band (not a status, not null); `ungraded` = no band                               | Decided | Matches the brief's grade list; no `status` column                                                                           |
+| Resubmission blocked by default (`max_submissions = 1`)                                                                        | Decided |                                                                                                                              |
+| Cross-school requests return `404`; `403` only for in-school role failures                                                     | Decided |                                                                                                                              |
+| Late work is not enforced or flagged yet                                                                                       | Decided | Future decision: grading implications                                                                                        |
 | Stale-grade check uses `If-Match` ETag derived from `graded_at` (412/428), not `If-Unmodified-Since`                           | Decided | HTTP dates have 1s precision                                                                                                 |
 | `class_enrollment` renamed `class_seat`                                                                                        | Decided |                                                                                                                              |
 | `feedback` renamed `teacher_notes`                                                                                             | Decided | Matches the spec wording                                                                                                     |
@@ -118,8 +123,12 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] README: setup, design decisions, how to run tests
 - [ ] CI; final test-suite pass
 
-## Open questions
+## Future decisions
 
-- Teacher-recorded work with no student submission (in-class exam, participation): do we model it now? See
-  data-model.md, "Grading modes" follow-ups.
-- Do students re-submit (`max_submissions` > 1) in the demo, or default to 1?
+Deliberately deferred; none block the required API.
+
+- Late-work policy (blocking, flagging, grade penalties).
+- Retention windows, purge, records holds, user tombstoning.
+- Teacher-recorded grades with no student upload (`assignment.submission_mode`; see data-model.md).
+- Excused work (Canvas and Google Classroom both have it) and an Incomplete resolve-by deadline.
+- Class averages and weighting.

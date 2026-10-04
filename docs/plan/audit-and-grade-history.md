@@ -23,7 +23,7 @@ Rules:
   Reads and denials are written outside the business transaction so a rollback can't erase them.
 - **Append-only:** `app_user` has `INSERT`/`SELECT` only; Prisma extension rejects `update`/`delete`. No triggers.
 - Optional later: per-org `prev_hash`/`row_hash` chain for tamper evidence.
-- Retention: document one sentence in the README (6 years is the common HIPAA default).
+- Retention: indefinite for now; a retention/purge policy is a future decision.
 - Reads: admin-only `GET …/activity`; per-submission `GET …/submissions/{id}/history` comes from grade events.
 - Students never see revision reasons or the log.
 
@@ -32,7 +32,7 @@ Rules:
 One row per grading action; a regrade adds a row, never edits one. Ordered by `(created_at, id)` — UUIDv7 `id`
 breaks ties within a millisecond.
 
-Columns: `organization_id`, `submission_id`, `points_awarded` (nullable), `status`, `teacher_notes`, `max_points`
+Columns: `organization_id`, `submission_id`, `points_awarded` (nullable), `teacher_notes`, `max_points`
 (snapshot, nullable), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group` (the grade as the student saw it), `graded_by` (member), `reason` (required for any event after the first), `created_at`.
 
 The submission row holds the **current** grade (denormalized for fast filtering); `submission.graded_at` equals

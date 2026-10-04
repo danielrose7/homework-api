@@ -18,8 +18,8 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
    - every Prisma model has `createdAt` + `@updatedAt` unless allowlisted (`activity_log`, `submission_grade_event`)
    - every tenant table has `organization_id`, composite FK to its parents
 6. **Soft-delete tests:** default reads exclude deleted rows (including via relation includes); partial unique
-   indexes allow re-creating a deleted natural key; DELETE requires a reason on education records; purge
-   removes content but keeps the id-only `activity_log`.
+   indexes allow re-creating a deleted natural key; DELETE requires a reason on education records; no code path
+   outside dev tooling hard-deletes.
 7. **Cross-tenant isolation test:** two schools; as a member of school A, every route and service returns
    nothing from school B and cross-school writes fail. Enforced in the service layer (no RLS).
 
@@ -68,7 +68,7 @@ Not final. Mark up what to add, drop or rename.
 | `gradingScaleBand`      | `top`, `bottom` (min 0), `failing`                                                                                                                               |
 | `classSeat`             | `active`, `dropped`                                                                                                                                              |
 | `assignment`            | `pointsGraded`, `passFail` (band mode), `homework`, `exam`, `project`, `draft` (unpublished), `published`, `pastDue`, `singleAttempt`, `multiAttempt`, `deleted` |
-| `submission`            | `ungraded`, `graded(points)`, `markedBand(label)`, `incomplete`, `late`, `regraded`, `deleted`                                                                   |
+| `submission`            | `ungraded`, `graded(points)`, `markedBand(label)`, `incomplete` (manual-only band), `regraded`, `deleted`                                                        |
 | `gradeEvent`            | `first`, `regrade` (requires reason)                                                                                                                             |
 | `activityLog`           | `read`, `denied`, `system`                                                                                                                                       |
 

@@ -6,8 +6,8 @@
   types and OpenAPI (`zod-to-openapi` or similar). Handlers are thin; logic lives in a service layer that the UI
   also calls.
 - Auth: `Authorization: Bearer <token>` (or `x-api-key`). Org from the path; membership + role checked per request.
-- Consistent error shape: `{ error: { code, message, details? } }`; `409` for conflicts, `412`/`428` for failed/missing preconditions, `403` vs `404` policy
-  decided deliberately (don't leak cross-tenant existence).
+- Consistent error shape: `{ error: { code, message, details? } }`; `409` for conflicts, `412`/`428` for failed/missing preconditions, a resource in another school returns `404`
+  (existence isn't leaked); `403` only when the caller is a member of the school but lacks the role.
 - Pagination: cursor-based on `(created_at, id)`; filters as query params.
 
 ### Verb conventions
@@ -33,7 +33,7 @@
 | Terms / classes / seats / assignments CRUD                                                                                           | admin/teacher | Phase 4: `POST` create, `GET` read, `PUT` replace, `PATCH` partial, `DELETE` soft-delete                    |
 
 Submission response includes: assignment, student, `submitted_at`, `graded_at`, a `grade` object (`label`, `group`, `points_awarded`,
-`max_points`, `percent`, `scale_id`; points fields are `null` for pass/fail-by-band work) that is `null` until graded, plus `status` and `teacher_notes`.
+`max_points`, `percent`, `scale_id`; points fields are `null` for pass/fail-by-band work) that is `null` until graded, plus `teacher_notes`.
 
 ## Docs (Phase 5)
 
