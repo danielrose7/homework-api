@@ -23,6 +23,9 @@ export const forbidden = () =>
 
 export const notFound = () => new ApiError(404, "not_found", "Not found");
 
+export const conflict = (code: string, message: string) =>
+  new ApiError(409, code, message);
+
 export const validationFailed = (details: ErrorDetail[]) =>
   new ApiError(422, "validation_failed", "Request validation failed", details);
 

@@ -1,5 +1,7 @@
 import { Factory } from "fishery";
 
+import { createDefaultGradingScale } from "@/lib/server/services/grading-scales";
+
 import { factoryDb } from "./runtime";
 
 export interface OrganizationBuild {
@@ -24,7 +26,9 @@ class OrganizationFactory extends Factory<
 export const organizationFactory = OrganizationFactory.define(
   ({ sequence, onCreate }) => {
     onCreate(async (build) => {
-      const row = await factoryDb().organization.create({ data: build });
+      const db = factoryDb();
+      const row = await db.organization.create({ data: build });
+      await createDefaultGradingScale(db, row.id);
       return { ...build, id: row.id };
     });
 
