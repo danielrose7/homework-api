@@ -1,7 +1,7 @@
 import { recordActivity } from "@/lib/server/activity";
 import { requirePermission, type RequestContext } from "@/lib/server/context";
-import { loadAccessibleSubmission } from "@/lib/server/services/access";
 import { toSubmissionView } from "@/modules/submissions/serializers";
+import { loadAccessibleSubmission } from "@/modules/submissions/queries/load-accessible-submission";
 import {
   submissionInclude,
   type SubmissionView,

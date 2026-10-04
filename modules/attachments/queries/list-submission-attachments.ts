@@ -1,5 +1,5 @@
 import { requirePermission, type RequestContext } from "@/lib/server/context";
-import { loadAccessibleSubmission } from "@/lib/server/services/access";
+import { loadAccessibleSubmission } from "@/modules/submissions/queries/load-accessible-submission";
 import type { AttachmentSummary } from "@/modules/attachments/types";
 
 export async function listSubmissionAttachments(

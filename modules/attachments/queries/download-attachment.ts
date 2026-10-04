@@ -1,7 +1,7 @@
 import { recordActivity } from "@/lib/server/activity";
 import { requirePermission, type RequestContext } from "@/lib/server/context";
 import { notFound } from "@/lib/server/errors";
-import { loadAccessibleSubmission } from "@/lib/server/services/access";
+import { loadAccessibleSubmission } from "@/modules/submissions/queries/load-accessible-submission";
 import { storageService } from "@/lib/server/storage";
 
 export async function downloadAttachment(
