@@ -23,7 +23,7 @@ describe("denial logging", () => {
       grade,
       {
         orgSlug: seeded.school.organization.slug,
-        submissionId: seeded.submission.id,
+        submission_id: seeded.submission.id,
       },
       { method: "PUT", headers: student.headers, json: { points: 90 } },
     );
@@ -32,11 +32,11 @@ describe("denial logging", () => {
     expect(await denials()).toMatchObject([
       {
         outcome: "denied",
-        resourceType: "submission",
-        resourceId: seeded.submission.id,
-        actorRole: "student",
-        actorMemberId: student.member.id,
-        organizationId: seeded.school.organization.id,
+        resource_type: "submission",
+        resource_id: seeded.submission.id,
+        actor_role: "student",
+        actor_member_id: student.member.id,
+        organization_id: seeded.school.organization.id,
         metadata: { method: "PUT" },
       },
     ]);
@@ -50,7 +50,7 @@ describe("denial logging", () => {
       getOne,
       {
         orgSlug: seeded.school.organization.slug,
-        submissionId: seeded.submission.id,
+        submission_id: seeded.submission.id,
       },
       { headers: classmate.headers },
     );
@@ -58,9 +58,9 @@ describe("denial logging", () => {
     expect(response.status).toBe(STATUS.not_found);
     expect(await denials()).toMatchObject([
       {
-        resourceType: "submission",
-        resourceId: seeded.submission.id,
-        actorMemberId: classmate.member.id,
+        resource_type: "submission",
+        resource_id: seeded.submission.id,
+        actor_member_id: classmate.member.id,
       },
     ]);
   });
@@ -69,42 +69,42 @@ describe("denial logging", () => {
     const seeded = await seedSubmission({ teachers: 2 });
     const outsider = seeded.school.teachers[1]!;
     await testDb().classTeacher.updateMany({
-      where: { classId: seeded.klass.id, memberId: outsider.member.id },
-      data: { deletedAt: new Date() },
+      where: { class_id: seeded.klass.id, member_id: outsider.member.id },
+      data: { deleted_at: new Date() },
     });
 
     const response = await callRoute(
       getOne,
       {
         orgSlug: seeded.school.organization.slug,
-        submissionId: seeded.submission.id,
+        submission_id: seeded.submission.id,
       },
       { headers: outsider.headers },
     );
 
     expect(response.status).toBe(STATUS.not_found);
-    expect(await denials()).toMatchObject([{ actorRole: "teacher" }]);
+    expect(await denials()).toMatchObject([{ actor_role: "teacher" }]);
   });
 
   it("logs a dropped student who tries to submit, against the assignment", async () => {
     const seeded = await seedAssignment();
     await testDb().classSeat.update({
       where: { id: seeded.seats[0]!.id },
-      data: { status: "dropped", droppedAt: new Date() },
+      data: { status: "dropped", dropped_at: new Date() },
     });
 
     const response = await callRoute(
       submit,
       {
         orgSlug: seeded.school.organization.slug,
-        assignmentId: seeded.assignment.id,
+        assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, json: { text: "late" } },
     );
 
     expect(response.status).toBe(STATUS.forbidden);
     expect(await denials()).toMatchObject([
-      { resourceType: "assignment", resourceId: seeded.assignment.id },
+      { resource_type: "assignment", resource_id: seeded.assignment.id },
     ]);
   });
 
@@ -115,7 +115,7 @@ describe("denial logging", () => {
 
     await callRoute(
       getOne,
-      { ...params, submissionId: missing },
+      { ...params, submission_id: missing },
       { headers: seeded.school.admin.headers },
     );
     await callRoute(listMine, params);
@@ -132,12 +132,12 @@ describe("read logging", () => {
     const seeded = await seedSubmission();
     const params = {
       orgSlug: seeded.school.organization.slug,
-      submissionId: seeded.submission.id,
+      submission_id: seeded.submission.id,
     };
     const teacher = seeded.school.teachers[0]!;
     const reads = () =>
       testDb().activityLog.findMany({
-        where: { action: "read", resourceType: "submission" },
+        where: { action: "read", resource_type: "submission" },
       });
 
     await callRoute(grade, params, {
@@ -155,8 +155,8 @@ describe("read logging", () => {
     await callRoute(getOne, params, { headers: teacher.headers });
     expect(await reads()).toMatchObject([
       {
-        resourceId: seeded.submission.id,
-        actorMemberId: teacher.member.id,
+        resource_id: seeded.submission.id,
+        actor_member_id: teacher.member.id,
         outcome: "success",
       },
     ]);

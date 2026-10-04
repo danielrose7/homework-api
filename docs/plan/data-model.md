@@ -8,8 +8,8 @@ The short checklist lives in [schema-conventions.md](schema-conventions.md); thi
   client extension like `../goji-health`'s `newId()`).
 - **Timestamps:** every model has
   ```prisma
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  created_at DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updated_at DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   ```
   - `@default(now())` is a real DB `DEFAULT` on both columns, so inserts from any writer get them.
     `@updatedAt` is set by the Prisma client on update — **no DB trigger**. Therefore no raw-SQL writes in app code.
@@ -17,10 +17,11 @@ The short checklist lives in [schema-conventions.md](schema-conventions.md); thi
     round-tripped through JS never matches. Millisecond columns make timestamp-based concurrency checks exact.
   - Exceptions (append-only, `created_at` only): `activity_log`, `submission_grade_event`.
   - Better Auth tables that ship without `updatedAt` (`organization`, `member`, `invitation`) get it added.
-- **Naming:** camelCase in TS, `snake_case` columns via `@map` / `@@map`.
+- **Naming:** domain Prisma fields, relations, and corresponding application identifiers use `snake_case`.
+  Better Auth's owned models remain camelCase at the adapter boundary.
 - **Tenancy:** every domain table has a NOT NULL `organization_id`, **including child/join/history tables**.
-  Parents declare `@@unique([id, organizationId])`; children use composite relations
-  `fields: [organizationId, parentId], references: [organizationId, id]` so a child can never reference another
+  Parents declare `@@unique([id, organization_id])`; children use composite relations
+  `fields: [organization_id, parent_id], references: [organization_id, id]` so a child can never reference another
   tenant's parent.
 - **Members, not users:** org-scoped references (student, teacher, `graded_by_id`, `submitted_by`) point at
   `member.id`. A user can belong to several schools.
@@ -185,9 +186,9 @@ decision. This supports a FERPA-compliant deployment; it does not by itself make
 counsel confirm.
 
 - **Columns** (soft-deletable domain tables: `academic_year`, `term`, `class`, `class_teacher`, `class_seat`,
-  `assignment`, `assignment_submission`): `deletedAt DateTime? @db.Timestamptz(3)`, `deletedById` (member id),
-  `deletionReason`. Append-only tables (`activity_log`, `submission_grade_event`) are never soft-deleted.
-- **Default invisibility:** a Prisma client extension adds `deletedAt: null` to reads. It does not cover raw SQL
+  `assignment`, `assignment_submission`): `deleted_at DateTime? @db.Timestamptz(3)`, `deleted_by_id` (member id),
+  `deletion_reason`. Append-only tables (`activity_log`, `submission_grade_event`) are never soft-deleted.
+- **Default invisibility:** a Prisma client extension adds `deleted_at: null` to reads. It does not cover raw SQL
   or relation includes reliably, so a guard test checks the extension and raw queries are
   banned in app code.
 - **Uniqueness:** natural-key unique constraints become partial indexes `WHERE deleted_at IS NULL` (hand-written

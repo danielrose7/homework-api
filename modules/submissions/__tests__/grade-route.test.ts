@@ -18,10 +18,10 @@ const errorOf = async (response: Response) =>
   };
 
 async function setup() {
-  const seeded = await seedSubmission({ assignment: { maxPoints: "100" } });
+  const seeded = await seedSubmission({ assignment: { max_points: "100" } });
   const params = {
     orgSlug: seeded.school.organization.slug,
-    submissionId: seeded.submission.id,
+    submission_id: seeded.submission.id,
   };
   const teacher = seeded.school.teachers[0]!.headers;
   return { seeded, params, teacher };
@@ -178,7 +178,7 @@ describe("GET /submissions/{id}", () => {
       getOne,
       {
         orgSlug: seeded.school.organization.slug,
-        submissionId: seeded.submission.id,
+        submission_id: seeded.submission.id,
       },
       { headers: seeded.school.students[1]!.headers },
     );

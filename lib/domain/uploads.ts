@@ -55,10 +55,10 @@ function isUtf8Text(bytes: Uint8Array): boolean {
 
 /** Whether the bytes plausibly match the declared type. Types without a signature are not second-guessed. */
 export function bytesMatchContentType(
-  contentType: string,
+  content_type: string,
   bytes: Uint8Array,
 ): boolean {
-  switch (contentType) {
+  switch (content_type) {
     case "application/pdf":
       return startsWith(bytes, ascii("%PDF-"));
     case "image/png":
@@ -80,7 +80,7 @@ export function bytesMatchContentType(
     case "image/heic":
     case "image/heif":
     case "image/avif":
-      return hasIsoBrand(bytes, HEIF_BRANDS[contentType] ?? []);
+      return hasIsoBrand(bytes, HEIF_BRANDS[content_type] ?? []);
     case "application/zip":
     case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
       return startsWith(bytes, [0x50, 0x4b, 0x03, 0x04]);
@@ -102,7 +102,7 @@ export function sanitizeFilename(filename: string): string {
 
 export interface UploadInput {
   filename: string;
-  contentType: string;
+  content_type: string;
   bytes: Uint8Array;
 }
 
@@ -127,19 +127,19 @@ export function validateUpload(input: UploadInput): ValidationIssue[] {
   }
 
   const allowed = (ALLOWED_CONTENT_TYPES as readonly string[]).includes(
-    input.contentType,
+    input.content_type,
   );
   if (!allowed) {
     issues.push(
       issue(
-        "contentType",
+        "content_type",
         "content_type_not_allowed",
-        `${input.contentType || "That type"} is not accepted`,
+        `${input.content_type || "That type"} is not accepted`,
       ),
     );
   } else if (
     input.bytes.length > 0 &&
-    !bytesMatchContentType(input.contentType, input.bytes)
+    !bytesMatchContentType(input.content_type, input.bytes)
   ) {
     issues.push(
       issue(

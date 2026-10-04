@@ -1,14 +1,14 @@
 export interface BlobSummary {
   id: string;
   filename: string;
-  contentType: string;
-  byteSize: number;
+  content_type: string;
+  byte_size: number;
   checksum: string;
 }
 
 export interface AttachInput {
-  submissionId: string;
-  blobId: string;
+  submission_id: string;
+  blob_id: string;
   name?: string;
 }
 

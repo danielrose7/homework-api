@@ -5,18 +5,18 @@ import type { ScaleWithBands } from "@/modules/grading-scales/types";
 export async function listGradingScales(
   ctx: RequestContext,
 ): Promise<ScaleWithBands[]> {
-  requirePermission(ctx, { gradingScale: ["read"] });
+  requirePermission(ctx, { grading_scale: ["read"] });
   const scales = await ctx.db.gradingScale.findMany({
-    where: { organizationId: ctx.organizationId },
-    orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+    where: { organization_id: ctx.organization_id },
+    orderBy: [{ is_default: "desc" }, { name: "asc" }],
     include: {
-      bands: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" } },
+      bands: { where: { deleted_at: null }, orderBy: { sort_order: "asc" } },
     },
   });
   return scales.map((scale) => ({
     id: scale.id,
     name: scale.name,
-    isDefault: scale.isDefault,
+    is_default: scale.is_default,
     bands: scale.bands.map(toBand),
   }));
 }

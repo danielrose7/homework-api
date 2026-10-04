@@ -2,8 +2,8 @@ import { issue, type ValidationIssue } from "./validation";
 
 /** Calendar days as `YYYY-MM-DD`, which compare correctly as strings. */
 export interface DateRange {
-  startsOn: string;
-  endsOn: string;
+  starts_on: string;
+  ends_on: string;
 }
 
 export function isCalendarDate(value: string): boolean {
@@ -15,24 +15,24 @@ export function isCalendarDate(value: string): boolean {
 }
 
 export function rangesOverlap(a: DateRange, b: DateRange): boolean {
-  return a.startsOn <= b.endsOn && b.startsOn <= a.endsOn;
+  return a.starts_on <= b.ends_on && b.starts_on <= a.ends_on;
 }
 
 export function validateRange(range: DateRange): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
-  if (!isCalendarDate(range.startsOn)) {
+  if (!isCalendarDate(range.starts_on)) {
     issues.push(
-      issue("startsOn", "invalid_date", "Use a real date as YYYY-MM-DD"),
+      issue("starts_on", "invalid_date", "Use a real date as YYYY-MM-DD"),
     );
   }
-  if (!isCalendarDate(range.endsOn)) {
+  if (!isCalendarDate(range.ends_on)) {
     issues.push(
-      issue("endsOn", "invalid_date", "Use a real date as YYYY-MM-DD"),
+      issue("ends_on", "invalid_date", "Use a real date as YYYY-MM-DD"),
     );
   }
-  if (issues.length === 0 && range.endsOn <= range.startsOn) {
+  if (issues.length === 0 && range.ends_on <= range.starts_on) {
     issues.push(
-      issue("endsOn", "end_not_after_start", "End must be after the start"),
+      issue("ends_on", "end_not_after_start", "End must be after the start"),
     );
   }
   return issues;
@@ -51,10 +51,10 @@ export function validateTerm(
   const issues = validateRange(term);
   if (issues.length > 0) return issues;
 
-  if (term.startsOn < year.startsOn || term.endsOn > year.endsOn) {
+  if (term.starts_on < year.starts_on || term.ends_on > year.ends_on) {
     issues.push(
       issue(
-        "startsOn",
+        "starts_on",
         "outside_academic_year",
         "Term must fall inside its academic year",
       ),
@@ -64,7 +64,7 @@ export function validateTerm(
     if (sibling.id !== term.id && rangesOverlap(term, sibling)) {
       issues.push(
         issue(
-          "startsOn",
+          "starts_on",
           "overlaps_term",
           `Overlaps the term "${sibling.name}"`,
         ),

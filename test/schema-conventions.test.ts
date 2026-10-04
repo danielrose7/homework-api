@@ -35,7 +35,16 @@ function parseModels(source: string): ParsedModel[] {
 const models = parseModels(schema);
 
 const APPEND_ONLY = new Set(["ActivityLog", "SubmissionGradeEvent"]);
-const BETTER_AUTH_OWNED = new Set(["Member", "Invitation"]);
+const AUTH_MODELS = new Set([
+  "User",
+  "Session",
+  "Account",
+  "Verification",
+  "Organization",
+  "Member",
+  "Invitation",
+]);
+const BETTER_AUTH_CASCADE = new Set(["Member", "Invitation"]);
 const GLOBAL = new Set([
   "User",
   "Session",
@@ -60,27 +69,32 @@ describe("schema conventions", () => {
       });
 
       it("has created_at defaulting to now()", () => {
-        const createdAt = model.fields.get("createdAt") ?? "";
-        expect(createdAt).toContain("@default(now())");
-        expect(createdAt).toContain('@map("created_at")');
+        const created_at =
+          model.fields.get(
+            AUTH_MODELS.has(name) ? "createdAt" : "created_at",
+          ) ?? "";
+        expect(created_at).toContain("@default(now())");
+        expect(created_at).toContain('@map("created_at")');
       });
 
       it("has updated_at maintained by the Prisma client, unless append-only", () => {
-        const updatedAt = model.fields.get("updatedAt");
+        const updated_at = model.fields.get(
+          AUTH_MODELS.has(name) ? "updatedAt" : "updated_at",
+        );
         if (APPEND_ONLY.has(name)) {
-          expect(updatedAt).toBeUndefined();
+          expect(updated_at).toBeUndefined();
           return;
         }
-        expect(updatedAt).toBeDefined();
-        expect(updatedAt).toContain("@default(now())");
-        expect(updatedAt).toContain("@updatedAt");
-        expect(updatedAt).toContain('@map("updated_at")');
+        expect(updated_at).toBeDefined();
+        expect(updated_at).toContain("@default(now())");
+        expect(updated_at).toContain("@updatedAt");
+        expect(updated_at).toContain('@map("updated_at")');
       });
 
       it("stores every instant as Timestamptz(3) and calendar days as Date", () => {
         for (const [field, definition] of model.fields) {
           if (!/^DateTime\??(\s|$)/.test(definition)) continue;
-          const calendarDay = field.endsWith("On");
+          const calendarDay = field.endsWith("_on");
           expect(definition, `${name}.${field}`).toContain(
             calendarDay ? "@db.Date" : "@db.Timestamptz(3)",
           );
@@ -88,7 +102,7 @@ describe("schema conventions", () => {
       });
 
       it("keeps foreign keys from cascading", () => {
-        if (GLOBAL.has(name) || BETTER_AUTH_OWNED.has(name)) return;
+        if (GLOBAL.has(name) || BETTER_AUTH_CASCADE.has(name)) return;
         for (const [field, definition] of model.fields) {
           if (
             definition.includes("@relation(") &&
@@ -102,11 +116,12 @@ describe("schema conventions", () => {
       });
 
       it("names every pointer to another row with an _id suffix", () => {
+        if (AUTH_MODELS.has(name)) return;
         for (const [field, definition] of model.fields) {
           if (field === "id" || !definition.includes("@db.Uuid")) continue;
           expect(
-            field.endsWith("Id"),
-            `${name}.${field} should end in Id`,
+            field.endsWith("_id"),
+            `${name}.${field} should end in _id`,
           ).toBe(true);
           expect(definition, `${name}.${field}`).toMatch(
             /@map\("[a-z_]+_id"\)/,
@@ -125,11 +140,12 @@ describe("schema conventions", () => {
               .split(",")
               .map((part) => part.trim())
               .at(-1) ?? "";
-          if (pointer === "organizationId" || !pointer.endsWith("Id")) continue;
+          if (pointer === "organization_id" || !pointer.endsWith("_id"))
+            continue;
           expect(
             field,
             `${name}.${field} relates through ${pointer}`,
-          ).not.toMatch(/Id$/);
+          ).not.toMatch(/_id$/);
         }
       });
 
@@ -139,9 +155,12 @@ describe("schema conventions", () => {
 
       it("is scoped by organization_id unless global", () => {
         if (GLOBAL.has(name)) return;
-        const organizationId = model.fields.get("organizationId") ?? "";
-        expect(organizationId).toContain('@map("organization_id")');
-        expect(organizationId).toContain("@db.Uuid");
+        const organization_id =
+          model.fields.get(
+            AUTH_MODELS.has(name) ? "organizationId" : "organization_id",
+          ) ?? "";
+        expect(organization_id).toContain('@map("organization_id")');
+        expect(organization_id).toContain("@db.Uuid");
       });
     },
   );

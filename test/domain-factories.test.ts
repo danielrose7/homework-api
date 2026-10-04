@@ -13,21 +13,21 @@ describe("seedClass", () => {
   it("builds a term, a class, its teacher and a seat for every student", async () => {
     const seeded = await seedClass({ teachers: 1, students: 2 });
     expect(seeded.seats).toHaveLength(2);
-    expect(seeded.klass.organizationId).toBe(seeded.school.organization.id);
+    expect(seeded.klass.organization_id).toBe(seeded.school.organization.id);
 
     const teacher = await seeded.school.teachers[0]!.context();
     await expect(
       requireTeachesClass(teacher, seeded.klass.id),
     ).resolves.toBeUndefined();
     expect(
-      await testDb().classSeat.count({ where: { classId: seeded.klass.id } }),
+      await testDb().classSeat.count({ where: { class_id: seeded.klass.id } }),
     ).toBe(2);
   });
 
   it("keeps two seeded schools apart", async () => {
     const a = await seedClass();
     const b = await seedClass();
-    expect(a.klass.organizationId).not.toBe(b.klass.organizationId);
+    expect(a.klass.organization_id).not.toBe(b.klass.organization_id);
     const teacherOfB = await b.school.teachers[0]!.context();
     await expect(
       requireTeachesClass(teacherOfB, a.klass.id),
@@ -42,26 +42,26 @@ describe("assignment factory traits", () => {
     const { assignment } = await seedAssignment();
     expect(assignment).toMatchObject({
       type: "homework",
-      gradingMode: "points",
-      maxPoints: "100",
-      maxSubmissions: 1,
+      grading_mode: "points",
+      max_points: "100",
+      max_submissions: 1,
     });
-    expect(assignment.publishedAt).toBeInstanceOf(Date);
+    expect(assignment.published_at).toBeInstanceOf(Date);
   });
 
   it("supports pass/fail, draft, past due, multi-attempt and deleted", async () => {
     const { klass } = await seedClass();
     const create = (factory: typeof assignmentFactory) =>
-      factory.create({ classId: klass.id });
+      factory.create({ class_id: klass.id });
 
     const passFail = await create(assignmentFactory.passFail());
-    expect(passFail).toMatchObject({ gradingMode: "band", maxPoints: null });
+    expect(passFail).toMatchObject({ grading_mode: "band", max_points: null });
 
-    expect((await create(assignmentFactory.draft())).publishedAt).toBeNull();
+    expect((await create(assignmentFactory.draft())).published_at).toBeNull();
     const pastDue = await create(assignmentFactory.pastDue());
-    expect(pastDue.dueAt!.getTime()).toBeLessThan(Date.now());
+    expect(pastDue.due_at!.getTime()).toBeLessThan(Date.now());
     expect(
-      (await create(assignmentFactory.multiAttempt(4))).maxSubmissions,
+      (await create(assignmentFactory.multiAttempt(4))).max_submissions,
     ).toBe(4);
     expect((await create(assignmentFactory.exam())).type).toBe("exam");
 
@@ -75,11 +75,11 @@ describe("assignment factory traits", () => {
 describe("submission factory", () => {
   it("is ungraded by default", async () => {
     const { submission } = await seedSubmission();
-    expect(submission.gradedAt).toBeNull();
+    expect(submission.graded_at).toBeNull();
     const row = await testDb().assignmentSubmission.findUniqueOrThrow({
       where: { id: submission.id },
     });
-    expect(row.gradeBandId).toBeNull();
+    expect(row.grade_band_id).toBeNull();
     expect(await testDb().submissionGradeEvent.count()).toBe(0);
   });
 
@@ -92,17 +92,17 @@ describe("submission factory", () => {
       where: { id: submission.id },
     });
     expect(row).toMatchObject({
-      gradeLabel: "A",
-      gradeGroup: "A",
-      teacherNotes: "Great",
+      grade_label: "A",
+      grade_group: "A",
+      teacher_notes: "Great",
     });
-    expect(String(row.pointsAwarded)).toBe("92");
-    expect(row.gradedAt?.toISOString()).toBe(submission.gradedAt);
+    expect(String(row.points_awarded)).toBe("92");
+    expect(row.graded_at?.toISOString()).toBe(submission.graded_at);
 
     const events = await testDb().submissionGradeEvent.findMany();
     expect(events).toHaveLength(1);
-    expect(events[0]?.createdAt.toISOString()).toBe(submission.gradedAt);
-    expect(events[0]?.gradeLabel).toBe("A");
+    expect(events[0]?.created_at.toISOString()).toBe(submission.graded_at);
+    expect(events[0]?.grade_label).toBe("A");
   });
 
   it("incomplete() records the manual band with no points", async () => {
@@ -112,16 +112,16 @@ describe("submission factory", () => {
     const row = await testDb().assignmentSubmission.findUniqueOrThrow({
       where: { id: submission.id },
     });
-    expect(row.gradeLabel).toBe("Incomplete");
-    expect(row.pointsAwarded).toBeNull();
+    expect(row.grade_label).toBe("Incomplete");
+    expect(row.points_awarded).toBeNull();
   });
 
   it("can attach to an existing assignment and seat", async () => {
     const seeded = await seedAssignment({ students: 2 });
     const made = await submissionFactory.create({
-      assignmentId: seeded.assignment.id,
-      classSeatId: seeded.seats[1]!.id,
+      assignment_id: seeded.assignment.id,
+      class_seat_id: seeded.seats[1]!.id,
     });
-    expect(made.assignmentId).toBe(seeded.assignment.id);
+    expect(made.assignment_id).toBe(seeded.assignment.id);
   });
 });

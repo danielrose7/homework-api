@@ -12,40 +12,43 @@ describe("recordActivity", () => {
   it("records who did what to which resource, with ids only", async () => {
     const school = await seedSchool();
     const ctx = await school.teachers[0]!.context();
-    const resourceId = ctx.memberId;
+    const resource_id = ctx.member_id;
 
     await recordActivity(testDb(), ctx, {
       action: "read",
-      resourceType: "submission",
-      resourceId,
-      metadata: { assignmentId: resourceId, changedFields: ["teacherNotes"] },
+      resource_type: "submission",
+      resource_id,
+      metadata: {
+        assignment_id: resource_id,
+        changedFields: ["teacher_notes"],
+      },
     });
 
     const row = await testDb().activityLog.findFirstOrThrow();
     expect(row).toMatchObject({
-      organizationId: ctx.organizationId,
-      actorType: "user",
-      actorUserId: ctx.userId,
-      actorMemberId: ctx.memberId,
-      actorRole: "teacher",
+      organization_id: ctx.organization_id,
+      actor_type: "user",
+      actor_user_id: ctx.userId,
+      actor_member_id: ctx.member_id,
+      actor_role: "teacher",
       action: "read",
-      resourceType: "submission",
-      resourceId,
+      resource_type: "submission",
+      resource_id,
       outcome: "success",
-      requestId: ctx.requestId,
+      request_id: ctx.request_id,
     });
-    expect(row.createdAt).toBeInstanceOf(Date);
+    expect(row.created_at).toBeInstanceOf(Date);
   });
 
   it("refuses metadata that could carry personal or graded content", async () => {
     const school = await seedSchool();
     const ctx = await school.admin.context();
 
-    for (const key of ["name", "email", "teacherNotes", "points", "Title"]) {
+    for (const key of ["name", "email", "teacher_notes", "points", "Title"]) {
       await expect(
         recordActivity(testDb(), ctx, {
           action: "update",
-          resourceType: "assignment",
+          resource_type: "assignment",
           metadata: { [key]: "x" },
         }),
       ).rejects.toThrow(/ids and field names only/);
@@ -68,11 +71,11 @@ describe("recordActivity", () => {
     });
     await recordActivity(testDb(), ctx, {
       action: "read",
-      resourceType: "class",
+      resource_type: "class",
     });
     const row = await testDb().activityLog.findFirstOrThrow();
-    expect(row.ipAddress).toBe("203.0.113.9");
-    expect(row.userAgent).toBe("curl/8.0");
+    expect(row.ip_address).toBe("203.0.113.9");
+    expect(row.user_agent).toBe("curl/8.0");
   });
 
   it("is append-only in the client", async () => {
@@ -80,7 +83,7 @@ describe("recordActivity", () => {
     const ctx = await school.admin.context();
     await recordActivity(testDb(), ctx, {
       action: "read",
-      resourceType: "class",
+      resource_type: "class",
     });
     const db = testDb();
 
@@ -98,7 +101,7 @@ describe("recordActivity", () => {
     const ctx = await school.admin.context();
     await recordActivity(testDb(), ctx, {
       action: "read",
-      resourceType: "class",
+      resource_type: "class",
     });
 
     await expect(
@@ -111,7 +114,7 @@ describe("recordActivity", () => {
     const ctx = await school.admin.context();
     await recordActivity(testDb(), ctx, {
       action: "read",
-      resourceType: "class",
+      resource_type: "class",
     });
 
     const other = createPrismaClient(testEnv.appUrl);

@@ -42,7 +42,7 @@ export async function listSubmissionsOverview(
 ): Promise<SubmissionPage> {
   requirePermission(ctx, { submission: ["readAll"] });
   const { timezone } = await ctx.db.organizationPreferences.findUniqueOrThrow({
-    where: { organizationId: ctx.organizationId },
+    where: { organization_id: ctx.organization_id },
   });
   const range = instantsForDayRange(filters, timezone);
 
@@ -54,7 +54,7 @@ export async function listSubmissionsOverview(
           assignment: {
             class: {
               teachers: {
-                some: { memberId: ctx.memberId, deletedAt: null },
+                some: { member_id: ctx.member_id, deleted_at: null },
               },
             },
           },

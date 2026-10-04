@@ -11,36 +11,39 @@ import {
 } from "@/modules/academics/validation";
 
 export interface TermInput {
-  academicYearId: string;
+  academic_year_id: string;
   name: string;
-  startsOn: string;
-  endsOn: string;
+  starts_on: string;
+  ends_on: string;
 }
 
 export async function createTerm(ctx: RequestContext, input: TermInput) {
   requireRole(ctx, "administrator");
   const year = await ctx.db.academicYear.findFirst({
-    where: { id: input.academicYearId, organizationId: ctx.organizationId },
+    where: { id: input.academic_year_id, organization_id: ctx.organization_id },
   });
   if (!year) {
     throw validationFailed([
-      issue("academicYearId", "not_found", "Academic year not found"),
+      issue("academic_year_id", "not_found", "Academic year not found"),
     ]);
   }
 
   const siblings = await ctx.db.term.findMany({
-    where: { organizationId: ctx.organizationId, academicYearId: year.id },
+    where: { organization_id: ctx.organization_id, academic_year_id: year.id },
   });
   const issues = [
     ...requireName(input.name),
     ...validateTerm(
       input,
-      { startsOn: formatDay(year.startsOn), endsOn: formatDay(year.endsOn) },
+      {
+        starts_on: formatDay(year.starts_on),
+        ends_on: formatDay(year.ends_on),
+      },
       siblings.map((term) => ({
         id: term.id,
         name: term.name,
-        startsOn: formatDay(term.startsOn),
-        endsOn: formatDay(term.endsOn),
+        starts_on: formatDay(term.starts_on),
+        ends_on: formatDay(term.ends_on),
       })),
     ),
   ];
@@ -51,23 +54,23 @@ export async function createTerm(ctx: RequestContext, input: TermInput) {
 
   const row = await ctx.db.term.create({
     data: {
-      organizationId: ctx.organizationId,
-      academicYearId: year.id,
+      organization_id: ctx.organization_id,
+      academic_year_id: year.id,
       name: input.name.trim(),
-      startsOn: day(input.startsOn),
-      endsOn: day(input.endsOn),
+      starts_on: day(input.starts_on),
+      ends_on: day(input.ends_on),
     },
   });
   await recordActivity(ctx.db, ctx, {
     action: "create",
-    resourceType: "term",
-    resourceId: row.id,
+    resource_type: "term",
+    resource_id: row.id,
   });
   return {
     id: row.id,
-    academicYearId: year.id,
+    academic_year_id: year.id,
     name: row.name,
-    startsOn: input.startsOn,
-    endsOn: input.endsOn,
+    starts_on: input.starts_on,
+    ends_on: input.ends_on,
   };
 }

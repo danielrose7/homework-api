@@ -31,8 +31,8 @@ export interface AssignmentSpec {
   classKey: string;
   title: string;
   type: "homework" | "quiz" | "exam" | "project";
-  gradingMode: "points" | "band";
-  maxPoints: string | null;
+  grading_mode: "points" | "band";
+  max_points: string | null;
   scale?: ScaleKey;
   dueInDays: number;
   /** Set to demonstrate a soft-deleted assignment and, later, restore. */
@@ -58,8 +58,8 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     classKey: "algebra",
     title: "Linear equations quiz",
     type: "quiz",
-    gradingMode: "points",
-    maxPoints: "50",
+    grading_mode: "points",
+    max_points: "50",
     dueInDays: -10,
   },
   {
@@ -67,8 +67,8 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     classKey: "algebra",
     title: "Quadratics problem set",
     type: "homework",
-    gradingMode: "points",
-    maxPoints: "100",
+    grading_mode: "points",
+    max_points: "100",
     dueInDays: 4,
   },
   {
@@ -76,8 +76,8 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     classKey: "english",
     title: "Gatsby essay",
     type: "project",
-    gradingMode: "points",
-    maxPoints: "100",
+    grading_mode: "points",
+    max_points: "100",
     dueInDays: -6,
   },
   {
@@ -85,8 +85,8 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     classKey: "english",
     title: "Poetry close reading",
     type: "homework",
-    gradingMode: "points",
-    maxPoints: "20",
+    grading_mode: "points",
+    max_points: "20",
     dueInDays: 2,
   },
   {
@@ -94,8 +94,8 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     classKey: "english",
     title: "Ancient Rome map",
     type: "project",
-    gradingMode: "points",
-    maxPoints: "40",
+    grading_mode: "points",
+    max_points: "40",
     dueInDays: 9,
     deleted: true,
   },
@@ -104,8 +104,8 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     classKey: "biology",
     title: "Lab report: density",
     type: "homework",
-    gradingMode: "band",
-    maxPoints: null,
+    grading_mode: "band",
+    max_points: null,
     scale: "passFail",
     dueInDays: -3,
   },
@@ -114,8 +114,8 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     classKey: "biology",
     title: "Cell structure worksheet",
     type: "homework",
-    gradingMode: "points",
-    maxPoints: "30",
+    grading_mode: "points",
+    max_points: "30",
     scale: "passFail",
     dueInDays: 5,
   },

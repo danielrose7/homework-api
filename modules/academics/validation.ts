@@ -24,16 +24,16 @@ export function requireName(value: string, field = "name", limit = 120) {
 
 export async function scaleIssue(
   db: DbClient,
-  organizationId: string,
-  gradingScaleId: string | null | undefined,
+  organization_id: string,
+  grading_scale_id: string | null | undefined,
 ): Promise<ValidationIssue[]> {
-  if (!gradingScaleId) return [];
+  if (!grading_scale_id) return [];
   const scale = await db.gradingScale.findFirst({
-    where: { id: gradingScaleId, organizationId },
+    where: { id: grading_scale_id, organization_id },
   });
   return scale
     ? []
-    : [issue("gradingScaleId", "not_found", "Grading scale not found")];
+    : [issue("grading_scale_id", "not_found", "Grading scale not found")];
 }
 
 export type AssignmentKind = "homework" | "exam" | "quiz" | "project";
@@ -42,11 +42,11 @@ export interface AssignmentInput {
   title: string;
   description?: string | null;
   type: AssignmentKind;
-  gradingMode?: "points" | "band";
-  maxPoints?: string | null;
-  gradingScaleId?: string | null;
-  dueAt?: Date | null;
-  maxSubmissions?: number;
+  grading_mode?: "points" | "band";
+  max_points?: string | null;
+  grading_scale_id?: string | null;
+  due_at?: Date | null;
+  max_submissions?: number;
   publish?: boolean;
 }
 
@@ -54,42 +54,42 @@ export function validateAssignmentInput(
   input: AssignmentInput,
 ): ValidationIssue[] {
   const issues = requireName(input.title, "title", 200);
-  const mode = input.gradingMode ?? "points";
-  const rawMax = input.maxPoints ?? null;
+  const mode = input.grading_mode ?? "points";
+  const rawMax = input.max_points ?? null;
   const hasMax = rawMax !== null;
 
   if (mode === "points") {
     const max = rawMax === null ? null : toHundredths(rawMax);
     if (!hasMax) {
       issues.push(
-        issue("maxPoints", "max_points_required", "Points are required"),
+        issue("max_points", "max_points_required", "Points are required"),
       );
     } else if (max === null) {
       issues.push(
-        issue("maxPoints", "invalid_number", "Use at most two decimals"),
+        issue("max_points", "invalid_number", "Use at most two decimals"),
       );
     } else if (max <= 0) {
       issues.push(
-        issue("maxPoints", "must_be_positive", "Must be greater than zero"),
+        issue("max_points", "must_be_positive", "Must be greater than zero"),
       );
     } else if (max > MAX_POINTS_LIMIT) {
-      issues.push(issue("maxPoints", "too_large", "Must be 99999.99 or less"));
+      issues.push(issue("max_points", "too_large", "Must be 99999.99 or less"));
     }
   } else if (hasMax) {
     issues.push(
       issue(
-        "maxPoints",
+        "max_points",
         "max_points_not_allowed",
         "Pass/fail work has no points",
       ),
     );
   }
 
-  const attempts = input.maxSubmissions ?? 1;
+  const attempts = input.max_submissions ?? 1;
   if (!Number.isInteger(attempts) || attempts < 1 || attempts > MAX_ATTEMPTS) {
     issues.push(
       issue(
-        "maxSubmissions",
+        "max_submissions",
         "invalid_max_submissions",
         `Use a whole number from 1 to ${MAX_ATTEMPTS}`,
       ),

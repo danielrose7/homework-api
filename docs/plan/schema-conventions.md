@@ -6,18 +6,19 @@ can (marked **tested** below).
 
 ## Naming
 
-- **Tables** are singular `snake_case` through `@@map` (`class_seat`, `storage_blob`). **Columns** are `snake_case`
-  through `@map`; TypeScript fields are `camelCase`. **Tested.**
+- **Tables** are singular `snake_case` through `@@map` (`class_seat`, `storage_blob`). Domain Prisma fields and
+  relations are `snake_case`, matching their database columns and the rest of the application. Better Auth's seven
+  owned models remain camelCase because its adapter owns that contract. **Tested.**
 - **A column that points at another row ends in `_id`** (`class_id`, `graded_by_id`, `deleted_by_id`,
-  `supersedes_id`), `camelCase` `…Id` in Prisma. This is the Rails convention. **Tested.**
-- **The relation drops the suffix.** `gradedById` is the column; `gradedBy` is the related member. A relation field
-  never ends in `Id`. `deletedById` and `uploadedById` are plain columns today and can become `deletedBy` and
-  `uploadedBy` relations without a rename. **Tested.**
+  `supersedes_id`) in both Prisma and Postgres. This is the Rails convention. **Tested.**
+- **The relation drops the suffix.** `graded_by_id` is the column; `graded_by` is the related member. A relation field
+  never ends in `_id`. `deleted_by_id` and `uploaded_by_id` are plain columns today and can become `deleted_by` and
+  `uploaded_by` relations without a rename. **Tested.**
 - **Polymorphic links** use `record_type` (an enum) + `record_id` + `name`, as Active Storage does.
 - **Enums** are `snake_case` types through `@@map`, with lowercase `snake_case` values. Use an enum for a closed set
   (`assignment_type`, `grading_mode`); use plain text for an open set that should not need a migration to extend
   (`activity_log.action`, `storage_blob.service_name`).
-- **Calendar days** are named `…On` (`starts_on`, `ends_on`) and typed `@db.Date`. Instants are `…At`.
+- **Calendar days** end in `_on` and are typed `@db.Date`. Instants end in `_at`.
 - **Constraint and index names** are explicit where they matter: live-row uniques end `_live`
   (`class_name_live`), one-of-a-kind uniques say so (`grading_scale_one_default`), checks are named for the rule
   (`assignment_grading_mode`). Tests assert on these names.
@@ -25,9 +26,9 @@ can (marked **tested** below).
 ## Keys and timestamps
 
 - **Primary key:** `id String @id @default(uuid(7)) @db.Uuid`. **Tested.**
-- **Timestamps:** every model has `createdAt` and `updatedAt`, both `@default(now())`, `updatedAt` also
+- **Timestamps:** every domain model has `created_at` and `updated_at`, both `@default(now())`, `updated_at` also
   `@updatedAt`, all `@db.Timestamptz(3)`. No triggers, so no raw-SQL writes in app code. **Tested.**
-- **Exceptions with no `updatedAt`** (append-only): `activity_log`, `submission_grade_event`. **Tested.**
+- **Exceptions with no `updated_at`** (append-only): `activity_log`, `submission_grade_event`. **Tested.**
 - **Money-like numbers:** points `Decimal(7,2)`, percentages `Decimal(6,2)`, GPA `Decimal(3,2)`. Compare them as
   exact hundredths in code, never as floats.
 
@@ -35,9 +36,9 @@ can (marked **tested** below).
 
 - **Every non-global model has `organization_id`**, NOT NULL, `@db.Uuid`. Global models: `user`, `session`,
   `account`, `verification`, `organization`. **Tested.**
-- **Every table is a foreign-key target for its children** through `@@unique([organizationId, id])`.
-- **Children reference parents with composite keys** `fields: [organizationId, parentId], references:
-[organizationId, id]`, so a row can never point at another school's parent. A band is also referenced through
+- **Every domain table is a foreign-key target for its children** through `@@unique([organization_id, id])`.
+- **Children reference parents with composite keys** `fields: [organization_id, parent_id], references:
+[organization_id, id]`, so a row can never point at another school's parent. A band is also referenced through
   `(organization_id, grading_scale_id, id)` so it must belong to the scale it is recorded against.
 - **Members, not users,** for anything inside a school (`graded_by_id`, seats, teacher links).
 - Indexes that serve filters lead with `organization_id`.
@@ -73,9 +74,9 @@ grading-mode and points consistency, grade columns all set or all empty, non-neg
 
 ## Adding a model
 
-1. UUIDv7 `id`, `organizationId`, `createdAt`, `updatedAt`, `@@map` to a singular snake_case table.
-2. `@@unique([organizationId, id])`, and composite relations to each parent with `onDelete: Restrict`.
-3. Name pointer columns `…Id` / `…_id` and the relations without the suffix.
+1. UUIDv7 `id`, `organization_id`, `created_at`, `updated_at`, `@@map` to a singular snake_case table.
+2. `@@unique([organization_id, id])`, and composite relations to each parent with `onDelete: Restrict`.
+3. Name pointer fields `…_id` and the relations without the suffix.
 4. Add soft-delete columns and a live-row unique if people can delete it; add it to `SOFT_DELETABLE` in
    `lib/server/db-extensions.ts`.
 5. Append check constraints and any grants to the migration, then add a database-rule test for each.

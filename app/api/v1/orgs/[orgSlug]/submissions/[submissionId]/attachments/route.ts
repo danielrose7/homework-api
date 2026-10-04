@@ -6,15 +6,15 @@ import { serve } from "@/lib/server/serve";
 import { listSubmissionAttachments } from "@/modules/attachments/queries/list-submission-attachments";
 import { serializeAttachment } from "@/modules/attachments/serializers";
 
-const params = z.object({ submissionId: z.uuid() });
+const params = z.object({ submission_id: z.uuid() });
 
 export const listAttachmentsRoute = defineRoute({
   resource: "submission",
-  idParam: "submissionId",
+  idParam: "submission_id",
   handle: async ({ ctx, input }) => {
-    const { submissionId } = input.params(params);
-    const attachments = await listSubmissionAttachments(ctx, submissionId);
-    const url = `/api/v1/orgs/${ctx.organizationSlug}/submissions/${submissionId}/attachments`;
+    const { submission_id } = input.params(params);
+    const attachments = await listSubmissionAttachments(ctx, submission_id);
+    const url = `/api/v1/orgs/${ctx.organizationSlug}/submissions/${submission_id}/attachments`;
     return Response.json(listJson(url, attachments.map(serializeAttachment)));
   },
 });

@@ -42,7 +42,7 @@ describe("foundation", () => {
       headers,
       body: {
         organizationId: school!.id,
-        permissions: { gradingScale: ["create"] },
+        permissions: { grading_scale: ["create"] },
       },
     });
     expect(allowed.success).toBe(true);

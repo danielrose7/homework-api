@@ -23,51 +23,54 @@ describe("calendar dates", () => {
 describe("validateRange", () => {
   it("requires the end to be after the start", () => {
     expect(
-      validateRange({ startsOn: "2026-09-01", endsOn: "2026-09-01" })[0]?.code,
+      validateRange({ starts_on: "2026-09-01", ends_on: "2026-09-01" })[0]
+        ?.code,
     ).toBe("end_not_after_start");
     expect(
-      validateRange({ startsOn: "2026-09-02", endsOn: "2026-09-01" })[0]?.code,
+      validateRange({ starts_on: "2026-09-02", ends_on: "2026-09-01" })[0]
+        ?.code,
     ).toBe("end_not_after_start");
     expect(
-      validateRange({ startsOn: "2026-09-01", endsOn: "2026-12-20" }),
+      validateRange({ starts_on: "2026-09-01", ends_on: "2026-12-20" }),
     ).toEqual([]);
   });
 
   it("flags bad dates before comparing", () => {
-    const codes = validateRange({ startsOn: "nope", endsOn: "2026-12-20" }).map(
-      (i) => i.code,
-    );
+    const codes = validateRange({
+      starts_on: "nope",
+      ends_on: "2026-12-20",
+    }).map((i) => i.code);
     expect(codes).toEqual(["invalid_date"]);
   });
 });
 
 describe("rangesOverlap", () => {
-  const a = { startsOn: "2026-09-01", endsOn: "2026-12-20" };
+  const a = { starts_on: "2026-09-01", ends_on: "2026-12-20" };
   it("treats shared days as overlap and gaps as clear", () => {
     expect(
-      rangesOverlap(a, { startsOn: "2026-12-20", endsOn: "2027-01-30" }),
+      rangesOverlap(a, { starts_on: "2026-12-20", ends_on: "2027-01-30" }),
     ).toBe(true);
     expect(
-      rangesOverlap(a, { startsOn: "2026-12-21", endsOn: "2027-01-30" }),
+      rangesOverlap(a, { starts_on: "2026-12-21", ends_on: "2027-01-30" }),
     ).toBe(false);
     expect(
-      rangesOverlap(a, { startsOn: "2026-10-01", endsOn: "2026-10-02" }),
+      rangesOverlap(a, { starts_on: "2026-10-01", ends_on: "2026-10-02" }),
     ).toBe(true);
   });
 });
 
 describe("validateTerm", () => {
-  const year = { startsOn: "2026-09-01", endsOn: "2027-06-15" };
+  const year = { starts_on: "2026-09-01", ends_on: "2027-06-15" };
   const fall = {
     id: "t1",
     name: "Fall",
-    startsOn: "2026-09-01",
-    endsOn: "2026-12-20",
+    starts_on: "2026-09-01",
+    ends_on: "2026-12-20",
   };
 
   it("accepts a term inside the year that does not overlap", () => {
     expect(
-      validateTerm({ startsOn: "2027-01-05", endsOn: "2027-06-15" }, year, [
+      validateTerm({ starts_on: "2027-01-05", ends_on: "2027-06-15" }, year, [
         fall,
       ]),
     ).toEqual([]);
@@ -75,7 +78,7 @@ describe("validateTerm", () => {
 
   it("rejects a term outside the year", () => {
     const codes = validateTerm(
-      { startsOn: "2026-08-01", endsOn: "2026-10-01" },
+      { starts_on: "2026-08-01", ends_on: "2026-10-01" },
       year,
       [],
     ).map((i) => i.code);
@@ -83,12 +86,12 @@ describe("validateTerm", () => {
   });
 
   it("rejects overlap with another term but not with itself", () => {
-    const overlapping = { startsOn: "2026-12-01", endsOn: "2027-02-01" };
+    const overlapping = { starts_on: "2026-12-01", ends_on: "2027-02-01" };
     expect(validateTerm(overlapping, year, [fall])[0]?.code).toBe(
       "overlaps_term",
     );
     expect(
-      validateTerm({ ...fall, endsOn: "2026-12-19" }, year, [fall]),
+      validateTerm({ ...fall, ends_on: "2026-12-19" }, year, [fall]),
     ).toEqual([]);
   });
 });
@@ -96,18 +99,18 @@ describe("validateTerm", () => {
 describe("submissionEligibility", () => {
   const published = new Date("2026-09-01T00:00:00Z");
   const assignment = {
-    publishedAt: published,
-    deletedAt: null,
-    maxSubmissions: 1,
+    published_at: published,
+    deleted_at: null,
+    max_submissions: 1,
   };
-  const seat = { status: "active" as const, deletedAt: null };
+  const seat = { status: "active" as const, deleted_at: null };
 
   it("allows the first attempt", () => {
     expect(
       submissionEligibility({ assignment, seat, attemptsSoFar: 0 }),
     ).toEqual({
       ok: true,
-      attemptNumber: 1,
+      attempt_number: 1,
     });
   });
 
@@ -124,17 +127,17 @@ describe("submissionEligibility", () => {
   it("numbers further attempts when the limit allows them", () => {
     expect(
       submissionEligibility({
-        assignment: { ...assignment, maxSubmissions: 3 },
+        assignment: { ...assignment, max_submissions: 3 },
         seat,
         attemptsSoFar: 2,
       }),
-    ).toEqual({ ok: true, attemptNumber: 3 });
+    ).toEqual({ ok: true, attempt_number: 3 });
   });
 
   it("hides unpublished and deleted assignments", () => {
     for (const hidden of [
-      { ...assignment, publishedAt: null },
-      { ...assignment, deletedAt: new Date() },
+      { ...assignment, published_at: null },
+      { ...assignment, deleted_at: new Date() },
     ]) {
       expect(
         submissionEligibility({ assignment: hidden, seat, attemptsSoFar: 0 }),
@@ -147,8 +150,8 @@ describe("submissionEligibility", () => {
 
   it("forbids dropped or deleted seats", () => {
     for (const bad of [
-      { status: "dropped" as const, deletedAt: null },
-      { status: "active" as const, deletedAt: new Date() },
+      { status: "dropped" as const, deleted_at: null },
+      { status: "active" as const, deleted_at: new Date() },
     ]) {
       expect(
         submissionEligibility({ assignment, seat: bad, attemptsSoFar: 0 }),
@@ -162,7 +165,7 @@ describe("submissionEligibility", () => {
   it("ignores the due date", () => {
     expect(
       submissionEligibility({
-        assignment: { ...assignment, publishedAt: published },
+        assignment: { ...assignment, published_at: published },
         seat,
         attemptsSoFar: 0,
       }).ok,

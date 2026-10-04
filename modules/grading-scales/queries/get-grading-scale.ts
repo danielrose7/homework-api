@@ -7,8 +7,8 @@ export async function getGradingScale(
   ctx: RequestContext,
   scaleId: string,
 ): Promise<ScaleWithBands> {
-  requirePermission(ctx, { gradingScale: ["read"] });
-  const scale = await loadGradingScale(ctx.db, ctx.organizationId, scaleId);
+  requirePermission(ctx, { grading_scale: ["read"] });
+  const scale = await loadGradingScale(ctx.db, ctx.organization_id, scaleId);
   if (!scale) throw notFound();
   return scale;
 }

@@ -28,32 +28,32 @@ export async function createBlob(
   return transact(ctx.db, async (tx) => {
     const blob = await tx.storageBlob.create({
       data: {
-        organizationId: ctx.organizationId,
+        organization_id: ctx.organization_id,
         key: randomUUID(),
         filename,
-        contentType: input.contentType,
-        byteSize: input.bytes.length,
+        content_type: input.content_type,
+        byte_size: input.bytes.length,
         checksum,
-        serviceName: service.name,
-        uploadedById: ctx.memberId,
+        service_name: service.name,
+        uploaded_by_id: ctx.member_id,
       },
     });
     await service.upload(
       tx,
-      { organizationId: ctx.organizationId, blobId: blob.id, key: blob.key },
+      { organization_id: ctx.organization_id, blob_id: blob.id, key: blob.key },
       input.bytes,
     );
     await recordActivity(tx, ctx, {
       action: "create",
-      resourceType: "attachment",
-      resourceId: blob.id,
-      metadata: { byteSize: input.bytes.length },
+      resource_type: "attachment",
+      resource_id: blob.id,
+      metadata: { byte_size: input.bytes.length },
     });
     return {
       id: blob.id,
       filename: blob.filename,
-      contentType: blob.contentType,
-      byteSize: blob.byteSize,
+      content_type: blob.content_type,
+      byte_size: blob.byte_size,
       checksum: blob.checksum,
     };
   });

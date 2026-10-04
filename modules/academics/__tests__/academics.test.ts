@@ -35,17 +35,17 @@ async function structure() {
   const admin = await school.admin.context();
   const year = await createAcademicYear(admin, {
     name: "2026-2027",
-    startsOn: "2026-09-01",
-    endsOn: "2027-06-15",
+    starts_on: "2026-09-01",
+    ends_on: "2027-06-15",
   });
   const fall = await createTerm(admin, {
-    academicYearId: year.id,
+    academic_year_id: year.id,
     name: "Fall",
-    startsOn: "2026-09-01",
-    endsOn: "2026-12-20",
+    starts_on: "2026-09-01",
+    ends_on: "2026-12-20",
   });
   const klass = await createClass(admin, {
-    termId: fall.id,
+    term_id: fall.id,
     name: "Algebra I",
   });
   return { school, admin, year, fall, klass };
@@ -58,8 +58,8 @@ describe("academic years and terms", () => {
     const error = await failure(
       createAcademicYear(teacher, {
         name: "2026",
-        startsOn: "2026-09-01",
-        endsOn: "2027-06-15",
+        starts_on: "2026-09-01",
+        ends_on: "2027-06-15",
       }),
     );
     expect(error.status).toBe(STATUS.forbidden);
@@ -71,8 +71,8 @@ describe("academic years and terms", () => {
     const error = await failure(
       createAcademicYear(admin, {
         name: " ",
-        startsOn: "2027-06-15",
-        endsOn: "2026-09-01",
+        starts_on: "2027-06-15",
+        ends_on: "2026-09-01",
       }),
     );
     expect(error.status).toBe(STATUS.unprocessable_content);
@@ -84,8 +84,8 @@ describe("academic years and terms", () => {
     const error = await failure(
       createAcademicYear(admin, {
         name: "2026-2027",
-        startsOn: "2027-09-01",
-        endsOn: "2028-06-15",
+        starts_on: "2027-09-01",
+        ends_on: "2028-06-15",
       }),
     );
     expect(codes(error)).toEqual(["name_taken"]);
@@ -96,29 +96,29 @@ describe("academic years and terms", () => {
 
     const overlapping = await failure(
       createTerm(admin, {
-        academicYearId: year.id,
+        academic_year_id: year.id,
         name: "Winter",
-        startsOn: "2026-12-01",
-        endsOn: "2027-02-01",
+        starts_on: "2026-12-01",
+        ends_on: "2027-02-01",
       }),
     );
     expect(codes(overlapping)).toEqual(["overlaps_term"]);
 
     const outside = await failure(
       createTerm(admin, {
-        academicYearId: year.id,
+        academic_year_id: year.id,
         name: "Summer",
-        startsOn: "2027-06-01",
-        endsOn: "2027-08-01",
+        starts_on: "2027-06-01",
+        ends_on: "2027-08-01",
       }),
     );
     expect(codes(outside)).toContain("outside_academic_year");
 
     const spring = await createTerm(admin, {
-      academicYearId: year.id,
+      academic_year_id: year.id,
       name: "Spring",
-      startsOn: "2027-01-05",
-      endsOn: "2027-06-15",
+      starts_on: "2027-01-05",
+      ends_on: "2027-06-15",
     });
     expect(spring.name).toBe("Spring");
   });
@@ -127,15 +127,15 @@ describe("academic years and terms", () => {
     const { admin } = await structure();
     const error = await failure(
       createTerm(admin, {
-        academicYearId: "00000000-0000-7000-8000-000000000000",
+        academic_year_id: "00000000-0000-7000-8000-000000000000",
         name: "X",
-        startsOn: "2026-09-01",
-        endsOn: "2026-12-01",
+        starts_on: "2026-09-01",
+        ends_on: "2026-12-01",
       }),
     );
     expect(error.status).toBe(STATUS.unprocessable_content);
     expect(error.details[0]).toMatchObject({
-      field: "academicYearId",
+      field: "academic_year_id",
       code: "not_found",
     });
   });
@@ -146,7 +146,7 @@ describe("classes, teachers and seats", () => {
     const { admin, fall, klass } = await structure();
     expect(klass.name).toBe("Algebra I");
     const error = await failure(
-      createClass(admin, { termId: fall.id, name: "Algebra I" }),
+      createClass(admin, { term_id: fall.id, name: "Algebra I" }),
     );
     expect(codes(error)).toEqual(["name_taken"]);
   });
@@ -160,13 +160,13 @@ describe("classes, teachers and seats", () => {
     });
     const error = await failure(
       createClass(admin, {
-        termId: fall.id,
+        term_id: fall.id,
         name: "Geometry",
-        gradingScaleId: otherScale.id,
+        grading_scale_id: otherScale.id,
       }),
     );
     expect(error.details[0]).toMatchObject({
-      field: "gradingScaleId",
+      field: "grading_scale_id",
       code: "not_found",
     });
   });
@@ -190,7 +190,7 @@ describe("classes, teachers and seats", () => {
       addClassTeacher(admin, klass.id, student.id),
     );
     expect(wrongRole.details[0]).toMatchObject({
-      field: "memberId",
+      field: "member_id",
       code: "wrong_role",
     });
     const wrongRole2 = await failure(addClassSeat(admin, klass.id, teacher.id));
@@ -218,7 +218,7 @@ describe("assignments", () => {
   const base: AssignmentInput = {
     title: "Chapter 1",
     type: "homework",
-    maxPoints: "50",
+    max_points: "50",
   };
 
   it("lets a teacher of the class create one, and records it", async () => {
@@ -230,13 +230,13 @@ describe("assignments", () => {
       ...base,
       publish: true,
     });
-    expect(row.publishedAt).toBeInstanceOf(Date);
-    expect(row.maxSubmissions).toBe(1);
-    expect(row.gradingMode).toBe("points");
-    expect(String(row.maxPoints)).toBe("50");
+    expect(row.published_at).toBeInstanceOf(Date);
+    expect(row.max_submissions).toBe(1);
+    expect(row.grading_mode).toBe("points");
+    expect(String(row.max_points)).toBe("50");
     expect(
       await testDb().activityLog.count({
-        where: { resourceType: "assignment" },
+        where: { resource_type: "assignment" },
       }),
     ).toBe(1);
   });
@@ -259,7 +259,7 @@ describe("assignments", () => {
   it("lets an administrator create one in any class", async () => {
     const { admin, klass } = await structure();
     const row = await createAssignment(admin, klass.id, base);
-    expect(row.publishedAt).toBeNull();
+    expect(row.published_at).toBeNull();
   });
 
   it("creates pass/fail work with no points", async () => {
@@ -267,10 +267,10 @@ describe("assignments", () => {
     const row = await createAssignment(admin, klass.id, {
       title: "Lab safety",
       type: "quiz",
-      gradingMode: "band",
+      grading_mode: "band",
     });
-    expect(row.maxPoints).toBeNull();
-    expect(row.gradingMode).toBe("band");
+    expect(row.max_points).toBeNull();
+    expect(row.grading_mode).toBe("band");
   });
 
   it("reports every problem in one 422", async () => {
@@ -279,9 +279,9 @@ describe("assignments", () => {
       createAssignment(admin, klass.id, {
         title: "",
         type: "exam",
-        maxPoints: "0",
-        maxSubmissions: 0,
-        gradingScaleId: "00000000-0000-7000-8000-000000000000",
+        max_points: "0",
+        max_submissions: 0,
+        grading_scale_id: "00000000-0000-7000-8000-000000000000",
       }),
     );
     expect(error.status).toBe(STATUS.unprocessable_content);
@@ -297,15 +297,15 @@ describe("assignments", () => {
     const run = (input: Partial<AssignmentInput>) =>
       validateAssignmentInput({ ...base, ...input }).map((i) => i.code);
 
-    expect(run({ maxPoints: null })).toEqual(["max_points_required"]);
-    expect(run({ maxPoints: undefined })).toEqual(["max_points_required"]);
-    expect(run({ maxPoints: "10.555" })).toEqual(["invalid_number"]);
-    expect(run({ maxPoints: "100000" })).toEqual(["too_large"]);
-    expect(run({ maxPoints: "99999.99" })).toEqual([]);
-    expect(run({ gradingMode: "band" })).toEqual(["max_points_not_allowed"]);
-    expect(run({ gradingMode: "band", maxPoints: null })).toEqual([]);
-    expect(run({ maxSubmissions: 21 })).toEqual(["invalid_max_submissions"]);
-    expect(run({ maxSubmissions: 1.5 })).toEqual(["invalid_max_submissions"]);
-    expect(run({ maxSubmissions: 20 })).toEqual([]);
+    expect(run({ max_points: null })).toEqual(["max_points_required"]);
+    expect(run({ max_points: undefined })).toEqual(["max_points_required"]);
+    expect(run({ max_points: "10.555" })).toEqual(["invalid_number"]);
+    expect(run({ max_points: "100000" })).toEqual(["too_large"]);
+    expect(run({ max_points: "99999.99" })).toEqual([]);
+    expect(run({ grading_mode: "band" })).toEqual(["max_points_not_allowed"]);
+    expect(run({ grading_mode: "band", max_points: null })).toEqual([]);
+    expect(run({ max_submissions: 21 })).toEqual(["invalid_max_submissions"]);
+    expect(run({ max_submissions: 1.5 })).toEqual(["invalid_max_submissions"]);
+    expect(run({ max_submissions: 20 })).toEqual([]);
   });
 });

@@ -14,13 +14,13 @@ import {
 
 async function gradeFilterIssue(
   db: DbClient,
-  organizationId: string,
+  organization_id: string,
   grade: string | undefined,
 ) {
   if (grade === undefined) return [];
   const bands = await db.gradingScaleBand.findMany({
-    where: { organizationId },
-    select: { label: true, groupLabel: true },
+    where: { organization_id },
+    select: { label: true, group_label: true },
   });
   return knownGradeNames(bands).has(grade.toLowerCase())
     ? []
@@ -37,11 +37,11 @@ export function gradeWhere(
   grade: string | undefined,
 ): Prisma.AssignmentSubmissionWhereInput {
   if (grade === undefined) return {};
-  if (grade.toLowerCase() === UNGRADED) return { gradeLabel: null };
+  if (grade.toLowerCase() === UNGRADED) return { grade_label: null };
   return {
     OR: [
-      { gradeLabel: { equals: grade, mode: "insensitive" } },
-      { gradeGroup: { equals: grade, mode: "insensitive" } },
+      { grade_label: { equals: grade, mode: "insensitive" } },
+      { grade_group: { equals: grade, mode: "insensitive" } },
     ],
   };
 }
@@ -54,7 +54,7 @@ export async function listSubmissions(
 ): Promise<SubmissionPage> {
   const issues = [
     ...earlierIssues,
-    ...(await gradeFilterIssue(ctx.db, ctx.organizationId, filters.grade)),
+    ...(await gradeFilterIssue(ctx.db, ctx.organization_id, filters.grade)),
   ];
   const limit = filters.limit ?? DEFAULT_PAGE_SIZE;
   if (limit < 1 || limit > MAX_PAGE_SIZE) {
@@ -72,12 +72,12 @@ export async function listSubmissions(
       : await ctx.db.assignmentSubmission.findFirst({
           where: {
             AND: [
-              { organizationId: ctx.organizationId },
+              { organization_id: ctx.organization_id },
               scope,
               { id: filters.startingAfter },
             ],
           },
-          select: { id: true, submittedAt: true },
+          select: { id: true, submitted_at: true },
         });
   if (filters.startingAfter !== undefined && after === null) {
     issues.push(
@@ -93,7 +93,7 @@ export async function listSubmissions(
   const rows = await ctx.db.assignmentSubmission.findMany({
     where: {
       AND: [
-        { organizationId: ctx.organizationId },
+        { organization_id: ctx.organization_id },
         scope,
         gradeWhere(filters.grade),
         filters.assignment === undefined
@@ -106,7 +106,7 @@ export async function listSubmissions(
         filters.student === undefined
           ? {}
           : {
-              classSeat: {
+              class_seat: {
                 member: {
                   user: {
                     OR: [
@@ -129,22 +129,22 @@ export async function listSubmissions(
             },
         filters.submittedFrom === undefined
           ? {}
-          : { submittedAt: { gte: filters.submittedFrom } },
+          : { submitted_at: { gte: filters.submittedFrom } },
         filters.submittedBefore === undefined
           ? {}
-          : { submittedAt: { lt: filters.submittedBefore } },
+          : { submitted_at: { lt: filters.submittedBefore } },
         after === null
           ? {}
           : {
               OR: [
-                { submittedAt: { lt: after.submittedAt } },
-                { submittedAt: after.submittedAt, id: { lt: after.id } },
+                { submitted_at: { lt: after.submitted_at } },
+                { submitted_at: after.submitted_at, id: { lt: after.id } },
               ],
             },
       ],
     },
     include: submissionInclude,
-    orderBy: [{ submittedAt: "desc" }, { id: "desc" }],
+    orderBy: [{ submitted_at: "desc" }, { id: "desc" }],
     take: limit + 1,
   });
 

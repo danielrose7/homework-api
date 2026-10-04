@@ -4,26 +4,26 @@ import { requireRole, type RequestContext } from "@/lib/server/context";
 import { fail, requireName, scaleIssue } from "@/modules/academics/validation";
 
 export interface ClassInput {
-  termId: string;
+  term_id: string;
   name: string;
-  gradingScaleId?: string | null;
+  grading_scale_id?: string | null;
 }
 
 export async function createClass(ctx: RequestContext, input: ClassInput) {
   requireRole(ctx, "administrator");
   const term = await ctx.db.term.findFirst({
-    where: { id: input.termId, organizationId: ctx.organizationId },
+    where: { id: input.term_id, organization_id: ctx.organization_id },
   });
   const issues = [
     ...requireName(input.name),
-    ...(term ? [] : [issue("termId", "not_found", "Term not found")]),
-    ...(await scaleIssue(ctx.db, ctx.organizationId, input.gradingScaleId)),
+    ...(term ? [] : [issue("term_id", "not_found", "Term not found")]),
+    ...(await scaleIssue(ctx.db, ctx.organization_id, input.grading_scale_id)),
   ];
   if (term) {
     const taken = await ctx.db.class.findFirst({
       where: {
-        organizationId: ctx.organizationId,
-        termId: term.id,
+        organization_id: ctx.organization_id,
+        term_id: term.id,
         name: input.name.trim(),
       },
     });
@@ -34,21 +34,21 @@ export async function createClass(ctx: RequestContext, input: ClassInput) {
 
   const row = await ctx.db.class.create({
     data: {
-      organizationId: ctx.organizationId,
-      termId: input.termId,
+      organization_id: ctx.organization_id,
+      term_id: input.term_id,
       name: input.name.trim(),
-      gradingScaleId: input.gradingScaleId ?? null,
+      grading_scale_id: input.grading_scale_id ?? null,
     },
   });
   await recordActivity(ctx.db, ctx, {
     action: "create",
-    resourceType: "class",
-    resourceId: row.id,
+    resource_type: "class",
+    resource_id: row.id,
   });
   return {
     id: row.id,
-    termId: row.termId,
+    term_id: row.term_id,
     name: row.name,
-    gradingScaleId: row.gradingScaleId,
+    grading_scale_id: row.grading_scale_id,
   };
 }

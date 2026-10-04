@@ -10,7 +10,7 @@ import { issue, type ValidationIssue } from "./validation";
 export const MAX_TEXT_LENGTH = 50_000;
 
 export type EligibilityResult =
-  | { ok: true; attemptNumber: number }
+  | { ok: true; attempt_number: number }
   | {
       ok: false;
       status:
@@ -22,11 +22,11 @@ export type EligibilityResult =
 
 export interface EligibilityInput {
   assignment: {
-    publishedAt: Date | null;
-    deletedAt: Date | null;
-    maxSubmissions: number;
+    published_at: Date | null;
+    deleted_at: Date | null;
+    max_submissions: number;
   };
-  seat: { status: "active" | "dropped"; deletedAt: Date | null };
+  seat: { status: "active" | "dropped"; deleted_at: Date | null };
   attemptsSoFar: number;
 }
 
@@ -39,20 +39,20 @@ export function submissionEligibility(
   input: EligibilityInput,
 ): EligibilityResult {
   const { assignment, seat, attemptsSoFar } = input;
-  if (assignment.deletedAt !== null || assignment.publishedAt === null) {
+  if (assignment.deleted_at !== null || assignment.published_at === null) {
     return { ok: false, status: STATUS.not_found, code: "not_found" };
   }
-  if (seat.status !== "active" || seat.deletedAt !== null) {
+  if (seat.status !== "active" || seat.deleted_at !== null) {
     return { ok: false, status: STATUS.forbidden, code: "seat_not_active" };
   }
-  if (attemptsSoFar >= assignment.maxSubmissions) {
+  if (attemptsSoFar >= assignment.max_submissions) {
     return {
       ok: false,
       status: STATUS.conflict,
       code: "submission_limit_reached",
     };
   }
-  return { ok: true, attemptNumber: attemptsSoFar + 1 };
+  return { ok: true, attempt_number: attemptsSoFar + 1 };
 }
 
 export interface SubmissionContent {

@@ -9,14 +9,14 @@ import {
 
 export interface RequestContext {
   db: DbClient;
-  requestId: string;
-  organizationId: string;
+  request_id: string;
+  organization_id: string;
   organizationSlug: string;
   userId: string;
-  memberId: string;
+  member_id: string;
   role: RoleName;
-  ipAddress: string | null;
-  userAgent: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
 }
 
 type Permissions = {
@@ -34,7 +34,7 @@ export async function resolveContext(params: {
   db: DbClient;
   headers: Headers;
   organizationSlug: string;
-  requestId?: string;
+  request_id?: string;
 }): Promise<RequestContext> {
   const { auth, db, headers, organizationSlug } = params;
 
@@ -59,14 +59,14 @@ export async function resolveContext(params: {
 
   return {
     db,
-    requestId: params.requestId ?? crypto.randomUUID(),
-    organizationId: organization.id,
+    request_id: params.request_id ?? crypto.randomUUID(),
+    organization_id: organization.id,
     organizationSlug: organization.slug,
     userId: session.user.id,
-    memberId: member.id,
+    member_id: member.id,
     role: member.role,
-    ipAddress: headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
-    userAgent: headers.get("user-agent"),
+    ip_address: headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
+    user_agent: headers.get("user-agent"),
   };
 }
 

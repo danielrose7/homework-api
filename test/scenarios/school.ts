@@ -53,7 +53,7 @@ export async function seedSchool(
   options: SeedSchoolOptions = {},
 ): Promise<SeededSchool> {
   const organization = await organizationFactory.create(options.organization);
-  const inSchool = { organizationId: organization.id };
+  const inSchool = { organization_id: organization.id };
 
   const admin = await persona(
     await memberFactory.administrator().create(inSchool),

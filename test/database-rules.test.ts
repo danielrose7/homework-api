@@ -23,8 +23,8 @@ describe("tenant integrity (composite foreign keys)", () => {
     await expectViolation(
       testDb().class.create({
         data: {
-          organizationId: a.klass.organizationId,
-          termId: b.term.id,
+          organization_id: a.klass.organization_id,
+          term_id: b.term.id,
           name: "Sneaky",
         },
       }),
@@ -38,9 +38,9 @@ describe("tenant integrity (composite foreign keys)", () => {
     await expectViolation(
       testDb().classSeat.create({
         data: {
-          organizationId: a.klass.organizationId,
-          classId: a.klass.id,
-          memberId: b.school.students[0]!.member.id,
+          organization_id: a.klass.organization_id,
+          class_id: a.klass.id,
+          member_id: b.school.students[0]!.member.id,
         },
       }),
       "class_seat_organization_id_member_id_fkey",
@@ -51,20 +51,20 @@ describe("tenant integrity (composite foreign keys)", () => {
     const { submission, school } = await seedSubmission();
     const other = await gradingScaleFactory
       .passFail()
-      .create({ organizationId: school.organization.id });
+      .create({ organization_id: school.organization.id });
     const real = await testDb().gradingScale.findFirstOrThrow({
-      where: { organizationId: school.organization.id, isDefault: true },
+      where: { organization_id: school.organization.id, is_default: true },
     });
 
     await expectViolation(
       testDb().assignmentSubmission.update({
         where: { id: submission.id },
         data: {
-          gradingScaleId: real.id,
-          gradeBandId: other.bands[0]!.id,
-          gradeLabel: "Pass",
-          gradedAt: new Date(),
-          gradedById: school.teachers[0]!.member.id,
+          grading_scale_id: real.id,
+          grade_band_id: other.bands[0]!.id,
+          grade_label: "Pass",
+          graded_at: new Date(),
+          graded_by_id: school.teachers[0]!.member.id,
         },
       }),
       "assignment_submission_organization_id_grading_scale_id",
@@ -76,14 +76,14 @@ describe("check constraints", () => {
   it("require points on points-graded work and forbid them on pass/fail work", async () => {
     const { klass } = await seedClass();
     const base = {
-      organizationId: klass.organizationId,
-      classId: klass.id,
+      organization_id: klass.organization_id,
+      class_id: klass.id,
       title: "Bad",
       type: "homework" as const,
     };
     await expectViolation(
       testDb().assignment.create({
-        data: { ...base, gradingMode: "points", maxPoints: null },
+        data: { ...base, grading_mode: "points", max_points: null },
       }),
       "assignment_grading_mode",
     );
@@ -94,12 +94,12 @@ describe("check constraints", () => {
     await expectViolation(
       testDb().assignment.create({
         data: {
-          organizationId: klass.organizationId,
-          classId: klass.id,
+          organization_id: klass.organization_id,
+          class_id: klass.id,
           title: "Bad",
           type: "quiz",
-          gradingMode: "band",
-          maxPoints: "10",
+          grading_mode: "band",
+          max_points: "10",
         },
       }),
       "assignment_grading_mode",
@@ -111,7 +111,7 @@ describe("check constraints", () => {
     await expectViolation(
       testDb().assignmentSubmission.update({
         where: { id: submission.id },
-        data: { gradeLabel: "A" },
+        data: { grade_label: "A" },
       }),
       "submission_grade_together",
     );
@@ -122,7 +122,7 @@ describe("check constraints", () => {
     await expectViolation(
       testDb().assignmentSubmission.update({
         where: { id: submission.id },
-        data: { pointsAwarded: "5" },
+        data: { points_awarded: "5" },
       }),
       "submission_points",
     );
@@ -134,13 +134,13 @@ describe("check constraints", () => {
       await import("./factories/member")
     ).memberFactory
       .student()
-      .create({ organizationId: school.organization.id });
+      .create({ organization_id: school.organization.id });
     await expectViolation(
       testDb().classSeat.create({
         data: {
-          organizationId: klass.organizationId,
-          classId: klass.id,
-          memberId: extra.id,
+          organization_id: klass.organization_id,
+          class_id: klass.id,
+          member_id: extra.id,
           status: "dropped",
         },
       }),
@@ -153,11 +153,11 @@ describe("check constraints", () => {
     await expectViolation(
       testDb().term.create({
         data: {
-          organizationId: year.organizationId,
-          academicYearId: year.id,
+          organization_id: year.organization_id,
+          academic_year_id: year.id,
           name: "Backwards",
-          startsOn: new Date("2026-12-01T00:00:00Z"),
-          endsOn: new Date("2026-09-01T00:00:00Z"),
+          starts_on: new Date("2026-12-01T00:00:00Z"),
+          ends_on: new Date("2026-09-01T00:00:00Z"),
         },
       }),
       "term_dates",
@@ -171,10 +171,10 @@ describe("uniqueness", () => {
     await expectViolation(
       testDb().assignmentSubmission.create({
         data: {
-          organizationId: submission.organizationId,
-          assignmentId: assignment.id,
-          classSeatId: seats[0]!.id,
-          attemptNumber: submission.attemptNumber,
+          organization_id: submission.organization_id,
+          assignment_id: assignment.id,
+          class_seat_id: seats[0]!.id,
+          attempt_number: submission.attempt_number,
         },
       }),
       "Unique constraint failed",
@@ -186,8 +186,8 @@ describe("uniqueness", () => {
     await expectViolation(
       testDb().class.create({
         data: {
-          organizationId: klass.organizationId,
-          termId: klass.termId,
+          organization_id: klass.organization_id,
+          term_id: klass.term_id,
           name: klass.name,
         },
       }),
@@ -199,12 +199,12 @@ describe("uniqueness", () => {
     const { klass } = await seedClass();
     await testDb().class.update({
       where: { id: klass.id },
-      data: { deletedAt: new Date(), deletionReason: "Duplicate" },
+      data: { deleted_at: new Date(), deletion_reason: "Duplicate" },
     });
     const again = await testDb().class.create({
       data: {
-        organizationId: klass.organizationId,
-        termId: klass.termId,
+        organization_id: klass.organization_id,
+        term_id: klass.term_id,
         name: klass.name,
       },
     });
@@ -216,9 +216,9 @@ describe("uniqueness", () => {
     await expectViolation(
       testDb().gradingScale.create({
         data: {
-          organizationId: school.organization.id,
+          organization_id: school.organization.id,
           name: "Second default",
-          isDefault: true,
+          is_default: true,
         },
       }),
       "grading_scale_one_default",
@@ -231,11 +231,11 @@ describe("soft deletes", () => {
     const { assignment, klass } = await seedAssignment();
     await testDb().assignment.update({
       where: { id: assignment.id },
-      data: { deletedAt: new Date(), deletionReason: "Wrong class" },
+      data: { deleted_at: new Date(), deletion_reason: "Wrong class" },
     });
 
     expect(
-      await testDb().assignment.findMany({ where: { classId: klass.id } }),
+      await testDb().assignment.findMany({ where: { class_id: klass.id } }),
     ).toHaveLength(0);
     expect(
       await testDb().assignment.findFirst({ where: { id: assignment.id } }),
@@ -244,7 +244,7 @@ describe("soft deletes", () => {
       await testDb().assignment.findUnique({ where: { id: assignment.id } }),
     ).toBeNull();
     expect(
-      await testDb().assignment.count({ where: { classId: klass.id } }),
+      await testDb().assignment.count({ where: { class_id: klass.id } }),
     ).toBe(0);
 
     const raw = await testDb().$queryRaw<
@@ -260,14 +260,14 @@ describe("soft deletes", () => {
     ).rejects.toThrow(/soft-deleted/);
     await expect(
       testDb().class.deleteMany({
-        where: { organizationId: assignment.organizationId },
+        where: { organization_id: assignment.organization_id },
       }),
     ).rejects.toThrow(/soft-deleted/);
   });
 
   it("do not filter nested includes, so services must", async () => {
     const { assignment, klass } = await seedAssignment();
-    await assignmentFactory.deleted().create({ classId: klass.id });
+    await assignmentFactory.deleted().create({ class_id: klass.id });
 
     const withNested = await testDb().class.findFirstOrThrow({
       where: { id: klass.id },
@@ -277,23 +277,23 @@ describe("soft deletes", () => {
 
     const filtered = await testDb().class.findFirstOrThrow({
       where: { id: klass.id },
-      include: { assignments: { where: { deletedAt: null } } },
+      include: { assignments: { where: { deleted_at: null } } },
     });
     expect(filtered.assignments.map((a) => a.id)).toEqual([assignment.id]);
   });
 });
 
 describe("file storage", () => {
-  async function blobFor(organizationId: string) {
+  async function blobFor(organization_id: string) {
     return testDb().storageBlob.create({
       data: {
-        organizationId,
+        organization_id,
         key: crypto.randomUUID(),
         filename: "essay.txt",
-        contentType: "text/plain",
-        byteSize: 5,
+        content_type: "text/plain",
+        byte_size: 5,
         checksum: "abc",
-        serviceName: "database",
+        service_name: "database",
       },
     });
   }
@@ -303,8 +303,8 @@ describe("file storage", () => {
     const blob = await blobFor(school.organization.id);
     await testDb().storageBlobData.create({
       data: {
-        organizationId: school.organization.id,
-        blobId: blob.id,
+        organization_id: school.organization.id,
+        blob_id: blob.id,
         content: Buffer.from("hello"),
       },
     });
@@ -314,7 +314,7 @@ describe("file storage", () => {
     });
     expect("content" in listed).toBe(false);
     const data = await testDb().storageBlobData.findFirstOrThrow({
-      where: { blobId: blob.id },
+      where: { blob_id: blob.id },
     });
     expect(Buffer.from(data.content).toString()).toBe("hello");
   });
@@ -323,8 +323,8 @@ describe("file storage", () => {
     const { school } = await seedClass();
     const blob = await blobFor(school.organization.id);
     const data = {
-      organizationId: school.organization.id,
-      blobId: blob.id,
+      organization_id: school.organization.id,
+      blob_id: blob.id,
       content: Buffer.from("x"),
     };
     await testDb().storageBlobData.create({ data });
@@ -339,13 +339,13 @@ describe("file storage", () => {
     await expectViolation(
       testDb().storageBlob.create({
         data: {
-          organizationId: school.organization.id,
+          organization_id: school.organization.id,
           key: "k",
           filename: "a.txt",
-          contentType: "text/plain",
-          byteSize: -1,
+          content_type: "text/plain",
+          byte_size: -1,
           checksum: "abc",
-          serviceName: "database",
+          service_name: "database",
         },
       }),
       "storage_blob_size",
@@ -359,10 +359,10 @@ describe("file storage", () => {
     await expectViolation(
       testDb().storageAttachment.create({
         data: {
-          organizationId: a.submission.organizationId,
-          blobId: foreign.id,
-          recordType: "assignment_submission",
-          recordId: a.submission.id,
+          organization_id: a.submission.organization_id,
+          blob_id: foreign.id,
+          record_type: "assignment_submission",
+          record_id: a.submission.id,
           name: "files",
         },
       }),
@@ -372,12 +372,12 @@ describe("file storage", () => {
 
   it("rejects attaching the same blob to the same record twice", async () => {
     const { submission } = await seedSubmission();
-    const blob = await blobFor(submission.organizationId);
+    const blob = await blobFor(submission.organization_id);
     const data = {
-      organizationId: submission.organizationId,
-      blobId: blob.id,
-      recordType: "assignment_submission" as const,
-      recordId: submission.id,
+      organization_id: submission.organization_id,
+      blob_id: blob.id,
+      record_type: "assignment_submission" as const,
+      record_id: submission.id,
       name: "files",
     };
     await testDb().storageAttachment.create({ data });
@@ -404,19 +404,19 @@ describe("file storage", () => {
 
   it("soft-deletes attachments but never the blob", async () => {
     const { submission } = await seedSubmission();
-    const blob = await blobFor(submission.organizationId);
+    const blob = await blobFor(submission.organization_id);
     const attachment = await testDb().storageAttachment.create({
       data: {
-        organizationId: submission.organizationId,
-        blobId: blob.id,
-        recordType: "assignment_submission",
-        recordId: submission.id,
+        organization_id: submission.organization_id,
+        blob_id: blob.id,
+        record_type: "assignment_submission",
+        record_id: submission.id,
         name: "files",
       },
     });
     await testDb().storageAttachment.update({
       where: { id: attachment.id },
-      data: { deletedAt: new Date(), deletionReason: "Wrong file" },
+      data: { deleted_at: new Date(), deletion_reason: "Wrong file" },
     });
     expect(
       await testDb().storageAttachment.findFirst({

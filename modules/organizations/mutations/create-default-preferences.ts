@@ -2,11 +2,11 @@ import type { DbClient } from "@/lib/server/db-types";
 
 export async function createDefaultOrganizationPreferences(
   db: DbClient,
-  organizationId: string,
+  organization_id: string,
 ): Promise<void> {
   await db.organizationPreferences.upsert({
-    where: { organizationId },
-    create: { organizationId },
+    where: { organization_id },
+    create: { organization_id },
     update: {},
   });
 }

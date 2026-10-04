@@ -1,8 +1,8 @@
 import { Prisma } from "@/lib/generated/prisma/client";
 
 export const submissionInclude = {
-  assignment: { select: { id: true, title: true, maxPoints: true } },
-  classSeat: {
+  assignment: { select: { id: true, title: true, max_points: true } },
+  class_seat: {
     select: {
       member: {
         select: { id: true, user: { select: { name: true, username: true } } },
@@ -18,17 +18,17 @@ export type SubmissionRow = Prisma.AssignmentSubmissionGetPayload<{
 export interface SubmissionView {
   id: string;
   assignment: { id: string; title: string };
-  student: { memberId: string; name: string; username: string | null };
-  attemptNumber: number;
+  student: { member_id: string; name: string; username: string | null };
+  attempt_number: number;
   text: string | null;
-  submittedAt: Date;
-  gradedAt: Date | null;
-  teacherNotes: string | null;
+  submitted_at: Date;
+  graded_at: Date | null;
+  teacher_notes: string | null;
   grade: {
     label: string;
     group: string | null;
-    pointsAwarded: string | null;
-    maxPoints: string | null;
+    points_awarded: string | null;
+    max_points: string | null;
     percent: string | null;
     scaleId: string | null;
   } | null;

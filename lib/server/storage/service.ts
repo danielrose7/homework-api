@@ -1,8 +1,8 @@
 import type { DbClient } from "@/lib/server/db-types";
 
 export interface StoredObject {
-  organizationId: string;
-  blobId: string;
+  organization_id: string;
+  blob_id: string;
   key: string;
 }
 

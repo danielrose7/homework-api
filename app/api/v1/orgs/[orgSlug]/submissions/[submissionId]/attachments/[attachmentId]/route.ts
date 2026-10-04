@@ -6,7 +6,7 @@ import { serve } from "@/lib/server/serve";
 import { downloadAttachment } from "@/modules/attachments/queries/download-attachment";
 
 const params = z.object({
-  submissionId: z.uuid(),
+  submission_id: z.uuid(),
   attachmentId: z.uuid(),
 });
 
@@ -24,14 +24,14 @@ export const downloadAttachmentRoute = defineRoute({
   resource: "attachment",
   idParam: "attachmentId",
   handle: async ({ ctx, input }) => {
-    const { submissionId, attachmentId } = input.params(params);
-    const file = await downloadAttachment(ctx, submissionId, attachmentId);
+    const { submission_id, attachmentId } = input.params(params);
+    const file = await downloadAttachment(ctx, submission_id, attachmentId);
 
     return new Response(new Uint8Array(file.bytes), {
       status: STATUS.ok,
       headers: {
-        "content-type": file.contentType,
-        "content-length": String(file.byteSize),
+        "content-type": file.content_type,
+        "content-length": String(file.byte_size),
         "content-disposition": contentDisposition(file.filename),
         "x-content-type-options": "nosniff",
         "cache-control": "private, no-store",

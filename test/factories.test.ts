@@ -66,7 +66,7 @@ describe("seedSchool", () => {
     const studentContext = await school.students[0]!.context();
     expect(adminContext.role).toBe("administrator");
     expect(studentContext.role).toBe("student");
-    expect(studentContext.organizationId).toBe(school.organization.id);
+    expect(studentContext.organization_id).toBe(school.organization.id);
   });
 
   it("keeps two schools apart: a member of one is a stranger to the other", async () => {

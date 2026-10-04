@@ -13,38 +13,38 @@ import {
 
 export async function createAssignment(
   ctx: RequestContext,
-  classId: string,
+  class_id: string,
   input: AssignmentInput,
 ) {
   requirePermission(ctx, { assignment: ["create"] });
-  const klass = await requireClass(ctx, classId);
+  const klass = await requireClass(ctx, class_id);
   await requireTeachesClass(ctx, klass.id);
   fail([
     ...validateAssignmentInput(input),
-    ...(await scaleIssue(ctx.db, ctx.organizationId, input.gradingScaleId)),
+    ...(await scaleIssue(ctx.db, ctx.organization_id, input.grading_scale_id)),
   ]);
 
-  const mode = input.gradingMode ?? "points";
+  const mode = input.grading_mode ?? "points";
   const row = await ctx.db.assignment.create({
     data: {
-      organizationId: ctx.organizationId,
-      classId: klass.id,
+      organization_id: ctx.organization_id,
+      class_id: klass.id,
       title: input.title.trim(),
       description: input.description ?? null,
       type: input.type,
-      gradingMode: mode,
-      maxPoints: mode === "points" ? (input.maxPoints ?? null) : null,
-      gradingScaleId: input.gradingScaleId ?? null,
-      dueAt: input.dueAt ?? null,
-      maxSubmissions: input.maxSubmissions ?? 1,
-      publishedAt: input.publish ? new Date() : null,
+      grading_mode: mode,
+      max_points: mode === "points" ? (input.max_points ?? null) : null,
+      grading_scale_id: input.grading_scale_id ?? null,
+      due_at: input.due_at ?? null,
+      max_submissions: input.max_submissions ?? 1,
+      published_at: input.publish ? new Date() : null,
     },
   });
   await recordActivity(ctx.db, ctx, {
     action: "create",
-    resourceType: "assignment",
-    resourceId: row.id,
-    metadata: { classId: klass.id },
+    resource_type: "assignment",
+    resource_id: row.id,
+    metadata: { class_id: klass.id },
   });
   return row;
 }

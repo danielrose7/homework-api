@@ -36,8 +36,8 @@ export type ActivityMetadata = Record<
 
 export interface ActivityEntry {
   action: ActivityAction;
-  resourceType: ResourceType;
-  resourceId?: string | null;
+  resource_type: ResourceType;
+  resource_id?: string | null;
   outcome?: ActivityOutcome;
   metadata?: ActivityMetadata;
 }
@@ -68,7 +68,8 @@ const FORBIDDEN_KEYS = new Set([
 
 export function assertIdOnlyMetadata(metadata: ActivityMetadata) {
   for (const key of Object.keys(metadata)) {
-    if (FORBIDDEN_KEYS.has(key.toLowerCase())) {
+    const normalized_key = key.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+    if (FORBIDDEN_KEYS.has(normalized_key)) {
       throw new Error(
         `Activity metadata may hold ids and field names only, not "${key}"`,
       );
@@ -89,18 +90,18 @@ export async function recordActivity(
 
   const row = await db.activityLog.create({
     data: {
-      organizationId: ctx.organizationId,
-      actorType: "user",
-      actorUserId: ctx.userId,
-      actorMemberId: ctx.memberId,
-      actorRole: ctx.role,
+      organization_id: ctx.organization_id,
+      actor_type: "user",
+      actor_user_id: ctx.userId,
+      actor_member_id: ctx.member_id,
+      actor_role: ctx.role,
       action: entry.action,
-      resourceType: entry.resourceType,
-      resourceId: entry.resourceId ?? null,
+      resource_type: entry.resource_type,
+      resource_id: entry.resource_id ?? null,
       outcome: entry.outcome ?? "success",
-      requestId: ctx.requestId,
-      ipAddress: ctx.ipAddress,
-      userAgent: ctx.userAgent,
+      request_id: ctx.request_id,
+      ip_address: ctx.ip_address,
+      user_agent: ctx.user_agent,
       metadata: entry.metadata ?? undefined,
     },
   });

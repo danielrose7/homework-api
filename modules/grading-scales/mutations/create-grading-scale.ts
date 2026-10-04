@@ -14,48 +14,48 @@ export async function createGradingScale(
   ctx: RequestContext,
   input: GradingScaleInput,
 ): Promise<ScaleWithBands> {
-  requirePermission(ctx, { gradingScale: ["create"] });
+  requirePermission(ctx, { grading_scale: ["create"] });
   const issues = validateGradingScaleInput(input);
   if (issues.length > 0) throw validationFailed(issues);
 
   const name = input.name.trim();
   const taken = await ctx.db.gradingScale.findFirst({
-    where: { organizationId: ctx.organizationId, name },
+    where: { organization_id: ctx.organization_id, name },
   });
   if (taken) {
     throw validationFailed([
       issue("name", "name_taken", `A scale named "${name}" already exists`),
     ]);
   }
-  if (input.isDefault) {
+  if (input.is_default) {
     await ctx.db.gradingScale.updateMany({
-      where: { organizationId: ctx.organizationId, isDefault: true },
-      data: { isDefault: false },
+      where: { organization_id: ctx.organization_id, is_default: true },
+      data: { is_default: false },
     });
   }
 
   const scale = await ctx.db.gradingScale.create({
     data: {
-      organizationId: ctx.organizationId,
+      organization_id: ctx.organization_id,
       name,
-      isDefault: input.isDefault ?? false,
+      is_default: input.is_default ?? false,
     },
   });
-  await addBands(ctx.db, ctx.organizationId, scale.id, input.bands);
+  await addBands(ctx.db, ctx.organization_id, scale.id, input.bands);
   const bands = await ctx.db.gradingScaleBand.findMany({
-    where: { organizationId: ctx.organizationId, gradingScaleId: scale.id },
-    orderBy: { sortOrder: "asc" },
+    where: { organization_id: ctx.organization_id, grading_scale_id: scale.id },
+    orderBy: { sort_order: "asc" },
   });
   await recordActivity(ctx.db, ctx, {
     action: "create",
-    resourceType: "grading_scale",
-    resourceId: scale.id,
+    resource_type: "grading_scale",
+    resource_id: scale.id,
   });
 
   return {
     id: scale.id,
     name: scale.name,
-    isDefault: scale.isDefault,
+    is_default: scale.is_default,
     bands: bands.map(toBand),
   };
 }

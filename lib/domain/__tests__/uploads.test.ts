@@ -103,7 +103,7 @@ describe("bytesMatchContentType", () => {
 describe("validateUpload", () => {
   const good = {
     filename: "essay.txt",
-    contentType: "text/plain",
+    content_type: "text/plain",
     bytes: text("hello"),
   };
 
@@ -126,10 +126,10 @@ describe("validateUpload", () => {
   });
 
   it("rejects types outside the allow-list and files that lie about their type", () => {
-    expect(codes({ ...good, contentType: "application/x-msdownload" })).toEqual(
-      ["content_type_not_allowed"],
-    );
-    expect(codes({ ...good, contentType: "application/pdf" })).toEqual([
+    expect(
+      codes({ ...good, content_type: "application/x-msdownload" }),
+    ).toEqual(["content_type_not_allowed"]);
+    expect(codes({ ...good, content_type: "application/pdf" })).toEqual([
       "content_type_mismatch",
     ]);
   });
@@ -138,7 +138,7 @@ describe("validateUpload", () => {
     expect(
       codes({
         filename: "",
-        contentType: "image/png",
+        content_type: "image/png",
         bytes: new Uint8Array(),
       }).sort(),
     ).toEqual(["file_empty", "filename_required"]);

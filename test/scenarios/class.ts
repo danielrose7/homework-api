@@ -39,29 +39,29 @@ export async function seedClass(
   options: SeedClassOptions = {},
 ): Promise<SeededClass> {
   const school = options.school ?? (await seedSchool(options));
-  const organizationId = school.organization.id;
+  const organization_id = school.organization.id;
 
-  const year = await academicYearFactory.create({ organizationId });
+  const year = await academicYearFactory.create({ organization_id });
   const term = await termFactory.current().create({
-    academicYearId: year.id,
+    academic_year_id: year.id,
   });
   const klass = await classFactory.create({
-    termId: term.id,
+    term_id: term.id,
     ...(options.className ? { name: options.className } : {}),
   });
 
   for (const teacher of school.teachers) {
     await classTeacherFactory.create({
-      classId: klass.id,
-      memberId: teacher.member.id,
+      class_id: klass.id,
+      member_id: teacher.member.id,
     });
   }
   const seats: ClassSeatRecord[] = [];
   for (const student of school.students) {
     seats.push(
       await classSeatFactory.create({
-        classId: klass.id,
-        memberId: student.member.id,
+        class_id: klass.id,
+        member_id: student.member.id,
       }),
     );
   }
@@ -84,7 +84,7 @@ export async function seedAssignment(
   const seeded = options.seeded ?? (await seedClass(options));
   const assignment = await assignmentFactory.create({
     ...options.assignment,
-    classId: seeded.klass.id,
+    class_id: seeded.klass.id,
   });
   return { ...seeded, assignment };
 }
@@ -114,8 +114,8 @@ export async function seedSubmission(
     factory = factory.markedBand(options.grade.band, options.notes);
   }
   const submission = await factory.create({
-    assignmentId: seeded.assignment.id,
-    classSeatId: seat.id,
+    assignment_id: seeded.assignment.id,
+    class_seat_id: seat.id,
   });
   return { ...seeded, submission };
 }

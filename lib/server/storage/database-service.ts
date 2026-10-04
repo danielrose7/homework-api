@@ -7,8 +7,8 @@ export const databaseStorage: StorageService = {
   async upload(db, object, bytes) {
     await db.storageBlobData.create({
       data: {
-        organizationId: object.organizationId,
-        blobId: object.blobId,
+        organization_id: object.organization_id,
+        blob_id: object.blob_id,
         content: Buffer.from(bytes),
       },
     });
@@ -17,9 +17,9 @@ export const databaseStorage: StorageService = {
   async download(db, object) {
     const row = await db.storageBlobData.findUniqueOrThrow({
       where: {
-        organizationId_blobId: {
-          organizationId: object.organizationId,
-          blobId: object.blobId,
+        organization_id_blob_id: {
+          organization_id: object.organization_id,
+          blob_id: object.blob_id,
         },
       },
     });

@@ -18,7 +18,7 @@ export async function listOwnSubmissions(
 
   return listSubmissions(
     ctx,
-    { classSeat: { memberId: ctx.memberId } },
+    { class_seat: { member_id: ctx.member_id } },
     filters,
   );
 }

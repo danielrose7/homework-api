@@ -20,7 +20,7 @@ type Result = { points: number } | { band: string } | null;
 async function classroom() {
   const base = await seedAssignment({
     students: 2,
-    assignment: { title: "Warm-up", maxPoints: "100" },
+    assignment: { title: "Warm-up", max_points: "100" },
   });
   const orgSlug = base.school.organization.slug;
   const [maya, sam] = base.school.students;
@@ -43,11 +43,11 @@ async function classroom() {
   ) {
     const { assignment } = await seedAssignment({
       seeded: base,
-      assignment: { title, maxPoints: "100" },
+      assignment: { title, max_points: "100" },
     });
     const submitted = await callRoute(
       submit,
-      { orgSlug, assignmentId: assignment.id },
+      { orgSlug, assignment_id: assignment.id },
       { headers: who!.headers, json: { text: `${title} answer` } },
     );
     expect(submitted.status).toBe(STATUS.created);
@@ -56,7 +56,7 @@ async function classroom() {
     if (result) {
       const graded = await callRoute(
         grade,
-        { orgSlug, submissionId: id as string },
+        { orgSlug, submission_id: id as string },
         {
           method: "PUT",
           headers: teacher.headers,
@@ -155,7 +155,7 @@ describe("brief: teachers", () => {
     ] as const) {
       await testDb().assignmentSubmission.update({
         where: { id },
-        data: { submittedAt: new Date(at) },
+        data: { submitted_at: new Date(at) },
       });
     }
 
@@ -188,7 +188,7 @@ describe("brief: teachers", () => {
 
     const graded = await callRoute(
       grade,
-      { orgSlug, submissionId: id },
+      { orgSlug, submission_id: id },
       {
         method: "PUT",
         headers: teacher.headers,

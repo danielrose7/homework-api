@@ -15,7 +15,7 @@ const multipartSubmission = z.object({
   text: z.string().optional(),
   files: z.array(z.instanceof(File)),
 });
-const params = z.object({ assignmentId: z.uuid() });
+const params = z.object({ assignment_id: z.uuid() });
 
 function blankToNull(text: string | undefined): string | null {
   const trimmed = text?.trim();
@@ -26,16 +26,16 @@ async function toUpload(file: File): Promise<UploadInput> {
   return {
     filename: file.name,
     // Multipart file types can include parameters absent from the allow-list.
-    contentType: (file.type.split(";")[0] ?? "").trim().toLowerCase(),
+    content_type: (file.type.split(";")[0] ?? "").trim().toLowerCase(),
     bytes: new Uint8Array(await file.arrayBuffer()),
   };
 }
 
 export const submitRoute = defineRoute({
   resource: "assignment",
-  idParam: "assignmentId",
+  idParam: "assignment_id",
   handle: async ({ ctx, request, input }) => {
-    const { assignmentId } = input.params(params);
+    const { assignment_id } = input.params(params);
     const isMultipart = (request.headers.get("content-type") ?? "").startsWith(
       "multipart/form-data",
     );
@@ -62,7 +62,7 @@ export const submitRoute = defineRoute({
       text = blankToNull((await input.body(jsonSubmission)).text);
     }
 
-    const result = await submitAssignment(ctx, assignmentId, { text, files });
+    const result = await submitAssignment(ctx, assignment_id, { text, files });
     const base = `/api/v1/orgs/${ctx.organizationSlug}`;
     return Response.json(
       {

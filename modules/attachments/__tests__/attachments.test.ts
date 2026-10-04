@@ -31,7 +31,7 @@ const codes = (error: ApiError) => error.details.map((d) => d.code);
 const text = (value: string) => new TextEncoder().encode(value);
 const file = (name = "essay.txt", body = "my essay") => ({
   filename: name,
-  contentType: "text/plain",
+  content_type: "text/plain",
   bytes: text(body),
 });
 
@@ -48,8 +48,8 @@ describe("createBlob", () => {
 
     expect(blob).toMatchObject({
       filename: "essay.txt",
-      contentType: "text/plain",
-      byteSize: 5,
+      content_type: "text/plain",
+      byte_size: 5,
     });
     expect(blob.checksum).toBe(
       createHash("sha256").update("hello").digest("hex"),
@@ -59,12 +59,12 @@ describe("createBlob", () => {
       where: { id: blob.id },
     });
     expect(row).toMatchObject({
-      serviceName: "database",
-      uploadedById: student.memberId,
+      service_name: "database",
+      uploaded_by_id: student.member_id,
     });
     expect(row.key).toBeTruthy();
     const data = await testDb().storageBlobData.findFirstOrThrow({
-      where: { blobId: blob.id },
+      where: { blob_id: blob.id },
     });
     expect(Buffer.from(data.content).toString()).toBe("hello");
   });
@@ -75,9 +75,9 @@ describe("createBlob", () => {
     expect(blob.filename).toBe("essay.txt");
 
     const log = await testDb().activityLog.findFirstOrThrow({
-      where: { resourceType: "attachment", action: "create" },
+      where: { resource_type: "attachment", action: "create" },
     });
-    expect(log.metadata).toEqual({ byteSize: 8 });
+    expect(log.metadata).toEqual({ byte_size: 8 });
   });
 
   it("rejects bad uploads with every problem listed", async () => {
@@ -85,7 +85,7 @@ describe("createBlob", () => {
     const mislabelled = await failure(
       createBlob(student, {
         filename: "x.pdf",
-        contentType: "application/pdf",
+        content_type: "application/pdf",
         bytes: text("nope"),
       }),
     );
@@ -109,14 +109,14 @@ describe("attachBlobToSubmission", () => {
     const blob = await createBlob(student, file());
 
     const attached = await attachBlobToSubmission(student, {
-      submissionId: id,
-      blobId: blob.id,
+      submission_id: id,
+      blob_id: blob.id,
     });
     expect(attached.name).toBe("files");
 
     const listed = await listSubmissionAttachments(student, id);
     expect(listed).toHaveLength(1);
-    expect(listed[0]).toMatchObject({ filename: "essay.txt", byteSize: 8 });
+    expect(listed[0]).toMatchObject({ filename: "essay.txt", byte_size: 8 });
     expect(listed[0]).not.toHaveProperty("bytes");
   });
 
@@ -130,8 +130,8 @@ describe("attachBlobToSubmission", () => {
       (
         await failure(
           attachBlobToSubmission(classmate, {
-            submissionId: id,
-            blobId: otherBlob.id,
+            submission_id: id,
+            blob_id: otherBlob.id,
           }),
         )
       ).status,
@@ -142,8 +142,8 @@ describe("attachBlobToSubmission", () => {
       (
         await failure(
           attachBlobToSubmission(teacher, {
-            submissionId: id,
-            blobId: blob.id,
+            submission_id: id,
+            blob_id: blob.id,
           }),
         )
       ).status,
@@ -154,8 +154,8 @@ describe("attachBlobToSubmission", () => {
     const gradedBlob = await createBlob(gradedStudent, file());
     const error = await failure(
       attachBlobToSubmission(gradedStudent, {
-        submissionId: graded.id,
-        blobId: gradedBlob.id,
+        submission_id: graded.id,
+        blob_id: gradedBlob.id,
       }),
     );
     expect(error).toMatchObject({
@@ -171,11 +171,14 @@ describe("attachBlobToSubmission", () => {
     const foreign = await createBlob(foreignStudent, file("theirs.txt"));
 
     const error = await failure(
-      attachBlobToSubmission(student, { submissionId: id, blobId: foreign.id }),
+      attachBlobToSubmission(student, {
+        submission_id: id,
+        blob_id: foreign.id,
+      }),
     );
     expect(error.status).toBe(STATUS.unprocessable_content);
     expect(error.details[0]).toMatchObject({
-      field: "blobId",
+      field: "blob_id",
       code: "not_found",
     });
   });
@@ -184,15 +187,15 @@ describe("attachBlobToSubmission", () => {
     const { student, id } = await submitted();
     const first = await createBlob(student, file("one.txt"));
     await attachBlobToSubmission(student, {
-      submissionId: id,
-      blobId: first.id,
+      submission_id: id,
+      blob_id: first.id,
     });
     expect(
       (
         await failure(
           attachBlobToSubmission(student, {
-            submissionId: id,
-            blobId: first.id,
+            submission_id: id,
+            blob_id: first.id,
           }),
         )
       ).status,
@@ -201,13 +204,13 @@ describe("attachBlobToSubmission", () => {
     for (let i = 2; i <= MAX_FILES_PER_RECORD; i++) {
       const blob = await createBlob(student, file(`f${i}.txt`, `body ${i}`));
       await attachBlobToSubmission(student, {
-        submissionId: id,
-        blobId: blob.id,
+        submission_id: id,
+        blob_id: blob.id,
       });
     }
     const extra = await createBlob(student, file("extra.txt", "extra"));
     const error = await failure(
-      attachBlobToSubmission(student, { submissionId: id, blobId: extra.id }),
+      attachBlobToSubmission(student, { submission_id: id, blob_id: extra.id }),
     );
     expect(codes(error)).toEqual(["too_many_files"]);
   });
@@ -221,8 +224,8 @@ describe("downloadAttachment", () => {
       file("essay.txt", "the real bytes"),
     );
     const attachment = await attachBlobToSubmission(ctx.student, {
-      submissionId: ctx.id,
-      blobId: blob.id,
+      submission_id: ctx.id,
+      blob_id: blob.id,
     });
     return { ...ctx, blob, attachmentId: attachment.id };
   }
@@ -237,7 +240,7 @@ describe("downloadAttachment", () => {
       expect(Buffer.from(result.bytes).toString()).toBe("the real bytes");
       expect(result).toMatchObject({
         filename: "essay.txt",
-        contentType: "text/plain",
+        content_type: "text/plain",
       });
     }
   });
@@ -247,13 +250,13 @@ describe("downloadAttachment", () => {
     await downloadAttachment(student, id, attachmentId);
 
     const log = await testDb().activityLog.findFirstOrThrow({
-      where: { action: "read", resourceType: "attachment" },
+      where: { action: "read", resource_type: "attachment" },
     });
     expect(log).toMatchObject({
-      resourceId: attachmentId,
-      actorRole: "student",
+      resource_id: attachmentId,
+      actor_role: "student",
     });
-    expect(log.metadata).toEqual({ submissionId: id });
+    expect(log.metadata).toEqual({ submission_id: id });
   });
 
   it("hides the file from a classmate and from another school", async () => {
@@ -289,7 +292,7 @@ describe("downloadAttachment", () => {
     const { student, attachmentId, id } = await withAttachment();
     await testDb().storageAttachment.update({
       where: { id: attachmentId },
-      data: { deletedAt: new Date(), deletionReason: "Wrong file" },
+      data: { deleted_at: new Date(), deletion_reason: "Wrong file" },
     });
     expect(
       (await failure(downloadAttachment(student, id, attachmentId))).status,

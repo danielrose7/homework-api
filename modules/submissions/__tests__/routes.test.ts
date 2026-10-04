@@ -28,7 +28,7 @@ describe("POST /assignments/{id}/submissions", () => {
       submit,
       {
         orgSlug: seeded.school.organization.slug,
-        assignmentId: seeded.assignment.id,
+        assignment_id: seeded.assignment.id,
       },
       { headers: student.headers, json: { text: "  My answer  " } },
     );
@@ -63,7 +63,7 @@ describe("POST /assignments/{id}/submissions", () => {
       submit,
       {
         orgSlug: seeded.school.organization.slug,
-        assignmentId: seeded.assignment.id,
+        assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, form },
     );
@@ -90,7 +90,7 @@ describe("POST /assignments/{id}/submissions", () => {
       submit,
       {
         orgSlug: seeded.school.organization.slug,
-        assignmentId: seeded.assignment.id,
+        assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, form },
     );
@@ -109,10 +109,10 @@ describe("POST /assignments/{id}/submissions", () => {
   it("answers 422 for a missing text, an unknown field and a non-uuid id", async () => {
     const seeded = await seedAssignment();
     const headers = seeded.school.students[0]!.headers;
-    const send = (assignmentId: string, body: unknown) =>
+    const send = (assignment_id: string, body: unknown) =>
       callRoute(
         submit,
-        { orgSlug: seeded.school.organization.slug, assignmentId },
+        { orgSlug: seeded.school.organization.slug, assignment_id },
         { headers, json: body },
       );
 
@@ -134,7 +134,7 @@ describe("POST /assignments/{id}/submissions", () => {
       submit,
       {
         orgSlug: seeded.school.organization.slug,
-        assignmentId: seeded.assignment.id,
+        assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, raw: "{nope" },
     );
@@ -147,7 +147,7 @@ describe("POST /assignments/{id}/submissions", () => {
     const seeded = await seedAssignment();
     const params = {
       orgSlug: seeded.school.organization.slug,
-      assignmentId: seeded.assignment.id,
+      assignment_id: seeded.assignment.id,
     };
     const headers = seeded.school.students[0]!.headers;
     await callRoute(submit, params, { headers, json: { text: "one" } });
@@ -173,7 +173,7 @@ describe("POST /assignments/{id}/submissions", () => {
       submit,
       {
         orgSlug: seeded.school.organization.slug,
-        assignmentId: seeded.assignment.id,
+        assignment_id: seeded.assignment.id,
       },
       { json: { text: "x" } },
     );
@@ -296,7 +296,7 @@ describe("GET /submissions", () => {
     const seeded = await seedSubmission({ assignment: { title: "Fractions" } });
     await testDb().assignmentSubmission.update({
       where: { id: seeded.submission.id },
-      data: { submittedAt: new Date("2026-03-10T03:30:00Z") },
+      data: { submitted_at: new Date("2026-03-10T03:30:00Z") },
     });
     const params = { orgSlug: seeded.school.organization.slug };
     const headers = seeded.school.teachers[0]!.headers;

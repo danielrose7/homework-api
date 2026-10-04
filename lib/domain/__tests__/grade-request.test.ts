@@ -4,7 +4,7 @@ import { validateGradeRequest, type GradeContext } from "../grade-request";
 import { PASS_FAIL, STANDARD_AF, type Band, type BandInput } from "../grading";
 
 const withIds = (bands: readonly BandInput[]): Band[] =>
-  bands.map((band, index) => ({ ...band, id: `b${index}`, sortOrder: index }));
+  bands.map((band, index) => ({ ...band, id: `b${index}`, sort_order: index }));
 
 const standard = withIds(STANDARD_AF);
 const passFail = withIds(PASS_FAIL);
@@ -12,14 +12,14 @@ const passFail = withIds(PASS_FAIL);
 const pointsContext = (
   overrides: Partial<GradeContext> = {},
 ): GradeContext => ({
-  assignment: { gradingMode: "points", maxPoints: "50" },
+  assignment: { grading_mode: "points", max_points: "50" },
   bands: standard,
   currentBand: null,
   ...overrides,
 });
 
 const bandContext = (overrides: Partial<GradeContext> = {}): GradeContext => ({
-  assignment: { gradingMode: "band", maxPoints: null },
+  assignment: { grading_mode: "band", max_points: null },
   bands: passFail,
   currentBand: null,
   ...overrides,
@@ -134,7 +134,7 @@ describe("text limits", () => {
     const issues = validateGradeRequest(
       {
         points: "10",
-        teacherNotes: "x".repeat(5001),
+        teacher_notes: "x".repeat(5001),
         reason: "y".repeat(1001),
       },
       pointsContext({ currentBand: standard[0] ?? null }),
@@ -144,7 +144,7 @@ describe("text limits", () => {
 
   it("report everything at once", () => {
     const issues = validateGradeRequest(
-      { points: "999", teacherNotes: "x".repeat(5001) },
+      { points: "999", teacher_notes: "x".repeat(5001) },
       pointsContext({ currentBand: standard[1] ?? null }),
     );
     expect(codes(issues).sort()).toEqual(

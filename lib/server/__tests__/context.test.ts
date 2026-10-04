@@ -63,7 +63,7 @@ describe("resolveContext", () => {
       headers: adminHeaders,
       organizationSlug: "sandbox",
     });
-    expect(ctx.organizationId).toBe(schoolId);
+    expect(ctx.organization_id).toBe(schoolId);
     expect(ctx.role).toBe("administrator");
   });
 

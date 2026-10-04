@@ -29,7 +29,7 @@ describe("default grading scale", () => {
     const ctx = await school.admin.context();
     const scales = await listGradingScales(ctx);
     expect(scales).toHaveLength(1);
-    expect(scales[0]).toMatchObject({ name: "Standard A–F", isDefault: true });
+    expect(scales[0]).toMatchObject({ name: "Standard A–F", is_default: true });
     expect(scales[0]?.bands.map((b) => b.label)).toEqual([
       "A",
       "B",
@@ -63,10 +63,10 @@ describe("default grading scale", () => {
     });
 
     const scales = await testDb().gradingScale.findMany({
-      where: { organizationId: school!.id },
+      where: { organization_id: school!.id },
     });
     expect(scales).toHaveLength(1);
-    expect(scales[0]?.isDefault).toBe(true);
+    expect(scales[0]?.is_default).toBe(true);
   });
 });
 
@@ -80,15 +80,15 @@ describe("createGradingScale", () => {
       bands: [...PLUS_MINUS],
     });
 
-    expect(scale.isDefault).toBe(false);
+    expect(scale.is_default).toBe(false);
     expect(scale.bands).toHaveLength(PLUS_MINUS.length);
     expect(scale.bands[0]?.label).toBe("A+");
     const log = await testDb().activityLog.findFirstOrThrow({
-      where: { resourceId: scale.id },
+      where: { resource_id: scale.id },
     });
     expect(log).toMatchObject({
       action: "create",
-      resourceType: "grading_scale",
+      resource_type: "grading_scale",
     });
   });
 
@@ -114,19 +114,19 @@ describe("createGradingScale", () => {
         bands: [
           {
             label: "A",
-            groupLabel: null,
-            minPercent: "50",
-            gpaPoints: null,
-            isPassing: true,
-            countsInAverage: true,
+            group_label: null,
+            min_percent: "50",
+            gpa_points: null,
+            is_passing: true,
+            counts_in_average: true,
           },
           {
             label: "a",
-            groupLabel: null,
-            minPercent: "50",
-            gpaPoints: null,
-            isPassing: true,
-            countsInAverage: true,
+            group_label: null,
+            min_percent: "50",
+            gpa_points: null,
+            is_passing: true,
+            counts_in_average: true,
           },
         ],
       }),
@@ -160,11 +160,11 @@ describe("createGradingScale", () => {
     const ctx = await school.admin.context();
     const created = await createGradingScale(ctx, {
       name: "Plus/minus",
-      isDefault: true,
+      is_default: true,
       bands: [...PLUS_MINUS],
     });
     const scales = await listGradingScales(ctx);
-    expect(scales.filter((s) => s.isDefault).map((s) => s.id)).toEqual([
+    expect(scales.filter((s) => s.is_default).map((s) => s.id)).toEqual([
       created.id,
     ]);
   });
@@ -182,8 +182,8 @@ describe("setDefaultGradingScale", () => {
     await setDefaultGradingScale(ctx, passFail.id);
 
     const scales = await listGradingScales(ctx);
-    expect(scales.filter((s) => s.isDefault)).toHaveLength(1);
-    expect(scales.find((s) => s.isDefault)?.name).toBe("Pass/Fail");
+    expect(scales.filter((s) => s.is_default)).toHaveLength(1);
+    expect(scales.find((s) => s.is_default)?.name).toBe("Pass/Fail");
   });
 
   it("treats another school's scale as not found", async () => {
@@ -227,14 +227,14 @@ describe("resolveGradingScale", () => {
       name: "Pass/Fail",
       bands: [...PASS_FAIL],
     });
-    const organizationId = ctx.organizationId;
+    const organization_id = ctx.organization_id;
 
     const resolve = (
       assignmentScaleId: string | null,
       classScaleId: string | null,
     ) =>
       resolveGradingScale(testDb(), {
-        organizationId,
+        organization_id,
         assignmentScaleId,
         classScaleId,
       });

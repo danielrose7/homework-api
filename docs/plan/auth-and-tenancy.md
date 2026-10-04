@@ -38,9 +38,9 @@ Sources: better-auth.com/docs/plugins/{bearer,api-key,organization}.
 
 ## Request context
 
-Each request resolves to a typed `RequestContext` (`organizationId`, `memberId`, `role`, `requestId`, actor type)
+Each request resolves to a typed `RequestContext` (`organization_id`, `member_id`, `role`, `request_id`, actor type)
 before any service runs. Services take the context as an explicit argument and scope every query by
-`organizationId`; they never read it from ambient state. The same object feeds `recordActivity` (actor, org,
+`organization_id`; they never read it from ambient state. The same object feeds `recordActivity` (actor, org,
 request id). API-key requests carry org + fixed role and no member.
 
 ## RLS-ready schema rules

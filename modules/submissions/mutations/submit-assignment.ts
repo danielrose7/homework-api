@@ -44,7 +44,7 @@ function eligibilityError(failure: Extract<EligibilityResult, { ok: false }>) {
 
 export async function submitAssignment(
   ctx: RequestContext,
-  assignmentId: string,
+  assignment_id: string,
   input: SubmissionContent,
 ) {
   requirePermission(ctx, { submission: ["create"] });
@@ -57,14 +57,14 @@ export async function submitAssignment(
       const inTransaction = { ...ctx, db: tx };
 
       const assignment = await tx.assignment.findFirst({
-        where: { id: assignmentId, organizationId: ctx.organizationId },
+        where: { id: assignment_id, organization_id: ctx.organization_id },
       });
       if (!assignment) throw notFound();
       const seat = await tx.classSeat.findFirst({
         where: {
-          organizationId: ctx.organizationId,
-          classId: assignment.classId,
-          memberId: ctx.memberId,
+          organization_id: ctx.organization_id,
+          class_id: assignment.class_id,
+          member_id: ctx.member_id,
         },
       });
       if (!seat) throw deniedAsNotFound();
@@ -74,9 +74,9 @@ export async function submitAssignment(
         seat,
         attemptsSoFar: await tx.assignmentSubmission.count({
           where: {
-            organizationId: ctx.organizationId,
-            assignmentId: assignment.id,
-            classSeatId: seat.id,
+            organization_id: ctx.organization_id,
+            assignment_id: assignment.id,
+            class_seat_id: seat.id,
           },
         }),
       });
@@ -84,28 +84,28 @@ export async function submitAssignment(
 
       const created = await tx.assignmentSubmission.create({
         data: {
-          organizationId: ctx.organizationId,
-          assignmentId: assignment.id,
-          classSeatId: seat.id,
-          attemptNumber: eligibility.attemptNumber,
-          textContent: input.text,
+          organization_id: ctx.organization_id,
+          assignment_id: assignment.id,
+          class_seat_id: seat.id,
+          attempt_number: eligibility.attempt_number,
+          text_content: input.text,
         },
         include: submissionInclude,
       });
       for (const file of input.files) {
         const blob = await createBlob(inTransaction, file);
         await attachBlobToSubmission(inTransaction, {
-          submissionId: created.id,
-          blobId: blob.id,
+          submission_id: created.id,
+          blob_id: blob.id,
         });
       }
       await recordActivity(tx, ctx, {
         action: "create",
-        resourceType: "submission",
-        resourceId: created.id,
+        resource_type: "submission",
+        resource_id: created.id,
         metadata: {
-          assignmentId: assignment.id,
-          attemptNumber: created.attemptNumber,
+          assignment_id: assignment.id,
+          attempt_number: created.attempt_number,
           attachmentCount: input.files.length,
         },
       });

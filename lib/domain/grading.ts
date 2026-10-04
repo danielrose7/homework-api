@@ -6,22 +6,22 @@ export const RESERVED_LABELS = ["ungraded"] as const;
 export interface Band {
   id: string;
   label: string;
-  groupLabel: string | null;
+  group_label: string | null;
   /** Inclusive lower bound as a decimal string; null means the band is only ever chosen by a teacher. */
-  minPercent: string | null;
-  gpaPoints: string | null;
-  isPassing: boolean | null;
-  countsInAverage: boolean;
-  sortOrder: number;
+  min_percent: string | null;
+  gpa_points: string | null;
+  is_passing: boolean | null;
+  counts_in_average: boolean;
+  sort_order: number;
 }
 
-export type BandInput = Omit<Band, "id" | "sortOrder">;
+export type BandInput = Omit<Band, "id" | "sort_order">;
 
 function computedBands(bands: readonly Band[]): Array<Band & { min: number }> {
   const result: Array<Band & { min: number }> = [];
   for (const band of bands) {
-    if (band.minPercent === null) continue;
-    const min = toHundredths(band.minPercent);
+    if (band.min_percent === null) continue;
+    const min = toHundredths(band.min_percent);
     if (min !== null) result.push({ ...band, min });
   }
   return result;
@@ -34,10 +34,10 @@ function computedBands(bands: readonly Band[]): Array<Band & { min: number }> {
 export function lookupBand(
   bands: readonly Band[],
   points: string | number,
-  maxPoints: string | number,
+  max_points: string | number,
 ): Band | null {
   const p = toHundredths(points);
-  const m = toHundredths(maxPoints);
+  const m = toHundredths(max_points);
   if (p === null || m === null || m <= 0 || p < 0) return null;
 
   let best: (Band & { min: number }) | null = null;
@@ -52,10 +52,10 @@ export function lookupBand(
 /** Percentage to two decimals, rounded half up, as a string such as "87.50". */
 export function percentOf(
   points: string | number,
-  maxPoints: string | number,
+  max_points: string | number,
 ): string | null {
   const p = toHundredths(points);
-  const m = toHundredths(maxPoints);
+  const m = toHundredths(max_points);
   if (p === null || m === null || m <= 0) return null;
   return formatHundredths(Math.floor((p * 10_000 * 2 + m) / (m * 2)));
 }
@@ -69,7 +69,7 @@ export function findManualBand(
 }
 
 export function isManualOnly(band: Band): boolean {
-  return band.minPercent === null;
+  return band.min_percent === null;
 }
 
 export function validateScale(bands: readonly BandInput[]): ValidationIssue[] {
@@ -104,31 +104,35 @@ export function validateScale(bands: readonly BandInput[]): ValidationIssue[] {
       labels.add(key);
     }
 
-    if (band.groupLabel !== null && !band.groupLabel.trim()) {
+    if (band.group_label !== null && !band.group_label.trim()) {
       issues.push(
-        issue(at("groupLabel"), "group_label_blank", "Group label is blank"),
+        issue(at("group_label"), "group_label_blank", "Group label is blank"),
       );
     }
 
-    if (band.minPercent !== null) {
-      const min = toHundredths(band.minPercent);
+    if (band.min_percent !== null) {
+      const min = toHundredths(band.min_percent);
       if (min === null) {
         issues.push(
           issue(
-            at("minPercent"),
+            at("min_percent"),
             "invalid_percent",
             "Use a number with at most two decimals",
           ),
         );
       } else if (min < 0) {
         issues.push(
-          issue(at("minPercent"), "negative_threshold", "Must not be negative"),
+          issue(
+            at("min_percent"),
+            "negative_threshold",
+            "Must not be negative",
+          ),
         );
       } else {
         if (thresholds.has(min)) {
           issues.push(
             issue(
-              at("minPercent"),
+              at("min_percent"),
               "duplicate_threshold",
               `${formatHundredths(min)}% is used twice`,
             ),
@@ -139,11 +143,11 @@ export function validateScale(bands: readonly BandInput[]): ValidationIssue[] {
       }
     }
 
-    if (band.gpaPoints !== null) {
-      const gpa = toHundredths(band.gpaPoints);
+    if (band.gpa_points !== null) {
+      const gpa = toHundredths(band.gpa_points);
       if (gpa === null || gpa < 0 || gpa > 500) {
         issues.push(
-          issue(at("gpaPoints"), "gpa_out_of_range", "GPA must be 0 to 5"),
+          issue(at("gpa_points"), "gpa_out_of_range", "GPA must be 0 to 5"),
         );
       }
     }
@@ -172,7 +176,7 @@ export function resolveScaleId(ids: {
 
 /** `B` matches B+, B and B-; `B+` matches only B+. */
 export function matchesGradeFilter(
-  band: Pick<Band, "label" | "groupLabel"> | null,
+  band: Pick<Band, "label" | "group_label"> | null,
   filter: string,
 ): boolean {
   const wanted = filter.trim().toLowerCase();
@@ -180,17 +184,17 @@ export function matchesGradeFilter(
   if (band === null) return false;
   return (
     band.label.toLowerCase() === wanted ||
-    (band.groupLabel ?? band.label).toLowerCase() === wanted
+    (band.group_label ?? band.label).toLowerCase() === wanted
   );
 }
 
 const INCOMPLETE: BandInput = {
   label: "Incomplete",
-  groupLabel: null,
-  minPercent: null,
-  gpaPoints: null,
-  isPassing: null,
-  countsInAverage: false,
+  group_label: null,
+  min_percent: null,
+  gpa_points: null,
+  is_passing: null,
+  counts_in_average: false,
 };
 
 const letter = (
@@ -200,11 +204,11 @@ const letter = (
   group: string | null = null,
 ): BandInput => ({
   label,
-  groupLabel: group,
-  minPercent: min,
-  gpaPoints: gpa,
-  isPassing: label !== "F",
-  countsInAverage: true,
+  group_label: group,
+  min_percent: min,
+  gpa_points: gpa,
+  is_passing: label !== "F",
+  counts_in_average: true,
 });
 
 export const STANDARD_AF: readonly BandInput[] = [
@@ -234,7 +238,7 @@ export const PLUS_MINUS: readonly BandInput[] = [
 ];
 
 export const PASS_FAIL: readonly BandInput[] = [
-  { ...letter("Pass", "60", "0"), gpaPoints: null },
-  { ...letter("Fail", "0", "0"), gpaPoints: null, isPassing: false },
+  { ...letter("Pass", "60", "0"), gpa_points: null },
+  { ...letter("Fail", "0", "0"), gpa_points: null, is_passing: false },
   INCOMPLETE,
 ];

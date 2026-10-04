@@ -23,7 +23,7 @@ const APPEND_ONLY = new Set([
 type Where = Record<string, unknown> | undefined;
 
 function live(where: Where): Record<string, unknown> {
-  return where ? { AND: [where, { deletedAt: null }] } : { deletedAt: null };
+  return where ? { AND: [where, { deleted_at: null }] } : { deleted_at: null };
 }
 
 /** Prisma types `where` per model while these hooks are generic over models, so the widened filter is asserted here. */
@@ -32,7 +32,10 @@ function liveArgs<T extends { where?: unknown }>(args: T): T {
 }
 
 function liveUniqueArgs<T extends { where?: unknown }>(args: T): T {
-  return { ...args, where: { ...(args.where as Where), deletedAt: null } } as T;
+  return {
+    ...args,
+    where: { ...(args.where as Where), deleted_at: null },
+  } as T;
 }
 
 function refuse(model: string, operation: string, reason: string): never {
@@ -41,7 +44,7 @@ function refuse(model: string, operation: string, reason: string): never {
 
 /**
  * Top-level reads skip soft-deleted rows. Nested `include`/`select` relations are not filtered by this hook, so
- * services must add `where: { deletedAt: null }` to those explicitly.
+ * services must add `where: { deleted_at: null }` to those explicitly.
  */
 export const hideSoftDeleted = Prisma.defineExtension({
   name: "hide-soft-deleted",

@@ -36,41 +36,41 @@ describe("first grade with points", () => {
 
     const result = await gradeSubmission(teacher, id, {
       points: "93.5",
-      teacherNotes: "Nice work",
+      teacher_notes: "Nice work",
     });
 
     expect(result.grade).toMatchObject({
       label: "A",
       group: "A",
-      pointsAwarded: "93.5",
-      maxPoints: "100",
+      points_awarded: "93.5",
+      max_points: "100",
       percent: "93.50",
     });
-    expect(result.teacherNotes).toBe("Nice work");
+    expect(result.teacher_notes).toBe("Nice work");
 
     const row = await testDb().assignmentSubmission.findUniqueOrThrow({
       where: { id },
     });
     expect(row).toMatchObject({
-      gradeLabel: "A",
-      gradedById: seeded.school.teachers[0]!.member.id,
+      grade_label: "A",
+      graded_by_id: seeded.school.teachers[0]!.member.id,
     });
-    expect(row.gradedAt?.toISOString()).toBe(result.gradedAt);
+    expect(row.graded_at?.toISOString()).toBe(result.graded_at);
 
     const events = await testDb().submissionGradeEvent.findMany({
-      where: { submissionId: id },
+      where: { submission_id: id },
     });
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ gradeLabel: "A", reason: null });
-    expect(String(events[0]?.maxPoints)).toBe("100");
-    expect(events[0]?.createdAt.toISOString()).toBe(result.gradedAt);
+    expect(events[0]).toMatchObject({ grade_label: "A", reason: null });
+    expect(String(events[0]?.max_points)).toBe("100");
+    expect(events[0]?.created_at.toISOString()).toBe(result.graded_at);
 
     const log = await testDb().activityLog.findFirstOrThrow({
       where: { action: "grade" },
     });
     expect(log).toMatchObject({
-      resourceType: "submission",
-      resourceId: id,
+      resource_type: "submission",
+      resource_id: id,
       outcome: "success",
     });
   });
@@ -108,8 +108,8 @@ describe("authorization", () => {
   it("hides the submission from a teacher who does not teach the class", async () => {
     const { seeded, id } = await ungraded({ teachers: 2 });
     await testDb().classTeacher.updateMany({
-      where: { memberId: seeded.school.teachers[1]!.member.id },
-      data: { deletedAt: new Date() },
+      where: { member_id: seeded.school.teachers[1]!.member.id },
+      data: { deleted_at: new Date() },
     });
     const outsider = await seeded.school.teachers[1]!.context();
     expect(
@@ -136,7 +136,7 @@ describe("authorization", () => {
 
     await testDb().assignmentSubmission.update({
       where: { id: seeded.submission.id },
-      data: { deletedAt: new Date() },
+      data: { deleted_at: new Date() },
     });
     expect(
       (
@@ -154,7 +154,7 @@ describe("validation", () => {
     const error = await failure(
       gradeSubmission(teacher, id, {
         points: "101",
-        teacherNotes: "x".repeat(5001),
+        teacher_notes: "x".repeat(5001),
       }),
     );
     expect(error.status).toBe(STATUS.unprocessable_content);
@@ -175,11 +175,11 @@ describe("Incomplete", () => {
 
     const first = await gradeSubmission(teacher, id, {
       band: "Incomplete",
-      teacherNotes: "Missing page 2",
+      teacher_notes: "Missing page 2",
     });
     expect(first.grade).toMatchObject({
       label: "Incomplete",
-      pointsAwarded: null,
+      points_awarded: null,
       percent: null,
     });
 
@@ -189,7 +189,7 @@ describe("Incomplete", () => {
     expect(replaced.grade.label).toBe("B");
     expect(
       await testDb().submissionGradeEvent.count({
-        where: { submissionId: id },
+        where: { submission_id: id },
       }),
     ).toBe(2);
   });
@@ -216,8 +216,8 @@ describe("regrading", () => {
       reason: "Rubric applied late",
     });
     expect(second.grade.label).toBe("B");
-    expect(new Date(second.gradedAt).getTime()).toBeGreaterThanOrEqual(
-      new Date(first.gradedAt).getTime(),
+    expect(new Date(second.graded_at).getTime()).toBeGreaterThanOrEqual(
+      new Date(first.graded_at).getTime(),
     );
   });
 
@@ -234,10 +234,10 @@ describe("regrading", () => {
     });
 
     const events = await testDb().submissionGradeEvent.findMany({
-      where: { submissionId: id },
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      where: { submission_id: id },
+      orderBy: [{ created_at: "asc" }, { id: "asc" }],
     });
-    expect(events.map((e) => e.gradeLabel)).toEqual(["F", "D", "A"]);
+    expect(events.map((e) => e.grade_label)).toEqual(["F", "D", "A"]);
     expect(events.map((e) => e.reason)).toEqual([
       null,
       "Rubric corrected",
@@ -252,7 +252,7 @@ describe("regrading", () => {
     await gradingScaleFactory
       .plusMinus()
       .asDefault()
-      .create({ organizationId: seeded.school.organization.id });
+      .create({ organization_id: seeded.school.organization.id });
 
     const second = await gradeSubmission(teacher, id, {
       points: "91",
@@ -268,14 +268,14 @@ describe("scale overrides and pass/fail", () => {
     const seeded = await seedAssignment();
     const passFail = await gradingScaleFactory
       .passFail()
-      .create({ organizationId: seeded.school.organization.id });
+      .create({ organization_id: seeded.school.organization.id });
     const assignment = await assignmentFactory.create({
-      classId: seeded.klass.id,
-      gradingScaleId: passFail.id,
+      class_id: seeded.klass.id,
+      grading_scale_id: passFail.id,
     });
     const submission = await submissionFactory.create({
-      assignmentId: assignment.id,
-      classSeatId: seeded.seats[0]!.id,
+      assignment_id: assignment.id,
+      class_seat_id: seeded.seats[0]!.id,
     });
     const teacher = await seeded.school.teachers[0]!.context();
 
@@ -289,14 +289,14 @@ describe("scale overrides and pass/fail", () => {
     const seeded = await seedAssignment();
     const passFail = await gradingScaleFactory
       .passFail()
-      .create({ organizationId: seeded.school.organization.id });
+      .create({ organization_id: seeded.school.organization.id });
     const assignment = await assignmentFactory.passFail().create({
-      classId: seeded.klass.id,
-      gradingScaleId: passFail.id,
+      class_id: seeded.klass.id,
+      grading_scale_id: passFail.id,
     });
     const submission = await submissionFactory.create({
-      assignmentId: assignment.id,
-      classSeatId: seeded.seats[0]!.id,
+      assignment_id: assignment.id,
+      class_seat_id: seeded.seats[0]!.id,
     });
     const teacher = await seeded.school.teachers[0]!.context();
 
@@ -310,8 +310,8 @@ describe("scale overrides and pass/fail", () => {
     });
     expect(result.grade).toMatchObject({
       label: "Fail",
-      pointsAwarded: null,
-      maxPoints: null,
+      points_awarded: null,
+      max_points: null,
       percent: null,
     });
   });

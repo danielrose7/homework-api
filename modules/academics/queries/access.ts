@@ -7,9 +7,9 @@ import {
   validationFailed,
 } from "@/lib/server/errors";
 
-export async function requireClass(ctx: RequestContext, classId: string) {
+export async function requireClass(ctx: RequestContext, class_id: string) {
   const row = await ctx.db.class.findFirst({
-    where: { id: classId, organizationId: ctx.organizationId },
+    where: { id: class_id, organization_id: ctx.organization_id },
   });
   if (!row) throw notFound();
   return row;
@@ -17,20 +17,20 @@ export async function requireClass(ctx: RequestContext, classId: string) {
 
 export async function memberWithRole(
   ctx: RequestContext,
-  memberId: string,
+  member_id: string,
   role: "teacher" | "student",
 ) {
   const member = await ctx.db.member.findFirst({
-    where: { id: memberId, organizationId: ctx.organizationId },
+    where: { id: member_id, organizationId: ctx.organization_id },
   });
   if (!member) {
     throw validationFailed([
-      issue("memberId", "not_found", "Member not found"),
+      issue("member_id", "not_found", "Member not found"),
     ]);
   }
   if (member.role !== role) {
     throw validationFailed([
-      issue("memberId", "wrong_role", `This member is not a ${role}`),
+      issue("member_id", "wrong_role", `This member is not a ${role}`),
     ]);
   }
   return member;
@@ -38,15 +38,15 @@ export async function memberWithRole(
 
 export async function requireTeachesClass(
   ctx: RequestContext,
-  classId: string,
+  class_id: string,
 ) {
   if (ctx.role === "administrator") return;
   if (ctx.role !== "teacher") throw forbidden();
   const assignment = await ctx.db.classTeacher.findFirst({
     where: {
-      organizationId: ctx.organizationId,
-      classId,
-      memberId: ctx.memberId,
+      organization_id: ctx.organization_id,
+      class_id,
+      member_id: ctx.member_id,
     },
   });
   if (!assignment) throw deniedAsNotFound();

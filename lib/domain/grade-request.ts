@@ -5,12 +5,12 @@ import { issue, type ValidationIssue } from "./validation";
 export interface GradeRequest {
   points?: string | null;
   band?: string | null;
-  teacherNotes?: string | null;
+  teacher_notes?: string | null;
   reason?: string | null;
 }
 
 export interface GradeContext {
-  assignment: { gradingMode: "points" | "band"; maxPoints: string | null };
+  assignment: { grading_mode: "points" | "band"; max_points: string | null };
   bands: readonly Band[];
   /** The band currently on the submission, or null if it has not been graded. */
   currentBand: Band | null;
@@ -27,7 +27,7 @@ export function validateGradeRequest(
   const hasPoints = request.points !== undefined && request.points !== null;
   const hasBand = request.band !== undefined && request.band !== null;
 
-  if (context.assignment.gradingMode === "points") {
+  if (context.assignment.grading_mode === "points") {
     if (hasPoints && hasBand) {
       issues.push(
         issue(
@@ -42,7 +42,7 @@ export function validateGradeRequest(
       );
     } else if (request.points != null) {
       issues.push(
-        ...pointsIssues(request.points, context.assignment.maxPoints),
+        ...pointsIssues(request.points, context.assignment.max_points),
       );
     } else if (request.band != null) {
       const band = findManualBand(context.bands, request.band);
@@ -91,12 +91,12 @@ export function validateGradeRequest(
   }
 
   if (
-    request.teacherNotes != null &&
-    request.teacherNotes.length > NOTES_LIMIT
+    request.teacher_notes != null &&
+    request.teacher_notes.length > NOTES_LIMIT
   ) {
     issues.push(
       issue(
-        "teacherNotes",
+        "teacher_notes",
         "too_long",
         `Use at most ${NOTES_LIMIT} characters`,
       ),
@@ -121,7 +121,7 @@ export function validateGradeRequest(
 
 function pointsIssues(
   points: string,
-  maxPoints: string | null,
+  max_points: string | null,
 ): ValidationIssue[] {
   const value = toHundredths(points);
   if (value === null) {
@@ -138,13 +138,13 @@ function pointsIssues(
       issue("points", "must_not_be_negative", "Points cannot be negative"),
     ];
   }
-  const max = maxPoints === null ? null : toHundredths(maxPoints);
+  const max = max_points === null ? null : toHundredths(max_points);
   if (max !== null && value > max) {
     return [
       issue(
         "points",
         "exceeds_max_points",
-        `Points cannot exceed ${maxPoints}`,
+        `Points cannot exceed ${max_points}`,
       ),
     ];
   }

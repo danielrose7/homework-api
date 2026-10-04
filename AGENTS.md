@@ -68,11 +68,11 @@ is true, and then work stops for human review.
   no drift with `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`.
 - Schema naming and structure rules are in `docs/plan/schema-conventions.md`; read it before touching
   `prisma/schema.prisma`. In particular, a column that points at another row ends in `_id` (`graded_by_id`), and its
-  Prisma relation drops the suffix (`gradedBy`). `test/schema-conventions.test.ts` enforces this.
-- Services take an explicit `RequestContext` and scope every query by `organizationId`. No RLS for now, but keep
+  Prisma relation drops the suffix (`graded_by`). `test/schema-conventions.test.ts` enforces this.
+- Queries and mutations take an explicit `RequestContext` and scope every query by `organization_id`. No RLS for now, but keep
   the schema RLS-ready. No raw-SQL writes in app code (`updated_at` is set by the Prisma client).
-- Every domain table: UUIDv7 id, `organization_id`, `createdAt`/`updatedAt` (see `docs/plan/data-model.md`).
-- App and API code never hard-delete: `DELETE` is a soft delete (`deletedAt`/`deletedById`/`deletionReason`). Only
+- Every domain table: UUIDv7 id, `organization_id`, `created_at`/`updated_at` (see `docs/plan/data-model.md`).
+- App and API code never hard-delete: `DELETE` is a soft delete (`deleted_at`/`deleted_by_id`/`deletion_reason`). Only
   dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection.
 - Grading scales are data (`grading_scale`/`grading_scale_band`). The resolved grade is snapshotted when graded;
   scales are immutable once used.

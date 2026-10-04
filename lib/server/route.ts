@@ -76,19 +76,19 @@ function createInput(request: Request, params: RouteParams): RouteInput {
   };
 }
 
-function respond(response: Response, requestId: string): Response {
-  response.headers.set("x-request-id", requestId);
+function respond(response: Response, request_id: string): Response {
+  response.headers.set("x-request-id", request_id);
   return response;
 }
 
-function errorResponse(error: unknown, requestId: string): Response {
+function errorResponse(error: unknown, request_id: string): Response {
   if (error instanceof ApiError) {
     return respond(
       Response.json(errorBody(error), { status: error.status }),
-      requestId,
+      request_id,
     );
   }
-  console.error(`[${requestId}] unhandled error`, error);
+  console.error(`[${request_id}] unhandled error`, error);
   return respond(
     Response.json(
       {
@@ -100,7 +100,7 @@ function errorResponse(error: unknown, requestId: string): Response {
       },
       { status: STATUS.internal_server_error },
     ),
-    requestId,
+    request_id,
   );
 }
 
@@ -115,13 +115,13 @@ async function logDenial(
   try {
     await recordActivity(db, ctx, {
       action: "denied",
-      resourceType: definition.resource,
-      resourceId: z.uuid().safeParse(id).success ? (id as string) : null,
+      resource_type: definition.resource,
+      resource_id: z.uuid().safeParse(id).success ? (id as string) : null,
       outcome: "denied",
       metadata: { method: request.method },
     });
   } catch (error) {
-    console.error(`[${ctx.requestId}] could not log a denial`, error);
+    console.error(`[${ctx.request_id}] could not log a denial`, error);
   }
 }
 
@@ -131,7 +131,7 @@ export function createServe({ auth, db }: RouteDeps) {
       request: Request,
       routeContext: { params: Promise<RouteParams> },
     ): Promise<Response> => {
-      const requestId = crypto.randomUUID();
+      const request_id = crypto.randomUUID();
       let ctx: RequestContext | undefined;
       let params: RouteParams = {};
       try {
@@ -144,19 +144,19 @@ export function createServe({ auth, db }: RouteDeps) {
           db,
           headers: request.headers,
           organizationSlug,
-          requestId,
+          request_id,
         });
         const response = await definition.handle({
           ctx,
           request,
           input: createInput(request, params),
         });
-        return respond(response, requestId);
+        return respond(response, request_id);
       } catch (error) {
         if (error instanceof ApiError && error.denial && ctx) {
           await logDenial(db, ctx, request, definition, params);
         }
-        return errorResponse(error, requestId);
+        return errorResponse(error, request_id);
       }
     };
   };

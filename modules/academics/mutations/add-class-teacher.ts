@@ -8,17 +8,17 @@ import {
 
 export async function addClassTeacher(
   ctx: RequestContext,
-  classId: string,
-  memberId: string,
+  class_id: string,
+  member_id: string,
 ) {
   requireRole(ctx, "administrator");
-  const klass = await requireClass(ctx, classId);
-  const member = await memberWithRole(ctx, memberId, "teacher");
+  const klass = await requireClass(ctx, class_id);
+  const member = await memberWithRole(ctx, member_id, "teacher");
   const existing = await ctx.db.classTeacher.findFirst({
     where: {
-      organizationId: ctx.organizationId,
-      classId: klass.id,
-      memberId: member.id,
+      organization_id: ctx.organization_id,
+      class_id: klass.id,
+      member_id: member.id,
     },
   });
   if (existing)
@@ -26,16 +26,16 @@ export async function addClassTeacher(
 
   const row = await ctx.db.classTeacher.create({
     data: {
-      organizationId: ctx.organizationId,
-      classId: klass.id,
-      memberId: member.id,
+      organization_id: ctx.organization_id,
+      class_id: klass.id,
+      member_id: member.id,
     },
   });
   await recordActivity(ctx.db, ctx, {
     action: "create",
-    resourceType: "class_teacher",
-    resourceId: row.id,
-    metadata: { classId: klass.id, memberId: member.id },
+    resource_type: "class_teacher",
+    resource_id: row.id,
+    metadata: { class_id: klass.id, member_id: member.id },
   });
-  return { id: row.id, classId: klass.id, memberId: member.id };
+  return { id: row.id, class_id: klass.id, member_id: member.id };
 }

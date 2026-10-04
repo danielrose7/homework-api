@@ -8,7 +8,7 @@ import { userFactory, type UserRecord } from "./user";
 
 export interface MemberBuild {
   role: RoleName;
-  organizationId?: string;
+  organization_id?: string;
   userId?: string;
 }
 
@@ -41,8 +41,8 @@ export const memberFactory = MemberFactory.define(({ onCreate }) => {
     const user = build.userId
       ? await findUser(build.userId)
       : await userFactory.create();
-    const organization = build.organizationId
-      ? await findOrganization(build.organizationId)
+    const organization = build.organization_id
+      ? await findOrganization(build.organization_id)
       : await organizationFactory.create();
 
     const row = await db.member.create({

@@ -9,13 +9,13 @@ import {
 
 async function loadSubmissionView(
   ctx: RequestContext,
-  submissionId: string,
+  submission_id: string,
 ): Promise<SubmissionView> {
-  const { submission } = await loadAccessibleSubmission(ctx, submissionId);
+  const { submission } = await loadAccessibleSubmission(ctx, submission_id);
 
   return toSubmissionView(
     await ctx.db.assignmentSubmission.findFirstOrThrow({
-      where: { id: submission.id, organizationId: ctx.organizationId },
+      where: { id: submission.id, organization_id: ctx.organization_id },
       include: submissionInclude,
     }),
   );
@@ -23,21 +23,21 @@ async function loadSubmissionView(
 
 export async function getSubmission(
   ctx: RequestContext,
-  submissionId: string,
+  submission_id: string,
 ): Promise<SubmissionView> {
   requirePermission(ctx, { submission: ["read"] });
-  return loadSubmissionView(ctx, submissionId);
+  return loadSubmissionView(ctx, submission_id);
 }
 
 export async function readSubmission(
   ctx: RequestContext,
-  submissionId: string,
+  submission_id: string,
 ): Promise<SubmissionView> {
-  const view = await getSubmission(ctx, submissionId);
+  const view = await getSubmission(ctx, submission_id);
   await recordActivity(ctx.db, ctx, {
     action: "read",
-    resourceType: "submission",
-    resourceId: submissionId,
+    resource_type: "submission",
+    resource_id: submission_id,
   });
   return view;
 }

@@ -32,10 +32,10 @@ export async function resetDemoData(params: {
   const summary = await seedSandbox(params.db, params.auth);
   await params.db.activityLog.create({
     data: {
-      organizationId: summary.organizationId,
-      actorType: "system",
+      organization_id: summary.organization_id,
+      actor_type: "system",
       action: "reset",
-      resourceType: "system",
+      resource_type: "system",
       outcome: "success",
     },
   });

@@ -4,20 +4,20 @@ import type { ScaleWithBands } from "@/modules/grading-scales/types";
 
 export async function loadGradingScale(
   db: DbClient,
-  organizationId: string,
+  organization_id: string,
   scaleId: string,
 ): Promise<ScaleWithBands | null> {
   const scale = await db.gradingScale.findFirst({
-    where: { id: scaleId, organizationId },
+    where: { id: scaleId, organization_id },
     include: {
-      bands: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" } },
+      bands: { where: { deleted_at: null }, orderBy: { sort_order: "asc" } },
     },
   });
   if (!scale) return null;
   return {
     id: scale.id,
     name: scale.name,
-    isDefault: scale.isDefault,
+    is_default: scale.is_default,
     bands: scale.bands.map(toBand),
   };
 }

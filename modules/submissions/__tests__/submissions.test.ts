@@ -25,7 +25,7 @@ const fields = (error: ApiError) => error.details.map((d) => d.field);
 const text = (value: string) => new TextEncoder().encode(value);
 const file = (name = "essay.txt", body = "my essay") => ({
   filename: name,
-  contentType: "text/plain",
+  content_type: "text/plain",
   bytes: text(body),
 });
 
@@ -40,17 +40,17 @@ describe("submitAssignment", () => {
       { text: "My answer", files: [] },
     );
 
-    expect(submission.attemptNumber).toBe(1);
+    expect(submission.attempt_number).toBe(1);
     expect(submission.text).toBe("My answer");
     expect(submission.grade).toBeNull();
-    expect(submission.gradedAt).toBeNull();
-    expect(submission.student.memberId).toBe(ctx.memberId);
+    expect(submission.graded_at).toBeNull();
+    expect(submission.student.member_id).toBe(ctx.member_id);
     expect(attachments).toEqual([]);
 
     const log = await testDb().activityLog.findFirstOrThrow({
-      where: { resourceId: submission.id, action: "create" },
+      where: { resource_id: submission.id, action: "create" },
     });
-    expect(log.actorMemberId).toBe(ctx.memberId);
+    expect(log.actor_member_id).toBe(ctx.member_id);
     expect(JSON.stringify(log.metadata)).not.toContain("My answer");
   });
 
@@ -83,10 +83,10 @@ describe("submitAssignment", () => {
           ...Array.from({ length: MAX_FILES_PER_RECORD }, () => file()),
           {
             filename: "big.txt",
-            contentType: "text/plain",
+            content_type: "text/plain",
             bytes: new Uint8Array(MAX_UPLOAD_BYTES + 1).fill(97),
           },
-          { ...file("x.exe"), contentType: "application/x-msdownload" },
+          { ...file("x.exe"), content_type: "application/x-msdownload" },
         ],
       }),
     );
@@ -98,7 +98,7 @@ describe("submitAssignment", () => {
     expect(fields(many)).toEqual([
       "files",
       `files.${MAX_FILES_PER_RECORD}.file`,
-      `files.${MAX_FILES_PER_RECORD + 1}.contentType`,
+      `files.${MAX_FILES_PER_RECORD + 1}.content_type`,
     ]);
     expect(await testDb().assignmentSubmission.count()).toBe(0);
   });
@@ -120,7 +120,7 @@ describe("submitAssignment", () => {
   });
 
   it("numbers further attempts when the assignment allows them", async () => {
-    const seeded = await seedAssignment({ assignment: { maxSubmissions: 2 } });
+    const seeded = await seedAssignment({ assignment: { max_submissions: 2 } });
     const ctx = await seeded.school.students[0]!.context();
 
     const first = await submitAssignment(ctx, seeded.assignment.id, {
@@ -133,8 +133,8 @@ describe("submitAssignment", () => {
     });
 
     expect([
-      first.submission.attemptNumber,
-      second.submission.attemptNumber,
+      first.submission.attempt_number,
+      second.submission.attempt_number,
     ]).toEqual([1, 2]);
   });
 
@@ -153,7 +153,7 @@ describe("submitAssignment", () => {
   });
 
   it("treats an unpublished assignment as absent", async () => {
-    const seeded = await seedAssignment({ assignment: { publishedAt: null } });
+    const seeded = await seedAssignment({ assignment: { published_at: null } });
     const ctx = await seeded.school.students[0]!.context();
 
     const error = await failure(
@@ -168,7 +168,7 @@ describe("submitAssignment", () => {
     const ctx = await seeded.school.students[0]!.context();
     await testDb().classSeat.update({
       where: { id: seeded.seats[0]!.id },
-      data: { status: "dropped", droppedAt: new Date() },
+      data: { status: "dropped", dropped_at: new Date() },
     });
 
     const error = await failure(
@@ -184,7 +184,7 @@ describe("submitAssignment", () => {
     const outsider = await seeded.school.students[1]!.context();
     await testDb().classSeat.update({
       where: { id: seeded.seats[1]!.id },
-      data: { deletedAt: new Date() },
+      data: { deleted_at: new Date() },
     });
 
     const error = await failure(
@@ -233,7 +233,7 @@ describe("listOwnSubmissions", () => {
     });
     const other = await seedAssignment({
       seeded,
-      assignment: { title: "Reading log", maxSubmissions: 3 },
+      assignment: { title: "Reading log", max_submissions: 3 },
     });
     await seedSubmission({
       seededAssignment: other,
@@ -256,10 +256,10 @@ describe("listOwnSubmissions", () => {
     });
     await testDb().assignmentSubmission.create({
       data: {
-        organizationId: seeded.klass.organizationId,
-        assignmentId: otherAssignment.assignment.id,
-        classSeatId: classmate.id,
-        attemptNumber: 1,
+        organization_id: seeded.klass.organization_id,
+        assignment_id: otherAssignment.assignment.id,
+        class_seat_id: classmate.id,
+        attempt_number: 1,
       },
     });
     const ctx = await seeded.school.students[0]!.context();
@@ -275,8 +275,8 @@ describe("listOwnSubmissions", () => {
     const graded = page.items[2]!;
     expect(graded.grade).toMatchObject({
       label: "A",
-      pointsAwarded: "95.00",
-      maxPoints: "100.00",
+      points_awarded: "95.00",
+      max_points: "100.00",
       percent: "95.00",
     });
   });
@@ -368,10 +368,10 @@ describe("listSubmissionsOverview", () => {
     });
     await testDb().classTeacher.updateMany({
       where: {
-        classId: second.klass.id,
-        memberId: first.school.teachers[0]!.member.id,
+        class_id: second.klass.id,
+        member_id: first.school.teachers[0]!.member.id,
       },
-      data: { deletedAt: new Date() },
+      data: { deleted_at: new Date() },
     });
     const poems = await seedSubmission({ seededAssignment: second });
     return { first, second, poems };
@@ -420,10 +420,10 @@ describe("listSubmissionsOverview", () => {
     });
     await testDb().assignmentSubmission.create({
       data: {
-        organizationId: first.klass.organizationId,
-        assignmentId: secondSubmission.assignment.id,
-        classSeatId: first.seats[1]!.id,
-        attemptNumber: 1,
+        organization_id: first.klass.organization_id,
+        assignment_id: secondSubmission.assignment.id,
+        class_seat_id: first.seats[1]!.id,
+        attempt_number: 1,
       },
     });
     const ctx = await first.school.admin.context();
@@ -439,7 +439,7 @@ describe("listSubmissionsOverview", () => {
   });
 
   describe("date range", () => {
-    async function submittedAt(...instants: string[]) {
+    async function submitted_at(...instants: string[]) {
       const seeded = await seedSubmission();
       const rows = [seeded.submission.id];
       for (const [index] of instants.slice(1).entries()) {
@@ -453,14 +453,14 @@ describe("listSubmissionsOverview", () => {
       for (const [index, id] of rows.entries()) {
         await testDb().assignmentSubmission.update({
           where: { id },
-          data: { submittedAt: new Date(instants[index]!) },
+          data: { submitted_at: new Date(instants[index]!) },
         });
       }
       return { seeded, ctx: await seeded.school.admin.context(), rows };
     }
 
     it("reads from and to as days in the school's time zone, both inclusive", async () => {
-      const { ctx, rows } = await submittedAt(
+      const { ctx, rows } = await submitted_at(
         "2026-03-10T03:30:00Z",
         "2026-03-10T04:00:00Z",
         "2026-03-11T03:59:59Z",
@@ -482,9 +482,9 @@ describe("listSubmissionsOverview", () => {
     });
 
     it("moves the day boundaries when the school changes its time zone", async () => {
-      const { seeded, ctx } = await submittedAt("2026-03-10T03:30:00Z");
+      const { seeded, ctx } = await submitted_at("2026-03-10T03:30:00Z");
       await testDb().organizationPreferences.update({
-        where: { organizationId: seeded.school.organization.id },
+        where: { organization_id: seeded.school.organization.id },
         data: { timezone: "Asia/Tokyo" },
       });
 

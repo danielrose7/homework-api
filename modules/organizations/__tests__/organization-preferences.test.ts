@@ -12,7 +12,7 @@ describe("organization preferences", () => {
 
     const preferences =
       await testDb().organizationPreferences.findUniqueOrThrow({
-        where: { organizationId: school.organization.id },
+        where: { organization_id: school.organization.id },
       });
     expect(preferences.timezone).toBe("America/New_York");
   });
@@ -40,7 +40,7 @@ describe("organization preferences", () => {
 
     const preferences =
       await testDb().organizationPreferences.findUniqueOrThrow({
-        where: { organizationId: school!.id },
+        where: { organization_id: school!.id },
       });
     expect(preferences.timezone).toBe("America/New_York");
   });

@@ -6,8 +6,8 @@ import { day, fail, requireName } from "@/modules/academics/validation";
 
 export interface YearInput {
   name: string;
-  startsOn: string;
-  endsOn: string;
+  starts_on: string;
+  ends_on: string;
 }
 
 export async function createAcademicYear(
@@ -18,7 +18,7 @@ export async function createAcademicYear(
   const issues = [...requireName(input.name), ...validateRange(input)];
   if (issues.length === 0) {
     const taken = await ctx.db.academicYear.findFirst({
-      where: { organizationId: ctx.organizationId, name: input.name.trim() },
+      where: { organization_id: ctx.organization_id, name: input.name.trim() },
     });
     if (taken)
       issues.push(issue("name", "name_taken", "That name is already used"));
@@ -27,21 +27,21 @@ export async function createAcademicYear(
 
   const row = await ctx.db.academicYear.create({
     data: {
-      organizationId: ctx.organizationId,
+      organization_id: ctx.organization_id,
       name: input.name.trim(),
-      startsOn: day(input.startsOn),
-      endsOn: day(input.endsOn),
+      starts_on: day(input.starts_on),
+      ends_on: day(input.ends_on),
     },
   });
   await recordActivity(ctx.db, ctx, {
     action: "create",
-    resourceType: "academic_year",
-    resourceId: row.id,
+    resource_type: "academic_year",
+    resource_id: row.id,
   });
   return {
     id: row.id,
     name: row.name,
-    startsOn: input.startsOn,
-    endsOn: input.endsOn,
+    starts_on: input.starts_on,
+    ends_on: input.ends_on,
   };
 }

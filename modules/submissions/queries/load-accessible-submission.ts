@@ -8,27 +8,33 @@ import { requireTeachesClass } from "@/modules/academics/queries/access";
  */
 export async function loadAccessibleSubmission(
   ctx: RequestContext,
-  submissionId: string,
+  submission_id: string,
 ) {
   const submission = await ctx.db.assignmentSubmission.findFirst({
-    where: { id: submissionId, organizationId: ctx.organizationId },
+    where: { id: submission_id, organization_id: ctx.organization_id },
   });
   if (!submission) throw notFound();
 
   const assignment = await ctx.db.assignment.findFirst({
-    where: { id: submission.assignmentId, organizationId: ctx.organizationId },
+    where: {
+      id: submission.assignment_id,
+      organization_id: ctx.organization_id,
+    },
   });
   if (!assignment) throw notFound();
 
   const seat = await ctx.db.classSeat.findFirst({
-    where: { id: submission.classSeatId, organizationId: ctx.organizationId },
+    where: {
+      id: submission.class_seat_id,
+      organization_id: ctx.organization_id,
+    },
   });
   if (!seat) throw notFound();
 
   if (ctx.role === "student") {
-    if (seat.memberId !== ctx.memberId) throw deniedAsNotFound();
+    if (seat.member_id !== ctx.member_id) throw deniedAsNotFound();
   } else {
-    await requireTeachesClass(ctx, assignment.classId);
+    await requireTeachesClass(ctx, assignment.class_id);
   }
   return { submission, assignment, seat };
 }

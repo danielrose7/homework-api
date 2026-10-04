@@ -32,7 +32,7 @@ export class SeedRefusedError extends Error {
 }
 
 export interface SeedSummary {
-  organizationId: string;
+  organization_id: string;
   slug: string;
   password: string;
   people: Array<{ username: string; role: string }>;
@@ -44,14 +44,14 @@ const DAY = 24 * HOUR;
 
 async function createScale(
   db: AppPrismaClient,
-  organizationId: string,
+  organization_id: string,
   name: string,
   bands: readonly BandInput[],
 ) {
   const scale = await db.gradingScale.create({
-    data: { organizationId, name },
+    data: { organization_id, name },
   });
-  await addBands(db, organizationId, scale.id, bands);
+  await addBands(db, organization_id, scale.id, bands);
   return scale.id;
 }
 
@@ -65,13 +65,13 @@ export async function seedSandbox(
 
   const now = Date.now();
   const organization = await db.organization.create({ data: DEMO_SCHOOL });
-  const organizationId = organization.id;
-  const standardId = await createDefaultGradingScale(db, organizationId);
-  await createDefaultOrganizationPreferences(db, organizationId);
+  const organization_id = organization.id;
+  const standardId = await createDefaultGradingScale(db, organization_id);
+  await createDefaultOrganizationPreferences(db, organization_id);
   const scaleIds: Record<ScaleKey, string> = {
     standard: standardId,
-    plusMinus: await createScale(db, organizationId, "Plus/minus", PLUS_MINUS),
-    passFail: await createScale(db, organizationId, "Pass/Fail", PASS_FAIL),
+    plusMinus: await createScale(db, organization_id, "Plus/minus", PLUS_MINUS),
+    passFail: await createScale(db, organization_id, "Pass/Fail", PASS_FAIL),
   };
 
   const members = new Map<string, string>();
@@ -85,11 +85,15 @@ export async function seedSandbox(
       },
     });
     const member = await db.member.create({
-      data: { organizationId, userId: user.id, role: person.role },
+      data: {
+        organizationId: organization_id,
+        userId: user.id,
+        role: person.role,
+      },
     });
     members.set(person.username, member.id);
   }
-  const memberId = (username: string) => {
+  const member_id = (username: string) => {
     const id = members.get(username);
     if (!id) throw new Error(`seed has no person "${username}"`);
     return id;
@@ -99,28 +103,28 @@ export async function seedSandbox(
     new Date(now + offset * DAY).toISOString().slice(0, 10);
   const year = await db.academicYear.create({
     data: {
-      organizationId,
+      organization_id,
       name: "2026–27",
-      startsOn: new Date(day(-60)),
-      endsOn: new Date(day(160)),
+      starts_on: new Date(day(-60)),
+      ends_on: new Date(day(160)),
     },
   });
   const fall = await db.term.create({
     data: {
-      organizationId,
-      academicYearId: year.id,
+      organization_id,
+      academic_year_id: year.id,
       name: "Fall",
-      startsOn: new Date(day(-60)),
-      endsOn: new Date(day(45)),
+      starts_on: new Date(day(-60)),
+      ends_on: new Date(day(45)),
     },
   });
   await db.term.create({
     data: {
-      organizationId,
-      academicYearId: year.id,
+      organization_id,
+      academic_year_id: year.id,
       name: "Spring",
-      startsOn: new Date(day(60)),
-      endsOn: new Date(day(160)),
+      starts_on: new Date(day(60)),
+      ends_on: new Date(day(160)),
     },
   });
 
@@ -130,26 +134,26 @@ export async function seedSandbox(
   for (const spec of CLASSES) {
     const klass = await db.class.create({
       data: {
-        organizationId,
-        termId: fall.id,
+        organization_id,
+        term_id: fall.id,
         name: spec.name,
-        gradingScaleId: spec.scale ? scaleIds[spec.scale] : null,
+        grading_scale_id: spec.scale ? scaleIds[spec.scale] : null,
       },
     });
     classIds.set(spec.key, klass.id);
     await db.classTeacher.create({
       data: {
-        organizationId,
-        classId: klass.id,
-        memberId: memberId(spec.teacher),
+        organization_id,
+        class_id: klass.id,
+        member_id: member_id(spec.teacher),
       },
     });
     for (const student of students) {
       const seat = await db.classSeat.create({
         data: {
-          organizationId,
-          classId: klass.id,
-          memberId: memberId(student.username),
+          organization_id,
+          class_id: klass.id,
+          member_id: member_id(student.username),
         },
       });
       seatIds.set(`${spec.key}:${student.username}`, seat.id);
@@ -158,24 +162,24 @@ export async function seedSandbox(
 
   const assignmentIds = new Map<string, string>();
   for (const spec of ASSIGNMENTS) {
-    const classId = classIds.get(spec.classKey);
-    if (!classId) throw new Error(`seed has no class "${spec.classKey}"`);
+    const class_id = classIds.get(spec.classKey);
+    if (!class_id) throw new Error(`seed has no class "${spec.classKey}"`);
     const row = await db.assignment.create({
       data: {
-        organizationId,
-        classId,
+        organization_id,
+        class_id,
         title: spec.title,
         type: spec.type,
-        gradingMode: spec.gradingMode,
-        maxPoints: spec.maxPoints,
-        gradingScaleId: spec.scale ? scaleIds[spec.scale] : null,
-        dueAt: new Date(now + spec.dueInDays * DAY),
-        publishedAt: new Date(now - 14 * DAY),
+        grading_mode: spec.grading_mode,
+        max_points: spec.max_points,
+        grading_scale_id: spec.scale ? scaleIds[spec.scale] : null,
+        due_at: new Date(now + spec.dueInDays * DAY),
+        published_at: new Date(now - 14 * DAY),
         ...(spec.deleted
           ? {
-              deletedAt: new Date(now - 1 * DAY),
-              deletedById: memberId("reyes"),
-              deletionReason: "Replaced by the poetry assignment",
+              deleted_at: new Date(now - 1 * DAY),
+              deleted_by_id: member_id("reyes"),
+              deletion_reason: "Replaced by the poetry assignment",
             }
           : {}),
       },
@@ -186,45 +190,45 @@ export async function seedSandbox(
   const teacherOf = (classKey: string) => {
     const spec = CLASSES.find((c) => c.key === classKey);
     if (!spec) throw new Error(`seed has no class "${classKey}"`);
-    return memberId(spec.teacher);
+    return member_id(spec.teacher);
   };
 
   for (const spec of SUBMISSIONS) {
     const assignment = ASSIGNMENTS.find((a) => a.key === spec.assignment);
-    const assignmentId = assignmentIds.get(spec.assignment);
+    const assignment_id = assignmentIds.get(spec.assignment);
     const seatId = assignment
       ? seatIds.get(`${assignment.classKey}:${spec.student}`)
       : undefined;
-    if (!assignment || !assignmentId || !seatId) {
+    if (!assignment || !assignment_id || !seatId) {
       throw new Error(
         `seed submission ${spec.student}/${spec.assignment} has no assignment or seat`,
       );
     }
 
-    const submittedAt = new Date(now - spec.daysAgo * DAY);
+    const submitted_at = new Date(now - spec.daysAgo * DAY);
     const submission = await db.assignmentSubmission.create({
       data: {
-        organizationId,
-        assignmentId,
-        classSeatId: seatId,
-        attemptNumber: 1,
-        textContent: spec.text,
-        submittedAt,
+        organization_id,
+        assignment_id,
+        class_seat_id: seatId,
+        attempt_number: 1,
+        text_content: spec.text,
+        submitted_at,
       },
     });
     if (!spec.grade) continue;
 
-    const classId = classIds.get(assignment.classKey);
+    const class_id = classIds.get(assignment.classKey);
     const klass = await db.class.findUniqueOrThrow({
-      where: { id: classId },
+      where: { id: class_id },
     });
     const dbAssignment = await db.assignment.findUniqueOrThrow({
-      where: { id: assignmentId },
+      where: { id: assignment_id },
     });
     const scale = await resolveGradingScale(db, {
-      organizationId,
-      assignmentScaleId: dbAssignment.gradingScaleId,
-      classScaleId: klass.gradingScaleId,
+      organization_id,
+      assignmentScaleId: dbAssignment.grading_scale_id,
+      classScaleId: klass.grading_scale_id,
     });
 
     const grade = async (
@@ -233,8 +237,8 @@ export async function seedSandbox(
       reason: string | null,
     ) => {
       const band =
-        given.points !== undefined && assignment.maxPoints !== null
-          ? lookupBand(scale.bands, given.points, assignment.maxPoints)
+        given.points !== undefined && assignment.max_points !== null
+          ? lookupBand(scale.bands, given.points, assignment.max_points)
           : findManualBand(scale.bands, given.band ?? "");
       if (!band) {
         throw new Error(
@@ -242,15 +246,17 @@ export async function seedSandbox(
         );
       }
       await applyGrade(db, {
-        organizationId,
-        submissionId: submission.id,
-        gradedById: teacherOf(assignment.classKey),
-        now: new Date(Math.min(now, submittedAt.getTime() + afterHours * HOUR)),
+        organization_id,
+        submission_id: submission.id,
+        graded_by_id: teacherOf(assignment.classKey),
+        now: new Date(
+          Math.min(now, submitted_at.getTime() + afterHours * HOUR),
+        ),
         scaleId: scale.id,
         band,
-        pointsAwarded: given.points ?? null,
-        maxPoints: assignment.maxPoints,
-        teacherNotes: given.notes ?? null,
+        points_awarded: given.points ?? null,
+        max_points: assignment.max_points,
+        teacher_notes: given.notes ?? null,
         reason,
       });
     };
@@ -266,7 +272,7 @@ export async function seedSandbox(
   }
 
   return {
-    organizationId,
+    organization_id,
     slug: DEMO_SCHOOL.slug,
     password: DEMO_PASSWORD,
     people: PEOPLE.map(({ username, role }) => ({ username, role })),
