@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { Check, Copy, Maximize2, Minimize2 } from "lucide-react";
+import {
+  ViewTransition,
+  startTransition,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { JsonView } from "@/app/sandbox/_components/json-view";
 import { StatusChip } from "@/app/sandbox/_components/ui";
@@ -109,6 +116,17 @@ function ResponseTab({ exchange }: { exchange: Exchange }) {
 export function ExchangeView({ exchange }: { exchange: Exchange | null }) {
   const [tab, setTab] = useState<Tab>("request");
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const toggleExpanded = () =>
+    startTransition(() => setExpanded((value) => !value));
+  useEffect(() => {
+    if (!expanded) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") toggleExpanded();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [expanded]);
   if (!exchange) {
     return (
       <div className="text-muted-foreground p-6">
@@ -118,56 +136,74 @@ export function ExchangeView({ exchange }: { exchange: Exchange | null }) {
   }
   const curl = toCurl(exchange, window.location.origin);
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
-        <span
-          role="tablist"
-          aria-label="Exchange view"
-          className="flex gap-3.5"
-        >
-          {TABS.map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
-              className={cn(
-                "border-b-2 border-transparent py-0.5",
-                tab === id
-                  ? "border-primary text-foreground"
-                  : "text-muted-foreground",
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </span>
-        <button
-          type="button"
-          className="border-input rounded border px-2 text-[11.5px]"
-          onClick={() => {
-            navigator.clipboard
-              .writeText(curl)
-              .then(() => setCopied(true))
-              .catch(() => setTab("curl"));
-            setTimeout(() => setCopied(false), 1200);
-          }}
-        >
-          {copied ? "Copied" : "Copy cURL"}
-        </button>
-        <span className="ml-auto flex items-center gap-2">
-          <StatusChip status={exchange.status} />
-          <span className="text-muted-foreground">{exchange.ms} ms</span>
-        </span>
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto px-4 py-2.5">
-        {tab === "request" && <RequestTab exchange={exchange} />}
-        {tab === "response" && <ResponseTab exchange={exchange} />}
-        {tab === "curl" && (
-          <pre className="break-words whitespace-pre-wrap">{curl}</pre>
+    <ViewTransition name="exchange-panel" update="exchange-morph">
+      <div
+        className={cn(
+          "flex min-h-0 flex-1 flex-col",
+          expanded && "bg-card fixed inset-0 z-50",
         )}
+      >
+        <div className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
+          <span
+            role="tablist"
+            aria-label="Exchange view"
+            className="flex gap-3.5"
+          >
+            {TABS.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                onClick={() => setTab(id)}
+                className={cn(
+                  "border-b-2 border-transparent py-0.5",
+                  tab === id
+                    ? "border-primary text-foreground"
+                    : "text-muted-foreground",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </span>
+          <button
+            type="button"
+            className="border-input inline-flex items-center gap-1 rounded border px-2 text-[11.5px]"
+            onClick={() => {
+              navigator.clipboard
+                .writeText(curl)
+                .then(() => setCopied(true))
+                .catch(() => setTab("curl"));
+              setTimeout(() => setCopied(false), 1200);
+            }}
+          >
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+            {copied ? "Copied" : "Copy cURL"}
+          </button>
+          <span className="ml-auto flex items-center gap-2">
+            <StatusChip status={exchange.status} />
+            <span className="text-muted-foreground">{exchange.ms} ms</span>
+            <button
+              type="button"
+              aria-expanded={expanded}
+              aria-label={expanded ? "Collapse" : "Expand to full screen"}
+              title={expanded ? "Collapse (Esc)" : "Expand to full screen"}
+              className="border-input text-muted-foreground hover:text-foreground rounded border p-1"
+              onClick={toggleExpanded}
+            >
+              {expanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+            </button>
+          </span>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto px-4 py-2.5">
+          {tab === "request" && <RequestTab exchange={exchange} />}
+          {tab === "response" && <ResponseTab exchange={exchange} />}
+          {tab === "curl" && (
+            <pre className="break-words whitespace-pre-wrap">{curl}</pre>
+          )}
+        </div>
       </div>
-    </div>
+    </ViewTransition>
   );
 }
