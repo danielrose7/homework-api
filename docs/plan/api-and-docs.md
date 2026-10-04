@@ -2,11 +2,11 @@
 
 ## API (REST — pending confirmation, see README decision log)
 
-- Route Handlers under `/api/v1/orgs/{orgSlug}/…`. Zod schemas are the single source of truth for validation,
+- Route Handlers under `/api/v1/orgs/{org_slug}/…`. Zod schemas are the single source of truth for validation,
   types and OpenAPI (`zod-to-openapi` or similar). Handlers are thin; logic lives in a service layer that the UI
   also calls.
 - Handlers are wrapped in `serve(...)` (`lib/server/serve.ts`), which resolves the `RequestContext` from the bearer
-  token and the `orgSlug` path segment, gives the handler `input.params/query/body(zodSchema)` parsers, and maps
+  token and the `org_slug` path segment, gives the handler `input.params/query/body(zodSchema)` parsers, and maps
   `ApiError`, Zod failures (`422`), unparseable JSON (`400`) and anything unexpected (generic `500`, logged with the
   request id) to the error shape below. Every response carries `x-request-id`. `createServe(deps)` takes the auth and
   database explicitly so route tests can pass the rolled-back client.
@@ -37,7 +37,7 @@
 | Method + path                                                                                                                        | Who                                         | Purpose                                                                                                     |
 | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `GET /submissions/{id}/attachments`                                                                                                  | student (own), teacher/admin                | List attachment metadata                                                                                    |
-| `GET /submissions/{id}/attachments/{attachmentId}`                                                                                   | student (own), teacher/admin                | Download an attachment (streamed, logged)                                                                   |
+| `GET /submissions/{id}/attachments/{attachment_id}`                                                                                  | student (own), teacher/admin                | Download an attachment (streamed, logged)                                                                   |
 | `POST /assignments/{id}/submissions`                                                                                                 | student                                     | Submit as JSON `{ text }` or multipart (`text`, repeated `files`); `409` over the limit                     |
 | `GET /submissions/me?grade=&assignment=`                                                                                             | student                                     | Own submissions; grade ∈ `A–F`, `incomplete`, `ungraded`                                                    |
 | `GET /submissions?assignment=&from=&to=&student=&grade=`                                                                             | teacher (own classes), admin                | Overview; `student` is at least 2 characters; `from`/`to` are school-time days                              |

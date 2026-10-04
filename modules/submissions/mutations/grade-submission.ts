@@ -22,8 +22,8 @@ export interface GradeResult {
   graded_at: string;
   teacher_notes: string | null;
   grade: {
-    bandId: string;
-    scaleId: string;
+    band_id: string;
+    scale_id: string;
     label: string;
     group: string;
     points_awarded: string | null;
@@ -37,7 +37,7 @@ interface ApplyGradeParams {
   submission_id: string;
   graded_by_id: string;
   now: Date;
-  scaleId: string;
+  scale_id: string;
   band: Band;
   points_awarded: string | null;
   max_points: string | null;
@@ -60,7 +60,7 @@ export async function applyGrade(
     },
     data: {
       points_awarded: params.points_awarded,
-      grading_scale_id: params.scaleId,
+      grading_scale_id: params.scale_id,
       grade_band_id: params.band.id,
       grade_label: params.band.label,
       grade_group: group,
@@ -75,7 +75,7 @@ export async function applyGrade(
       submission_id: params.submission_id,
       points_awarded: params.points_awarded,
       max_points: params.max_points,
-      grading_scale_id: params.scaleId,
+      grading_scale_id: params.scale_id,
       grade_band_id: params.band.id,
       grade_label: params.band.label,
       grade_group: group,
@@ -91,8 +91,8 @@ export async function applyGrade(
     graded_at: params.now.toISOString(),
     teacher_notes: params.teacher_notes,
     grade: {
-      bandId: params.band.id,
-      scaleId: params.scaleId,
+      band_id: params.band.id,
+      scale_id: params.scale_id,
       label: params.band.label,
       group,
       points_awarded: params.points_awarded,
@@ -142,18 +142,18 @@ export async function gradeSubmission(
         )
       : await resolveGradingScale(tx, {
           organization_id: ctx.organization_id,
-          assignmentScaleId: assignment.grading_scale_id,
-          classScaleId: klass.grading_scale_id,
+          assignment_scale_id: assignment.grading_scale_id,
+          class_scale_id: klass.grading_scale_id,
         });
     if (!scale) throw notFound();
 
     const max_points = assignment.max_points?.toString() ?? null;
-    const currentBand =
+    const current_band =
       scale.bands.find((band) => band.id === submission.grade_band_id) ?? null;
     const issues = validateGradeRequest(command, {
       assignment: { grading_mode: assignment.grading_mode, max_points },
       bands: scale.bands,
-      currentBand,
+      current_band,
     });
     if (issues.length > 0) throw validationFailed(issues);
 
@@ -168,7 +168,7 @@ export async function gradeSubmission(
       submission_id,
       graded_by_id: ctx.member_id,
       now: new Date(),
-      scaleId: scale.id,
+      scale_id: scale.id,
       band,
       points_awarded: command.points ?? null,
       max_points,
@@ -180,7 +180,7 @@ export async function gradeSubmission(
       action: "grade",
       resource_type: "submission",
       resource_id: submission_id,
-      metadata: { assignment_id: assignment.id, bandId: band.id },
+      metadata: { assignment_id: assignment.id, band_id: band.id },
     });
     return result;
   });

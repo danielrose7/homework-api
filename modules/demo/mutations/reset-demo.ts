@@ -8,8 +8,8 @@ import {
 } from "@/modules/demo/mutations/seed-sandbox";
 
 /** Truncating needs the owner role: `app_user` has no TRUNCATE grant. */
-export async function truncateAllTables(ownerUrl: string) {
-  const pool = new Pool({ connectionString: ownerUrl, max: 1 });
+export async function truncateAllTables(owner_url: string) {
+  const pool = new Pool({ connectionString: owner_url, max: 1 });
   try {
     const { rows } = await pool.query<{ tablename: string }>(
       `SELECT tablename FROM pg_tables
@@ -26,9 +26,9 @@ export async function truncateAllTables(ownerUrl: string) {
 export async function resetDemoData(params: {
   db: AppPrismaClient;
   auth: Auth;
-  ownerUrl: string;
+  owner_url: string;
 }): Promise<SeedSummary> {
-  await truncateAllTables(params.ownerUrl);
+  await truncateAllTables(params.owner_url);
   const summary = await seedSandbox(params.db, params.auth);
   await params.db.activityLog.create({
     data: {

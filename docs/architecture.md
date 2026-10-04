@@ -61,8 +61,9 @@ route handler -> query or mutation -> domain rules and infrastructure
 ```
 
 Queries and mutations must not import route handlers. Serializers must not authorize, query the database or write
-state. Route handlers translate between wire names and application names; application code continues to use
-camelCase, while public JSON uses snake_case.
+state. Domain data uses `snake_case` consistently across route parameters, Zod schemas, module inputs and results,
+serializer output and audit metadata. Better Auth's owned models and third-party API options keep the spelling their
+adapters require. TypeScript function, class and type names retain the language's usual casing.
 
 Do not introduce classes solely to resemble another framework. Small named functions and explicit module boundaries
 provide the useful Django/Rails familiarity without hiding dependencies in object construction.

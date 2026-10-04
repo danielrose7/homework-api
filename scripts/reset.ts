@@ -9,10 +9,10 @@ async function main() {
   const { resetDemoData } = await import("@/modules/demo/mutations/reset-demo");
   const { printSummary } = await import("./summary");
 
-  const ownerUrl = process.env.MIGRATION_DATABASE_URL;
-  if (!ownerUrl) throw new Error("MIGRATION_DATABASE_URL is not set");
+  const owner_url = process.env.MIGRATION_DATABASE_URL;
+  if (!owner_url) throw new Error("MIGRATION_DATABASE_URL is not set");
   try {
-    printSummary(await resetDemoData({ db: prisma, auth, ownerUrl }));
+    printSummary(await resetDemoData({ db: prisma, auth, owner_url }));
   } finally {
     await prisma.$disconnect();
   }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
-import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/grade/route";
-import { getSubmissionRoute as getOne } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/route";
+import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/grade/route";
+import { getSubmissionRoute as getOne } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/route";
 import { callRoute } from "@/test/http";
 import { seedSubmission } from "@/test/scenarios/class";
 import { withRollbackDb } from "@/test/rollback-db";
@@ -20,7 +20,7 @@ const errorOf = async (response: Response) =>
 async function setup() {
   const seeded = await seedSubmission({ assignment: { max_points: "100" } });
   const params = {
-    orgSlug: seeded.school.organization.slug,
+    org_slug: seeded.school.organization.slug,
     submission_id: seeded.submission.id,
   };
   const teacher = seeded.school.teachers[0]!.headers;
@@ -177,7 +177,7 @@ describe("GET /submissions/{id}", () => {
     const response = await callRoute(
       getOne,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         submission_id: seeded.submission.id,
       },
       { headers: seeded.school.students[1]!.headers },

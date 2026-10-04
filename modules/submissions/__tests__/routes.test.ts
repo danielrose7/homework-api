@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
-import { submitRoute as submit } from "@/app/api/v1/orgs/[orgSlug]/assignments/[assignmentId]/submissions/route";
-import { listOwnRoute as listMine } from "@/app/api/v1/orgs/[orgSlug]/submissions/me/route";
-import { listSubmissionsRoute as listAll } from "@/app/api/v1/orgs/[orgSlug]/submissions/route";
+import { submitRoute as submit } from "@/app/api/v1/orgs/[org_slug]/assignments/[assignment_id]/submissions/route";
+import { listOwnRoute as listMine } from "@/app/api/v1/orgs/[org_slug]/submissions/me/route";
+import { listSubmissionsRoute as listAll } from "@/app/api/v1/orgs/[org_slug]/submissions/route";
 import { callRoute } from "@/test/http";
 import { seedAssignment, seedSubmission } from "@/test/scenarios/class";
 import { testDb, withRollbackDb } from "@/test/rollback-db";
@@ -27,7 +27,7 @@ describe("POST /assignments/{id}/submissions", () => {
     const response = await callRoute(
       submit,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         assignment_id: seeded.assignment.id,
       },
       { headers: student.headers, json: { text: "  My answer  " } },
@@ -62,7 +62,7 @@ describe("POST /assignments/{id}/submissions", () => {
     const response = await callRoute(
       submit,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, form },
@@ -89,7 +89,7 @@ describe("POST /assignments/{id}/submissions", () => {
     const response = await callRoute(
       submit,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, form },
@@ -112,7 +112,7 @@ describe("POST /assignments/{id}/submissions", () => {
     const send = (assignment_id: string, body: unknown) =>
       callRoute(
         submit,
-        { orgSlug: seeded.school.organization.slug, assignment_id },
+        { org_slug: seeded.school.organization.slug, assignment_id },
         { headers, json: body },
       );
 
@@ -133,7 +133,7 @@ describe("POST /assignments/{id}/submissions", () => {
     const response = await callRoute(
       submit,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, raw: "{nope" },
@@ -146,7 +146,7 @@ describe("POST /assignments/{id}/submissions", () => {
   it("answers 409 on a second submission and 403 for a teacher", async () => {
     const seeded = await seedAssignment();
     const params = {
-      orgSlug: seeded.school.organization.slug,
+      org_slug: seeded.school.organization.slug,
       assignment_id: seeded.assignment.id,
     };
     const headers = seeded.school.students[0]!.headers;
@@ -172,7 +172,7 @@ describe("POST /assignments/{id}/submissions", () => {
     const response = await callRoute(
       submit,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         assignment_id: seeded.assignment.id,
       },
       { json: { text: "x" } },
@@ -188,7 +188,7 @@ describe("GET /submissions/me", () => {
       grade: { points: "92" },
       notes: "Nice work",
     });
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
     const headers = seeded.school.students[0]!.headers;
 
     const response = await callRoute(listMine, params, { headers });
@@ -221,7 +221,7 @@ describe("GET /submissions/me", () => {
 
     const response = await callRoute(
       listMine,
-      { orgSlug: seeded.school.organization.slug },
+      { org_slug: seeded.school.organization.slug },
       { headers: seeded.school.students[0]!.headers },
     );
 
@@ -237,7 +237,7 @@ describe("GET /submissions/me", () => {
       grade: { points: "92" },
       assignment: { title: "Fractions" },
     });
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
     const headers = seeded.school.students[0]!.headers;
     const count = async (query: Record<string, string>) =>
       (
@@ -252,7 +252,7 @@ describe("GET /submissions/me", () => {
 
   it("answers 422 for unknown query parameters and bad values, listing each", async () => {
     const seeded = await seedSubmission();
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
     const headers = seeded.school.students[0]!.headers;
 
     const response = await callRoute(listMine, params, {
@@ -270,7 +270,7 @@ describe("GET /submissions/me", () => {
 
     const response = await callRoute(
       listMine,
-      { orgSlug: seeded.school.organization.slug },
+      { org_slug: seeded.school.organization.slug },
       { headers: seeded.school.students[0]!.headers, query: { grade: "Z" } },
     );
 
@@ -283,7 +283,7 @@ describe("GET /submissions/me", () => {
 
     const response = await callRoute(
       listMine,
-      { orgSlug: seeded.school.organization.slug },
+      { org_slug: seeded.school.organization.slug },
       { headers: seeded.school.teachers[0]!.headers },
     );
 
@@ -298,7 +298,7 @@ describe("GET /submissions", () => {
       where: { id: seeded.submission.id },
       data: { submitted_at: new Date("2026-03-10T03:30:00Z") },
     });
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
     const headers = seeded.school.teachers[0]!.headers;
     const count = async (query: Record<string, string>) => {
       const response = await callRoute(listAll, params, { headers, query });
@@ -316,7 +316,7 @@ describe("GET /submissions", () => {
 
     const response = await callRoute(
       listAll,
-      { orgSlug: seeded.school.organization.slug },
+      { org_slug: seeded.school.organization.slug },
       {
         headers: seeded.school.admin.headers,
         query: { from: "03/10/2026", student: "m" },
@@ -324,7 +324,7 @@ describe("GET /submissions", () => {
     );
     const inverted = await callRoute(
       listAll,
-      { orgSlug: seeded.school.organization.slug },
+      { org_slug: seeded.school.organization.slug },
       {
         headers: seeded.school.admin.headers,
         query: { from: "2026-02-01", to: "2026-01-01" },
@@ -343,7 +343,7 @@ describe("GET /submissions", () => {
     ]) {
       const bad = await callRoute(
         listAll,
-        { orgSlug: seeded.school.organization.slug },
+        { org_slug: seeded.school.organization.slug },
         { headers: seeded.school.admin.headers, query: { from } },
       );
       expect(bad.status).toBe(STATUS.unprocessable_content);
@@ -356,7 +356,7 @@ describe("GET /submissions", () => {
 
   it("answers 403 for a student and 401 without a token", async () => {
     const seeded = await seedSubmission();
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
 
     const student = await callRoute(listAll, params, {
       headers: seeded.school.students[0]!.headers,
@@ -376,14 +376,14 @@ describe("paging over HTTP", () => {
         seeded: first,
         assignment: { title },
       });
-      await seedSubmission({ seededAssignment: next });
+      await seedSubmission({ seeded_assignment: next });
     }
     return first;
   }
 
   it("walks every submission once by following starting_after", async () => {
     const seeded = await threeSubmissions();
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
 
     for (const [route, persona] of [
       [listMine, seeded.school.students[0]!],
@@ -412,7 +412,7 @@ describe("paging over HTTP", () => {
 
   it("answers 422 for a starting_after that is not in the list and for limits out of range", async () => {
     const seeded = await seedSubmission();
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
     const headers = seeded.school.students[0]!.headers;
 
     const queries: Record<string, string>[] = [

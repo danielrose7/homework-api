@@ -30,7 +30,7 @@ export interface SubmissionView {
     points_awarded: string | null;
     max_points: string | null;
     percent: string | null;
-    scaleId: string | null;
+    scale_id: string | null;
   } | null;
 }
 
@@ -38,13 +38,13 @@ export interface SubmissionFilters {
   grade?: string;
   assignment?: string;
   student?: string;
-  submittedFrom?: Date;
-  submittedBefore?: Date;
+  submitted_from?: Date;
+  submitted_before?: Date;
   limit?: number;
-  startingAfter?: string;
+  starting_after?: string;
 }
 
 export interface SubmissionPage {
   items: SubmissionView[];
-  hasMore: boolean;
+  has_more: boolean;
 }

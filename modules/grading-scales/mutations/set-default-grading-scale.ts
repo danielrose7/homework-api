@@ -4,11 +4,11 @@ import { notFound } from "@/lib/server/errors";
 
 export async function setDefaultGradingScale(
   ctx: RequestContext,
-  scaleId: string,
+  scale_id: string,
 ): Promise<void> {
   requirePermission(ctx, { grading_scale: ["update"] });
   const scale = await ctx.db.gradingScale.findFirst({
-    where: { id: scaleId, organization_id: ctx.organization_id },
+    where: { id: scale_id, organization_id: ctx.organization_id },
   });
   if (!scale) throw notFound();
   if (scale.is_default) return;
@@ -25,6 +25,6 @@ export async function setDefaultGradingScale(
     action: "update",
     resource_type: "grading_scale",
     resource_id: scale.id,
-    metadata: { changedFields: ["is_default"] },
+    metadata: { changed_fields: ["is_default"] },
   });
 }

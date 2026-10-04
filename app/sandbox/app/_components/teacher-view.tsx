@@ -258,7 +258,7 @@ export function TeacherView({ options }: { options: DemoOptions }) {
         ) : (
           <ResultsTable
             rows={optimisticRows}
-            hasMore={list.hasMore}
+            has_more={list.has_more}
             showStudent
             selectedId={selected?.id}
             pendingIds={

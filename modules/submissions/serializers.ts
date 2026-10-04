@@ -36,7 +36,7 @@ export function toSubmissionView(row: SubmissionRow): SubmissionView {
               points_awarded !== null && max_points !== null
                 ? percentOf(points_awarded, max_points)
                 : null,
-            scaleId: row.grading_scale_id,
+            scale_id: row.grading_scale_id,
           },
   };
 }
@@ -65,11 +65,11 @@ export function serializeSubmission(view: SubmissionView) {
             points_awarded: view.grade.points_awarded,
             max_points: view.grade.max_points,
             percent: view.grade.percent,
-            scale_id: view.grade.scaleId,
+            scale_id: view.grade.scale_id,
           },
   };
 }
 
 export function serializeSubmissionPage(url: string, page: SubmissionPage) {
-  return listJson(url, page.items.map(serializeSubmission), page.hasMore);
+  return listJson(url, page.items.map(serializeSubmission), page.has_more);
 }

@@ -10,11 +10,11 @@ const params = z.object({ submission_id: z.uuid() });
 
 export const listAttachmentsRoute = defineRoute({
   resource: "submission",
-  idParam: "submission_id",
+  id_param: "submission_id",
   handle: async ({ ctx, input }) => {
     const { submission_id } = input.params(params);
     const attachments = await listSubmissionAttachments(ctx, submission_id);
-    const url = `/api/v1/orgs/${ctx.organizationSlug}/submissions/${submission_id}/attachments`;
+    const url = `/api/v1/orgs/${ctx.organization_slug}/submissions/${submission_id}/attachments`;
     return Response.json(listJson(url, attachments.map(serializeAttachment)));
   },
 });

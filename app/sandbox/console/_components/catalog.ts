@@ -35,7 +35,7 @@ export const CATALOG: Array<{ group: string; items: CatalogItem[] }> = [
         key: "submit",
         name: "Submit homework",
         method: "POST",
-        path: `${BASE}/assignments/{assignmentId}/submissions`,
+        path: `${BASE}/assignments/{assignment_id}/submissions`,
         note: "201 with Location. 409 submission_limit_reached on a second try, 422 on blank text, 403 for teachers.",
       },
       {
@@ -71,7 +71,7 @@ export const CATALOG: Array<{ group: string; items: CatalogItem[] }> = [
         key: "grade",
         name: "Grade a submission",
         method: "PUT",
-        path: `${BASE}/submissions/{submissionId}/grade`,
+        path: `${BASE}/submissions/{submission_id}/grade`,
         note: "Send points or band, plus teacher_notes. A regrade needs a reason. Every issue comes back in one 422.",
       },
     ],
@@ -83,14 +83,14 @@ export const CATALOG: Array<{ group: string; items: CatalogItem[] }> = [
         key: "get",
         name: "Get a submission",
         method: "GET",
-        path: `${BASE}/submissions/{submissionId}`,
+        path: `${BASE}/submissions/{submission_id}`,
         note: "Students read their own. A single-record read is written to the activity log.",
       },
       {
         key: "files",
         name: "List attachments",
         method: "GET",
-        path: `${BASE}/submissions/{submissionId}/attachments`,
+        path: `${BASE}/submissions/{submission_id}/attachments`,
         note: "Same access rules as the submission.",
       },
     ],
@@ -143,8 +143,8 @@ const dayFmt = new Intl.DateTimeFormat("en-CA", {
   month: "2-digit",
   day: "2-digit",
 });
-const day = (daysAgo: number) =>
-  dayFmt.format(new Date(Date.now() - daysAgo * 86_400_000));
+const day = (days_ago: number) =>
+  dayFmt.format(new Date(Date.now() - days_ago * 86_400_000));
 
 const points = (s: Submission | undefined, fraction: number) =>
   String(Math.round(Number(s?.max_points ?? 0) * fraction));

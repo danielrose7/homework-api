@@ -115,7 +115,7 @@ export function StudentView({ options }: { options: DemoOptions }) {
         ) : (
           <ResultsTable
             rows={optimisticRows}
-            hasMore={list.hasMore}
+            has_more={list.has_more}
             showStudent={false}
             pendingIds={
               pending

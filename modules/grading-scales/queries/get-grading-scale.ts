@@ -5,10 +5,10 @@ import type { ScaleWithBands } from "@/modules/grading-scales/types";
 
 export async function getGradingScale(
   ctx: RequestContext,
-  scaleId: string,
+  scale_id: string,
 ): Promise<ScaleWithBands> {
   requirePermission(ctx, { grading_scale: ["read"] });
-  const scale = await loadGradingScale(ctx.db, ctx.organization_id, scaleId);
+  const scale = await loadGradingScale(ctx.db, ctx.organization_id, scale_id);
   if (!scale) throw notFound();
   return scale;
 }

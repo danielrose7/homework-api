@@ -33,6 +33,6 @@ export async function listSubmissionAttachments(
   const byId = new Map(blobs.map((blob) => [blob.id, blob]));
   return attachments.flatMap((row) => {
     const blob = byId.get(row.blob_id);
-    return blob ? [{ attachmentId: row.id, name: row.name, ...blob }] : [];
+    return blob ? [{ attachment_id: row.id, name: row.name, ...blob }] : [];
   });
 }

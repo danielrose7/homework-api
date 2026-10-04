@@ -67,7 +67,7 @@ export async function attachBlobToSubmission(
     action: "update",
     resource_type: "submission",
     resource_id: submission.id,
-    metadata: { changedFields: ["attachments"], attachmentId: attachment.id },
+    metadata: { changed_fields: ["attachments"], attachment_id: attachment.id },
   });
   return { id: attachment.id, blob_id: blob.id, name };
 }

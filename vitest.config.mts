@@ -15,7 +15,7 @@ export default defineConfig({
     fileParallelism: false,
     env: {
       DATABASE_URL: testEnv.appUrl,
-      MIGRATION_DATABASE_URL: testEnv.ownerUrl,
+      MIGRATION_DATABASE_URL: testEnv.owner_url,
       BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-1234",
       BETTER_AUTH_URL: "http://localhost:3000",
     },

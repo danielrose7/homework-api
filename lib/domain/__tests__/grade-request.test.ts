@@ -7,21 +7,21 @@ const withIds = (bands: readonly BandInput[]): Band[] =>
   bands.map((band, index) => ({ ...band, id: `b${index}`, sort_order: index }));
 
 const standard = withIds(STANDARD_AF);
-const passFail = withIds(PASS_FAIL);
+const pass_fail = withIds(PASS_FAIL);
 
 const pointsContext = (
   overrides: Partial<GradeContext> = {},
 ): GradeContext => ({
   assignment: { grading_mode: "points", max_points: "50" },
   bands: standard,
-  currentBand: null,
+  current_band: null,
   ...overrides,
 });
 
 const bandContext = (overrides: Partial<GradeContext> = {}): GradeContext => ({
   assignment: { grading_mode: "band", max_points: null },
-  bands: passFail,
-  currentBand: null,
+  bands: pass_fail,
+  current_band: null,
   ...overrides,
 });
 
@@ -107,7 +107,7 @@ describe("regrades", () => {
     standard.find((b) => b.label === label) ?? null;
 
   it("need a reason once a real grade exists", () => {
-    const context = pointsContext({ currentBand: graded("B") });
+    const context = pointsContext({ current_band: graded("B") });
     expect(codes(validateGradeRequest({ points: "10" }, context))).toEqual([
       "reason_required",
     ]);
@@ -120,7 +120,7 @@ describe("regrades", () => {
   });
 
   it("do not need a reason when replacing an Incomplete", () => {
-    const context = pointsContext({ currentBand: graded("Incomplete") });
+    const context = pointsContext({ current_band: graded("Incomplete") });
     expect(validateGradeRequest({ points: "40" }, context)).toEqual([]);
   });
 
@@ -137,7 +137,7 @@ describe("text limits", () => {
         teacher_notes: "x".repeat(5001),
         reason: "y".repeat(1001),
       },
-      pointsContext({ currentBand: standard[0] ?? null }),
+      pointsContext({ current_band: standard[0] ?? null }),
     );
     expect(codes(issues)).toEqual(["too_long", "too_long"]);
   });
@@ -145,7 +145,7 @@ describe("text limits", () => {
   it("report everything at once", () => {
     const issues = validateGradeRequest(
       { points: "999", teacher_notes: "x".repeat(5001) },
-      pointsContext({ currentBand: standard[1] ?? null }),
+      pointsContext({ current_band: standard[1] ?? null }),
     );
     expect(codes(issues).sort()).toEqual(
       ["exceeds_max_points", "reason_required", "too_long"].sort(),

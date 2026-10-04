@@ -44,6 +44,6 @@ export default async function setup() {
   await ensureDatabase();
   execFileSync("pnpm", ["exec", "prisma", "migrate", "deploy"], {
     stdio: "inherit",
-    env: { ...process.env, MIGRATION_DATABASE_URL: testEnv.ownerUrl },
+    env: { ...process.env, MIGRATION_DATABASE_URL: testEnv.owner_url },
   });
 }

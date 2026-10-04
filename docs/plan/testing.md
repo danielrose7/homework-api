@@ -60,7 +60,7 @@ Route handlers are `defineRoute` definitions, so a test runs one through the rea
 
 - `callRoute(route, params, { method, headers, query, json, raw, form })` in `test/http.ts` builds a real `Request`,
   runs it through `createServe` with the rolled-back client, and returns the `Response`. Path parameters are passed
-  in `params` (`orgSlug` plus any ids).
+  in `params` (`org_slug` plus any ids).
 - Personas from `seedSchool`, `seedClass`, `seedAssignment` and `seedSubmission` already carry a signed-in Bearer
   `headers`, so a route test is a few lines.
 - `test/brief.test.ts` follows the assignment brief through the routes only: students submit and filter, teachers

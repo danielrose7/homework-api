@@ -84,7 +84,7 @@ async function resolveFor(headers: Headers, slug: string) {
     auth: factoryAuth(),
     db: testDb(),
     headers,
-    organizationSlug: slug,
+    organization_slug: slug,
   }).then(
     () => undefined,
     (error: unknown) => error,

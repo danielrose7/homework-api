@@ -6,7 +6,7 @@ const Null = () => <span className="text-muted-foreground italic">null</span>;
 
 export function ResultsTable({
   rows,
-  hasMore,
+  has_more,
   showStudent,
   selectedId,
   pendingIds,
@@ -14,7 +14,7 @@ export function ResultsTable({
   onMore,
 }: {
   rows: Submission[];
-  hasMore: boolean;
+  has_more: boolean;
   showStudent: boolean;
   selectedId?: string | null;
   pendingIds?: Set<string>;
@@ -86,8 +86,8 @@ export function ResultsTable({
         </table>
       </div>
       <div className="text-muted-foreground flex items-center gap-3 border-t px-3.5 py-2">
-        {rows.length} shown · has_more: {String(hasMore)}
-        {hasMore && (
+        {rows.length} shown · has_more: {String(has_more)}
+        {has_more && (
           <button
             type="button"
             className="border-input rounded border px-2 text-[11.5px]"

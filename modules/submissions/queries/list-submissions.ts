@@ -50,10 +50,10 @@ export async function listSubmissions(
   ctx: RequestContext,
   scope: Prisma.AssignmentSubmissionWhereInput,
   filters: SubmissionFilters,
-  earlierIssues: ValidationIssue[] = [],
+  earlier_issues: ValidationIssue[] = [],
 ): Promise<SubmissionPage> {
   const issues = [
-    ...earlierIssues,
+    ...earlier_issues,
     ...(await gradeFilterIssue(ctx.db, ctx.organization_id, filters.grade)),
   ];
   const limit = filters.limit ?? DEFAULT_PAGE_SIZE;
@@ -67,19 +67,19 @@ export async function listSubmissions(
     );
   }
   const after =
-    filters.startingAfter === undefined
+    filters.starting_after === undefined
       ? null
       : await ctx.db.assignmentSubmission.findFirst({
           where: {
             AND: [
               { organization_id: ctx.organization_id },
               scope,
-              { id: filters.startingAfter },
+              { id: filters.starting_after },
             ],
           },
           select: { id: true, submitted_at: true },
         });
-  if (filters.startingAfter !== undefined && after === null) {
+  if (filters.starting_after !== undefined && after === null) {
     issues.push(
       issue(
         "starting_after",
@@ -127,12 +127,12 @@ export async function listSubmissions(
                 },
               },
             },
-        filters.submittedFrom === undefined
+        filters.submitted_from === undefined
           ? {}
-          : { submitted_at: { gte: filters.submittedFrom } },
-        filters.submittedBefore === undefined
+          : { submitted_at: { gte: filters.submitted_from } },
+        filters.submitted_before === undefined
           ? {}
-          : { submitted_at: { lt: filters.submittedBefore } },
+          : { submitted_at: { lt: filters.submitted_before } },
         after === null
           ? {}
           : {
@@ -150,6 +150,6 @@ export async function listSubmissions(
 
   return {
     items: rows.slice(0, limit).map(toSubmissionView),
-    hasMore: rows.length > limit,
+    has_more: rows.length > limit,
   };
 }

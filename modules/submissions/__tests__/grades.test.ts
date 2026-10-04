@@ -259,19 +259,19 @@ describe("regrading", () => {
       reason: "Checking scale",
     });
     expect(second.grade.label).toBe("A");
-    expect(second.grade.scaleId).toBe(first.grade.scaleId);
+    expect(second.grade.scale_id).toBe(first.grade.scale_id);
   });
 });
 
 describe("scale overrides and pass/fail", () => {
   it("uses an assignment's own scale: pass at 60%", async () => {
     const seeded = await seedAssignment();
-    const passFail = await gradingScaleFactory
+    const pass_fail = await gradingScaleFactory
       .passFail()
       .create({ organization_id: seeded.school.organization.id });
     const assignment = await assignmentFactory.create({
       class_id: seeded.klass.id,
-      grading_scale_id: passFail.id,
+      grading_scale_id: pass_fail.id,
     });
     const submission = await submissionFactory.create({
       assignment_id: assignment.id,
@@ -282,17 +282,20 @@ describe("scale overrides and pass/fail", () => {
     const result = await gradeSubmission(teacher, submission.id, {
       points: "60",
     });
-    expect(result.grade).toMatchObject({ label: "Pass", scaleId: passFail.id });
+    expect(result.grade).toMatchObject({
+      label: "Pass",
+      scale_id: pass_fail.id,
+    });
   });
 
   it("grades band-mode work by choosing a result, with no points", async () => {
     const seeded = await seedAssignment();
-    const passFail = await gradingScaleFactory
+    const pass_fail = await gradingScaleFactory
       .passFail()
       .create({ organization_id: seeded.school.organization.id });
     const assignment = await assignmentFactory.passFail().create({
       class_id: seeded.klass.id,
-      grading_scale_id: passFail.id,
+      grading_scale_id: pass_fail.id,
     });
     const submission = await submissionFactory.create({
       assignment_id: assignment.id,

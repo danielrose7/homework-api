@@ -236,14 +236,14 @@ describe("listOwnSubmissions", () => {
       assignment: { title: "Reading log", max_submissions: 3 },
     });
     await seedSubmission({
-      seededAssignment: other,
+      seeded_assignment: other,
       grade: { band: "Incomplete" },
     });
     const third = await seedAssignment({
       seeded,
       assignment: { title: "Fractions quiz" },
     });
-    await seedSubmission({ seededAssignment: third });
+    await seedSubmission({ seeded_assignment: third });
     return seeded;
   }
 
@@ -271,7 +271,7 @@ describe("listOwnSubmissions", () => {
       "Reading log",
       "Fractions worksheet",
     ]);
-    expect(page.hasMore).toBe(false);
+    expect(page.has_more).toBe(false);
     const graded = page.items[2]!;
     expect(graded.grade).toMatchObject({
       label: "A",
@@ -315,7 +315,7 @@ describe("listOwnSubmissions", () => {
       listOwnSubmissions(ctx, {
         grade: "Z",
         limit: 0,
-        startingAfter: crypto.randomUUID(),
+        starting_after: crypto.randomUUID(),
       }),
     );
 
@@ -334,13 +334,13 @@ describe("listOwnSubmissions", () => {
     const first = await listOwnSubmissions(ctx, { limit: 2 });
     const second = await listOwnSubmissions(ctx, {
       limit: 2,
-      startingAfter: first.items.at(-1)!.id,
+      starting_after: first.items.at(-1)!.id,
     });
 
     expect(first.items).toHaveLength(2);
-    expect(first.hasMore).toBe(true);
+    expect(first.has_more).toBe(true);
     expect(second.items).toHaveLength(1);
-    expect(second.hasMore).toBe(false);
+    expect(second.has_more).toBe(false);
     expect(
       new Set([...first.items, ...second.items].map((s) => s.id)).size,
     ).toBe(3);
@@ -373,7 +373,7 @@ describe("listSubmissionsOverview", () => {
       },
       data: { deleted_at: new Date() },
     });
-    const poems = await seedSubmission({ seededAssignment: second });
+    const poems = await seedSubmission({ seeded_assignment: second });
     return { first, second, poems };
   }
 
@@ -447,7 +447,7 @@ describe("listSubmissionsOverview", () => {
           seeded,
           assignment: { title: `Extra ${index}` },
         });
-        const made = await seedSubmission({ seededAssignment: next });
+        const made = await seedSubmission({ seeded_assignment: next });
         rows.push(made.submission.id);
       }
       for (const [index, id] of rows.entries()) {

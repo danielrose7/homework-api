@@ -9,7 +9,7 @@ import type {
 
 export interface OverviewFilters extends Omit<
   SubmissionFilters,
-  "submittedFrom" | "submittedBefore"
+  "submitted_from" | "submitted_before"
 > {
   from?: string;
   to?: string;
@@ -64,9 +64,9 @@ export async function listSubmissionsOverview(
       assignment: filters.assignment,
       student: filters.student,
       limit: filters.limit,
-      startingAfter: filters.startingAfter,
-      ...(range.from ? { submittedFrom: range.from } : {}),
-      ...(range.before ? { submittedBefore: range.before } : {}),
+      starting_after: filters.starting_after,
+      ...(range.from ? { submitted_from: range.from } : {}),
+      ...(range.before ? { submitted_before: range.before } : {}),
     },
     validateOverviewFilters(filters),
   );

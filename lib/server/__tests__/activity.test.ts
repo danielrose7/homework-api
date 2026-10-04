@@ -20,7 +20,7 @@ describe("recordActivity", () => {
       resource_id,
       metadata: {
         assignment_id: resource_id,
-        changedFields: ["teacher_notes"],
+        changed_fields: ["teacher_notes"],
       },
     });
 
@@ -67,7 +67,7 @@ describe("recordActivity", () => {
       auth: factoryAuth(),
       db: testDb(),
       headers,
-      organizationSlug: school.organization.slug,
+      organization_slug: school.organization.slug,
     });
     await recordActivity(testDb(), ctx, {
       action: "read",

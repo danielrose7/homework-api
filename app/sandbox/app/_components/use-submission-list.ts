@@ -12,7 +12,7 @@ import { useSession } from "@/app/sandbox/_lib/session";
 
 export interface ListState {
   rows: Submission[];
-  hasMore: boolean;
+  has_more: boolean;
   error: { status: number; body: unknown } | null;
 }
 
@@ -30,7 +30,7 @@ export function useSubmissionList(
   const { active } = useSession();
   const [state, setState] = useState<ListState>({
     rows: [],
-    hasMore: false,
+    has_more: false,
     error: null,
   });
   const latest = useRef(0);
@@ -59,7 +59,7 @@ export function useSubmissionList(
       const page = exchange.json as ListResponse<Submission>;
       setState((current) => ({
         rows: more ? [...current.rows, ...page.data] : page.data,
-        hasMore: page.has_more,
+        has_more: page.has_more,
         error: null,
       }));
     },

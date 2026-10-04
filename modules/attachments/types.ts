@@ -13,6 +13,6 @@ export interface AttachInput {
 }
 
 export interface AttachmentSummary extends BlobSummary {
-  attachmentId: string;
+  attachment_id: string;
   name: string;
 }

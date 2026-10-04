@@ -227,16 +227,16 @@ describe("downloadAttachment", () => {
       submission_id: ctx.id,
       blob_id: blob.id,
     });
-    return { ...ctx, blob, attachmentId: attachment.id };
+    return { ...ctx, blob, attachment_id: attachment.id };
   }
 
   it("returns the bytes to the owner, the class teacher and an administrator", async () => {
-    const { seeded, student, attachmentId, id } = await withAttachment();
+    const { seeded, student, attachment_id, id } = await withAttachment();
     const teacher = await seeded.school.teachers[0]!.context();
     const admin = await seeded.school.admin.context();
 
     for (const ctx of [student, teacher, admin]) {
-      const result = await downloadAttachment(ctx, id, attachmentId);
+      const result = await downloadAttachment(ctx, id, attachment_id);
       expect(Buffer.from(result.bytes).toString()).toBe("the real bytes");
       expect(result).toMatchObject({
         filename: "essay.txt",
@@ -246,56 +246,56 @@ describe("downloadAttachment", () => {
   });
 
   it("logs each read with ids only", async () => {
-    const { student, attachmentId, id } = await withAttachment();
-    await downloadAttachment(student, id, attachmentId);
+    const { student, attachment_id, id } = await withAttachment();
+    await downloadAttachment(student, id, attachment_id);
 
     const log = await testDb().activityLog.findFirstOrThrow({
       where: { action: "read", resource_type: "attachment" },
     });
     expect(log).toMatchObject({
-      resource_id: attachmentId,
+      resource_id: attachment_id,
       actor_role: "student",
     });
     expect(log.metadata).toEqual({ submission_id: id });
   });
 
   it("hides the file from a classmate and from another school", async () => {
-    const { seeded, attachmentId, id } = await withAttachment();
+    const { seeded, attachment_id, id } = await withAttachment();
     const classmate = await seeded.school.students[1]!.context();
     expect(
-      (await failure(downloadAttachment(classmate, id, attachmentId))).status,
+      (await failure(downloadAttachment(classmate, id, attachment_id))).status,
     ).toBe(STATUS.not_found);
 
     const other = await seedClass();
     const foreignTeacher = await other.school.teachers[0]!.context();
     expect(
-      (await failure(downloadAttachment(foreignTeacher, id, attachmentId)))
+      (await failure(downloadAttachment(foreignTeacher, id, attachment_id)))
         .status,
     ).toBe(STATUS.not_found);
   });
 
   it("does not serve an attachment under a different submission", async () => {
-    const { seeded, student, attachmentId } = await withAttachment();
+    const { seeded, student, attachment_id } = await withAttachment();
     const second = await seedAssignment({ seeded });
-    const other = await seedSubmission({ seededAssignment: second });
+    const other = await seedSubmission({ seeded_assignment: second });
 
     expect(
       (
         await failure(
-          downloadAttachment(student, other.submission.id, attachmentId),
+          downloadAttachment(student, other.submission.id, attachment_id),
         )
       ).status,
     ).toBe(STATUS.not_found);
   });
 
   it("does not serve a detached file", async () => {
-    const { student, attachmentId, id } = await withAttachment();
+    const { student, attachment_id, id } = await withAttachment();
     await testDb().storageAttachment.update({
-      where: { id: attachmentId },
+      where: { id: attachment_id },
       data: { deleted_at: new Date(), deletion_reason: "Wrong file" },
     });
     expect(
-      (await failure(downloadAttachment(student, id, attachmentId))).status,
+      (await failure(downloadAttachment(student, id, attachment_id))).status,
     ).toBe(STATUS.not_found);
   });
 });

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
-import { submitRoute as submit } from "@/app/api/v1/orgs/[orgSlug]/assignments/[assignmentId]/submissions/route";
-import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/grade/route";
-import { listOwnRoute as listMine } from "@/app/api/v1/orgs/[orgSlug]/submissions/me/route";
-import { listSubmissionsRoute as listAll } from "@/app/api/v1/orgs/[orgSlug]/submissions/route";
+import { submitRoute as submit } from "@/app/api/v1/orgs/[org_slug]/assignments/[assignment_id]/submissions/route";
+import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/grade/route";
+import { listOwnRoute as listMine } from "@/app/api/v1/orgs/[org_slug]/submissions/me/route";
+import { listSubmissionsRoute as listAll } from "@/app/api/v1/orgs/[org_slug]/submissions/route";
 import { callRoute } from "@/test/http";
 import { seedAssignment } from "@/test/scenarios/class";
 import { testDb, withRollbackDb } from "@/test/rollback-db";
@@ -22,7 +22,7 @@ async function classroom() {
     students: 2,
     assignment: { title: "Warm-up", max_points: "100" },
   });
-  const orgSlug = base.school.organization.slug;
+  const org_slug = base.school.organization.slug;
   const [maya, sam] = base.school.students;
   const teacher = base.school.teachers[0]!;
 
@@ -47,7 +47,7 @@ async function classroom() {
     });
     const submitted = await callRoute(
       submit,
-      { orgSlug, assignment_id: assignment.id },
+      { org_slug, assignment_id: assignment.id },
       { headers: who!.headers, json: { text: `${title} answer` } },
     );
     expect(submitted.status).toBe(STATUS.created);
@@ -56,7 +56,7 @@ async function classroom() {
     if (result) {
       const graded = await callRoute(
         grade,
-        { orgSlug, submission_id: id as string },
+        { org_slug, submission_id: id as string },
         {
           method: "PUT",
           headers: teacher.headers,
@@ -73,14 +73,14 @@ async function classroom() {
     headers: Headers,
     query: Record<string, string> = {},
   ) => {
-    const response = await callRoute(route, { orgSlug }, { headers, query });
+    const response = await callRoute(route, { org_slug }, { headers, query });
     expect(response.status).toBe(STATUS.ok);
     return ((await json(response)).data as Json[]).map(
       (row) => (row.assignment as Json).title,
     );
   };
 
-  return { base, orgSlug, maya: maya!, sam: sam!, teacher, turnIn, titles };
+  return { base, org_slug, maya: maya!, sam: sam!, teacher, turnIn, titles };
 }
 
 describe("brief: students", () => {
@@ -183,12 +183,12 @@ describe("brief: teachers", () => {
   });
 
   it("grade a submission with a letter and comments that the student then sees", async () => {
-    const { maya, teacher, turnIn, orgSlug } = await classroom();
+    const { maya, teacher, turnIn, org_slug } = await classroom();
     const { id } = await turnIn(maya, "Fractions");
 
     const graded = await callRoute(
       grade,
-      { orgSlug, submission_id: id },
+      { org_slug, submission_id: id },
       {
         method: "PUT",
         headers: teacher.headers,
@@ -199,7 +199,7 @@ describe("brief: teachers", () => {
 
     const mine = await callRoute(
       listMine,
-      { orgSlug },
+      { org_slug },
       { headers: maya.headers },
     );
     const [row] = (await json(mine)).data as Json[];

@@ -5,10 +5,10 @@ import type { ScaleWithBands } from "@/modules/grading-scales/types";
 export async function loadGradingScale(
   db: DbClient,
   organization_id: string,
-  scaleId: string,
+  scale_id: string,
 ): Promise<ScaleWithBands | null> {
   const scale = await db.gradingScale.findFirst({
-    where: { id: scaleId, organization_id },
+    where: { id: scale_id, organization_id },
     include: {
       bands: { where: { deleted_at: null }, orderBy: { sort_order: "asc" } },
     },

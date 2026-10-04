@@ -72,7 +72,7 @@ export async function submitAssignment(
       const eligibility = submissionEligibility({
         assignment,
         seat,
-        attemptsSoFar: await tx.assignmentSubmission.count({
+        attempts_so_far: await tx.assignmentSubmission.count({
           where: {
             organization_id: ctx.organization_id,
             assignment_id: assignment.id,
@@ -106,7 +106,7 @@ export async function submitAssignment(
         metadata: {
           assignment_id: assignment.id,
           attempt_number: created.attempt_number,
-          attachmentCount: input.files.length,
+          attachment_count: input.files.length,
         },
       });
 

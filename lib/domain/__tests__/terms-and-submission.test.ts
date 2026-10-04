@@ -107,7 +107,7 @@ describe("submissionEligibility", () => {
 
   it("allows the first attempt", () => {
     expect(
-      submissionEligibility({ assignment, seat, attemptsSoFar: 0 }),
+      submissionEligibility({ assignment, seat, attempts_so_far: 0 }),
     ).toEqual({
       ok: true,
       attempt_number: 1,
@@ -116,7 +116,7 @@ describe("submissionEligibility", () => {
 
   it("blocks over-submission with a conflict by default", () => {
     expect(
-      submissionEligibility({ assignment, seat, attemptsSoFar: 1 }),
+      submissionEligibility({ assignment, seat, attempts_so_far: 1 }),
     ).toEqual({
       ok: false,
       status: STATUS.conflict,
@@ -129,7 +129,7 @@ describe("submissionEligibility", () => {
       submissionEligibility({
         assignment: { ...assignment, max_submissions: 3 },
         seat,
-        attemptsSoFar: 2,
+        attempts_so_far: 2,
       }),
     ).toEqual({ ok: true, attempt_number: 3 });
   });
@@ -140,7 +140,7 @@ describe("submissionEligibility", () => {
       { ...assignment, deleted_at: new Date() },
     ]) {
       expect(
-        submissionEligibility({ assignment: hidden, seat, attemptsSoFar: 0 }),
+        submissionEligibility({ assignment: hidden, seat, attempts_so_far: 0 }),
       ).toMatchObject({
         ok: false,
         status: STATUS.not_found,
@@ -154,7 +154,7 @@ describe("submissionEligibility", () => {
       { status: "active" as const, deleted_at: new Date() },
     ]) {
       expect(
-        submissionEligibility({ assignment, seat: bad, attemptsSoFar: 0 }),
+        submissionEligibility({ assignment, seat: bad, attempts_so_far: 0 }),
       ).toMatchObject({
         ok: false,
         status: STATUS.forbidden,
@@ -167,7 +167,7 @@ describe("submissionEligibility", () => {
       submissionEligibility({
         assignment: { ...assignment, published_at: published },
         seat,
-        attemptsSoFar: 0,
+        attempts_so_far: 0,
       }).ok,
     ).toBe(true);
   });

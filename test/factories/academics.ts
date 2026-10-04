@@ -613,8 +613,8 @@ async function gradeDirectly(
 
   const scale = await resolveGradingScale(db, {
     organization_id: assignment.organization_id,
-    assignmentScaleId: assignment.grading_scale_id,
-    classScaleId: klass.grading_scale_id,
+    assignment_scale_id: assignment.grading_scale_id,
+    class_scale_id: klass.grading_scale_id,
   });
   const max_points = assignment.max_points?.toString() ?? null;
   const band =
@@ -629,7 +629,7 @@ async function gradeDirectly(
     submission_id,
     graded_by_id: graderId,
     now: new Date(),
-    scaleId: scale.id,
+    scale_id: scale.id,
     band,
     points_awarded: grade.points ?? null,
     max_points,

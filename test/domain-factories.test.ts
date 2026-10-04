@@ -54,8 +54,8 @@ describe("assignment factory traits", () => {
     const create = (factory: typeof assignmentFactory) =>
       factory.create({ class_id: klass.id });
 
-    const passFail = await create(assignmentFactory.passFail());
-    expect(passFail).toMatchObject({ grading_mode: "band", max_points: null });
+    const pass_fail = await create(assignmentFactory.passFail());
+    expect(pass_fail).toMatchObject({ grading_mode: "band", max_points: null });
 
     expect((await create(assignmentFactory.draft())).published_at).toBeNull();
     const pastDue = await create(assignmentFactory.pastDue());

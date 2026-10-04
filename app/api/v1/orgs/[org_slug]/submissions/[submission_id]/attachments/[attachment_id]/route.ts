@@ -7,7 +7,7 @@ import { downloadAttachment } from "@/modules/attachments/queries/download-attac
 
 const params = z.object({
   submission_id: z.uuid(),
-  attachmentId: z.uuid(),
+  attachment_id: z.uuid(),
 });
 
 // Keep an ASCII fallback for old clients and the exact name for RFC 5987 clients.
@@ -22,10 +22,10 @@ function contentDisposition(filename: string): string {
 
 export const downloadAttachmentRoute = defineRoute({
   resource: "attachment",
-  idParam: "attachmentId",
+  id_param: "attachment_id",
   handle: async ({ ctx, input }) => {
-    const { submission_id, attachmentId } = input.params(params);
-    const file = await downloadAttachment(ctx, submission_id, attachmentId);
+    const { submission_id, attachment_id } = input.params(params);
+    const file = await downloadAttachment(ctx, submission_id, attachment_id);
 
     return new Response(new Uint8Array(file.bytes), {
       status: STATUS.ok,

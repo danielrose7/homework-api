@@ -11,7 +11,7 @@ export interface RequestContext {
   db: DbClient;
   request_id: string;
   organization_id: string;
-  organizationSlug: string;
+  organization_slug: string;
   userId: string;
   member_id: string;
   role: RoleName;
@@ -33,16 +33,16 @@ export async function resolveContext(params: {
   auth: Auth;
   db: DbClient;
   headers: Headers;
-  organizationSlug: string;
+  organization_slug: string;
   request_id?: string;
 }): Promise<RequestContext> {
-  const { auth, db, headers, organizationSlug } = params;
+  const { auth, db, headers, organization_slug } = params;
 
   const session = await auth.api.getSession({ headers });
   if (!session) throw unauthenticated();
 
   const organization = await db.organization.findUnique({
-    where: { slug: organizationSlug },
+    where: { slug: organization_slug },
   });
   if (!organization) throw notFound();
 
@@ -61,7 +61,7 @@ export async function resolveContext(params: {
     db,
     request_id: params.request_id ?? crypto.randomUUID(),
     organization_id: organization.id,
-    organizationSlug: organization.slug,
+    organization_slug: organization.slug,
     userId: session.user.id,
     member_id: member.id,
     role: member.role,

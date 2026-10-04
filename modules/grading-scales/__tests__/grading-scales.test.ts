@@ -174,12 +174,12 @@ describe("setDefaultGradingScale", () => {
   it("switches the default and keeps exactly one", async () => {
     const school = await seedSchool();
     const ctx = await school.admin.context();
-    const passFail = await createGradingScale(ctx, {
+    const pass_fail = await createGradingScale(ctx, {
       name: "Pass/Fail",
       bands: [...PASS_FAIL],
     });
 
-    await setDefaultGradingScale(ctx, passFail.id);
+    await setDefaultGradingScale(ctx, pass_fail.id);
 
     const scales = await listGradingScales(ctx);
     expect(scales.filter((s) => s.is_default)).toHaveLength(1);
@@ -218,7 +218,7 @@ describe("resolveGradingScale", () => {
   it("prefers the assignment's scale, then the class's, then the school default", async () => {
     const school = await seedSchool();
     const ctx = await school.admin.context();
-    const schoolDefault = (await listGradingScales(ctx))[0]!;
+    const school_default = (await listGradingScales(ctx))[0]!;
     const classScale = await createGradingScale(ctx, {
       name: "Plus/minus",
       bands: [...PLUS_MINUS],
@@ -230,19 +230,19 @@ describe("resolveGradingScale", () => {
     const organization_id = ctx.organization_id;
 
     const resolve = (
-      assignmentScaleId: string | null,
-      classScaleId: string | null,
+      assignment_scale_id: string | null,
+      class_scale_id: string | null,
     ) =>
       resolveGradingScale(testDb(), {
         organization_id,
-        assignmentScaleId,
-        classScaleId,
+        assignment_scale_id,
+        class_scale_id,
       });
 
     expect((await resolve(assignmentScale.id, classScale.id)).id).toBe(
       assignmentScale.id,
     );
     expect((await resolve(null, classScale.id)).id).toBe(classScale.id);
-    expect((await resolve(null, null)).id).toBe(schoolDefault.id);
+    expect((await resolve(null, null)).id).toBe(school_default.id);
   });
 });

@@ -5,10 +5,10 @@ import { resetDemoData } from "@/modules/demo/mutations/reset-demo";
 
 export async function POST() {
   if (!demoModeEnabled()) return demoDisabledResponse();
-  const ownerUrl = process.env.MIGRATION_DATABASE_URL;
-  if (!ownerUrl) throw new Error("MIGRATION_DATABASE_URL is not set");
+  const owner_url = process.env.MIGRATION_DATABASE_URL;
+  if (!owner_url) throw new Error("MIGRATION_DATABASE_URL is not set");
 
-  const summary = await resetDemoData({ db: prisma, auth, ownerUrl });
+  const summary = await resetDemoData({ db: prisma, auth, owner_url });
   return Response.json({
     object: "reset",
     school: summary.slug,

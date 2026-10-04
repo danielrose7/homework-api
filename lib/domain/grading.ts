@@ -169,9 +169,9 @@ export function validateScale(bands: readonly BandInput[]): ValidationIssue[] {
 export function resolveScaleId(ids: {
   assignment: string | null;
   class: string | null;
-  schoolDefault: string;
+  school_default: string;
 }): string {
-  return ids.assignment ?? ids.class ?? ids.schoolDefault;
+  return ids.assignment ?? ids.class ?? ids.school_default;
 }
 
 /** `B` matches B+, B and B-; `B+` matches only B+. */

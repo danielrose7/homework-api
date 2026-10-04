@@ -25,8 +25,8 @@ function withIds(bands: readonly BandInput[]): Band[] {
 }
 
 const standard = withIds(STANDARD_AF);
-const plusMinus = withIds(PLUS_MINUS);
-const passFail = withIds(PASS_FAIL);
+const plus_minus = withIds(PLUS_MINUS);
+const pass_fail = withIds(PASS_FAIL);
 
 const labelFor = (
   bands: Band[],
@@ -121,15 +121,15 @@ describe("lookupBand on a plus/minus scale", () => {
     [60, "D-"],
     ["59.99", "F"],
   ])("%s out of 100 is %s", (points, expected) => {
-    expect(labelFor(plusMinus, points, 100)).toBe(expected);
+    expect(labelFor(plus_minus, points, 100)).toBe(expected);
   });
 });
 
 describe("lookupBand on a pass/fail scale", () => {
   it("passes at 60% and fails below", () => {
-    expect(labelFor(passFail, 60, 100)).toBe("Pass");
-    expect(labelFor(passFail, "59.99", 100)).toBe("Fail");
-    expect(labelFor(passFail, 0, 100)).toBe("Fail");
+    expect(labelFor(pass_fail, 60, 100)).toBe("Pass");
+    expect(labelFor(pass_fail, "59.99", 100)).toBe("Fail");
+    expect(labelFor(pass_fail, 0, 100)).toBe("Fail");
   });
 });
 
@@ -227,13 +227,13 @@ describe("validateScale", () => {
 describe("resolveScaleId", () => {
   it("prefers assignment, then class, then the school default", () => {
     expect(
-      resolveScaleId({ assignment: "a", class: "c", schoolDefault: "d" }),
+      resolveScaleId({ assignment: "a", class: "c", school_default: "d" }),
     ).toBe("a");
     expect(
-      resolveScaleId({ assignment: null, class: "c", schoolDefault: "d" }),
+      resolveScaleId({ assignment: null, class: "c", school_default: "d" }),
     ).toBe("c");
     expect(
-      resolveScaleId({ assignment: null, class: null, schoolDefault: "d" }),
+      resolveScaleId({ assignment: null, class: null, school_default: "d" }),
     ).toBe("d");
   });
 });

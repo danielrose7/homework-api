@@ -44,7 +44,7 @@ async function persona(member: MemberRecord): Promise<Persona> {
         auth,
         db: factoryDb(),
         headers,
-        organizationSlug: member.organization.slug,
+        organization_slug: member.organization.slug,
       }),
   };
 }

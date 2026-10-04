@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { downloadAttachmentRoute as download } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/attachments/[attachmentId]/route";
-import { listAttachmentsRoute as list } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/attachments/route";
+import { downloadAttachmentRoute as download } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/attachments/[attachment_id]/route";
+import { listAttachmentsRoute as list } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/attachments/route";
 import { STATUS } from "@/lib/http-status";
 import { submitAssignment } from "@/modules/submissions/mutations/submit-assignment";
 import { callRoute } from "@/test/http";
@@ -26,15 +26,15 @@ async function submittedWithFile(filename = "essay.txt") {
   );
   return {
     seeded,
-    orgSlug: seeded.school.organization.slug,
+    org_slug: seeded.school.organization.slug,
     submission_id: submission.id,
-    attachmentId: attachments[0]!.attachmentId,
+    attachment_id: attachments[0]!.attachment_id,
   };
 }
 
 describe("GET /submissions/{id}/attachments", () => {
   it("lists the files for the owner, the teacher and an administrator", async () => {
-    const { seeded, orgSlug, submission_id, attachmentId } =
+    const { seeded, org_slug, submission_id, attachment_id } =
       await submittedWithFile();
 
     for (const persona of [
@@ -44,17 +44,17 @@ describe("GET /submissions/{id}/attachments", () => {
     ]) {
       const response = await callRoute(
         list,
-        { orgSlug, submission_id },
+        { org_slug, submission_id },
         { headers: persona.headers },
       );
       expect(response.status).toBe(STATUS.ok);
       expect(await response.json()).toEqual({
         object: "list",
-        url: `/api/v1/orgs/${orgSlug}/submissions/${submission_id}/attachments`,
+        url: `/api/v1/orgs/${org_slug}/submissions/${submission_id}/attachments`,
         has_more: false,
         data: [
           {
-            id: attachmentId,
+            id: attachment_id,
             object: "attachment",
             filename: "essay.txt",
             content_type: "text/plain",
@@ -67,25 +67,25 @@ describe("GET /submissions/{id}/attachments", () => {
   });
 
   it("answers 404 to a classmate and 401 without a token", async () => {
-    const { seeded, orgSlug, submission_id } = await submittedWithFile();
+    const { seeded, org_slug, submission_id } = await submittedWithFile();
 
     const classmate = await callRoute(
       list,
-      { orgSlug, submission_id },
+      { org_slug, submission_id },
       { headers: seeded.school.students[1]!.headers },
     );
-    const anonymous = await callRoute(list, { orgSlug, submission_id });
+    const anonymous = await callRoute(list, { org_slug, submission_id });
 
     expect(classmate.status).toBe(STATUS.not_found);
     expect(anonymous.status).toBe(STATUS.unauthorized);
   });
 
   it("answers 422 for an id that is not a uuid", async () => {
-    const { seeded, orgSlug } = await submittedWithFile();
+    const { seeded, org_slug } = await submittedWithFile();
 
     const response = await callRoute(
       list,
-      { orgSlug, submission_id: "nope" },
+      { org_slug, submission_id: "nope" },
       { headers: seeded.school.admin.headers },
     );
 
@@ -93,14 +93,14 @@ describe("GET /submissions/{id}/attachments", () => {
   });
 });
 
-describe("GET /submissions/{id}/attachments/{attachmentId}", () => {
+describe("GET /submissions/{id}/attachments/{attachment_id}", () => {
   it("streams the bytes with safe download headers and logs the read", async () => {
-    const { seeded, orgSlug, submission_id, attachmentId } =
+    const { seeded, org_slug, submission_id, attachment_id } =
       await submittedWithFile();
 
     const response = await callRoute(
       download,
-      { orgSlug, submission_id, attachmentId },
+      { org_slug, submission_id, attachment_id },
       { headers: seeded.school.teachers[0]!.headers },
     );
 
@@ -115,18 +115,18 @@ describe("GET /submissions/{id}/attachments/{attachmentId}", () => {
     );
     expect(
       await testDb().activityLog.count({
-        where: { action: "read", resource_id: attachmentId },
+        where: { action: "read", resource_id: attachment_id },
       }),
     ).toBe(1);
   });
 
   it("keeps odd file names from breaking out of the header", async () => {
-    const { seeded, orgSlug, submission_id, attachmentId } =
+    const { seeded, org_slug, submission_id, attachment_id } =
       await submittedWithFile(`résumé "final"; v2.txt`);
 
     const response = await callRoute(
       download,
-      { orgSlug, submission_id, attachmentId },
+      { org_slug, submission_id, attachment_id },
       { headers: seeded.school.admin.headers },
     );
 
@@ -136,23 +136,23 @@ describe("GET /submissions/{id}/attachments/{attachmentId}", () => {
   });
 
   it("answers 404 to a classmate, for another submission's id, and for a missing file", async () => {
-    const { seeded, orgSlug, submission_id, attachmentId } =
+    const { seeded, org_slug, submission_id, attachment_id } =
       await submittedWithFile();
     const missing = "0198f0f0-0000-7000-8000-000000000000";
 
     const classmate = await callRoute(
       download,
-      { orgSlug, submission_id, attachmentId },
+      { org_slug, submission_id, attachment_id },
       { headers: seeded.school.students[1]!.headers },
     );
     const wrongSubmission = await callRoute(
       download,
-      { orgSlug, submission_id: missing, attachmentId },
+      { org_slug, submission_id: missing, attachment_id },
       { headers: seeded.school.admin.headers },
     );
     const noFile = await callRoute(
       download,
-      { orgSlug, submission_id, attachmentId: missing },
+      { org_slug, submission_id, attachment_id: missing },
       { headers: seeded.school.admin.headers },
     );
 

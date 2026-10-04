@@ -33,7 +33,7 @@ async function toUpload(file: File): Promise<UploadInput> {
 
 export const submitRoute = defineRoute({
   resource: "assignment",
-  idParam: "assignment_id",
+  id_param: "assignment_id",
   handle: async ({ ctx, request, input }) => {
     const { assignment_id } = input.params(params);
     const isMultipart = (request.headers.get("content-type") ?? "").startsWith(
@@ -63,7 +63,7 @@ export const submitRoute = defineRoute({
     }
 
     const result = await submitAssignment(ctx, assignment_id, { text, files });
-    const base = `/api/v1/orgs/${ctx.organizationSlug}`;
+    const base = `/api/v1/orgs/${ctx.organization_slug}`;
     return Response.json(
       {
         ...serializeSubmission(result.submission),

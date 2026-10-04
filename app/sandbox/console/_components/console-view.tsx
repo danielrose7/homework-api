@@ -80,7 +80,7 @@ export function ConsoleView({ options }: { options: DemoOptions }) {
     });
 
   const optionsFor = (name: string): Array<[string, string]> =>
-    name === "assignmentId"
+    name === "assignment_id"
       ? options.assignments.map((a) => [a.id, `${a.title} (${a.class_name})`])
       : options.submissions.map((s) => [s.id, subLabel(s)]);
 
@@ -165,7 +165,7 @@ export function ConsoleView({ options }: { options: DemoOptions }) {
     if (picked) {
       next.vars = {
         ...next.vars,
-        [key === "submit" ? "assignmentId" : "submissionId"]: picked.id,
+        [key === "submit" ? "assignment_id" : "submission_id"]: picked.id,
       };
     }
     patch(next);

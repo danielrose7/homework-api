@@ -90,7 +90,7 @@ export async function seedAssignment(
 }
 
 export interface SeedSubmissionOptions extends SeedAssignmentOptions {
-  seededAssignment?: SeededAssignment;
+  seeded_assignment?: SeededAssignment;
   grade?: { points: string | number } | { band: string };
   notes?: string;
 }
@@ -103,7 +103,7 @@ export interface SeededSubmission extends SeededAssignment {
 export async function seedSubmission(
   options: SeedSubmissionOptions = {},
 ): Promise<SeededSubmission> {
-  const seeded = options.seededAssignment ?? (await seedAssignment(options));
+  const seeded = options.seeded_assignment ?? (await seedAssignment(options));
   const seat = seeded.seats[0];
   if (!seat) throw new Error("seedSubmission needs at least one student");
 

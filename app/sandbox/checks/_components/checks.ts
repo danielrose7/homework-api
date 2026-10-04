@@ -52,13 +52,13 @@ const page = (exchange: Exchange) =>
     ? []
     : ((exchange.json as ListResponse<Submission>).data ?? []);
 
-const day = (daysAgo: number) =>
+const day = (days_ago: number) =>
   new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date(Date.now() - daysAgo * 86_400_000));
+  }).format(new Date(Date.now() - days_ago * 86_400_000));
 
 const errorOf = (exchange: Exchange) =>
   isErrorBody(exchange.json) ? exchange.json.error : null;

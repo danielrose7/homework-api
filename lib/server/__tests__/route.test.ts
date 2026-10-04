@@ -33,13 +33,13 @@ function call(
 ) {
   const { url = "http://localhost/test", ...rest } = init;
   return route(new Request(url, rest), {
-    params: Promise.resolve({ orgSlug: slug }),
+    params: Promise.resolve({ org_slug: slug }),
   });
 }
 
 const whoAmI = () =>
   serveWith(async ({ ctx }) =>
-    Response.json({ role: ctx.role, slug: ctx.organizationSlug }),
+    Response.json({ role: ctx.role, slug: ctx.organization_slug }),
   );
 
 describe("Better Auth over HTTP", () => {

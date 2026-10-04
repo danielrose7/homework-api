@@ -7,14 +7,14 @@ import { storageService } from "@/lib/server/storage";
 export async function downloadAttachment(
   ctx: RequestContext,
   submission_id: string,
-  attachmentId: string,
+  attachment_id: string,
 ) {
   requirePermission(ctx, { submission: ["read"] });
   await loadAccessibleSubmission(ctx, submission_id);
 
   const attachment = await ctx.db.storageAttachment.findFirst({
     where: {
-      id: attachmentId,
+      id: attachment_id,
       organization_id: ctx.organization_id,
       record_type: "assignment_submission",
       record_id: submission_id,

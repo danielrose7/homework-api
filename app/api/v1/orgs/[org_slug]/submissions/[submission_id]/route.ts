@@ -9,7 +9,7 @@ const params = z.object({ submission_id: z.uuid() });
 
 export const getSubmissionRoute = defineRoute({
   resource: "submission",
-  idParam: "submission_id",
+  id_param: "submission_id",
   handle: async ({ ctx, input }) => {
     const { submission_id } = input.params(params);
     const submission = await readSubmission(ctx, submission_id);

@@ -35,7 +35,7 @@ export interface RouteDefinition {
   /** What the route is about, so a denied request is logged against it. */
   resource: ResourceType;
   /** The path parameter holding that resource's id, when the route has one. */
-  idParam?: string;
+  id_param?: string;
   handle: RouteHandler;
 }
 
@@ -111,7 +111,7 @@ async function logDenial(
   definition: RouteDefinition,
   params: RouteParams,
 ) {
-  const id = definition.idParam ? params[definition.idParam] : undefined;
+  const id = definition.id_param ? params[definition.id_param] : undefined;
   try {
     await recordActivity(db, ctx, {
       action: "denied",
@@ -136,14 +136,14 @@ export function createServe({ auth, db }: RouteDeps) {
       let params: RouteParams = {};
       try {
         params = await routeContext.params;
-        const organizationSlug = params.orgSlug;
-        if (typeof organizationSlug !== "string") throw notFound();
+        const organization_slug = params.org_slug;
+        if (typeof organization_slug !== "string") throw notFound();
 
         ctx = await resolveContext({
           auth,
           db,
           headers: request.headers,
-          organizationSlug,
+          organization_slug,
           request_id,
         });
         const response = await definition.handle({

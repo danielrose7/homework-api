@@ -8,14 +8,14 @@ export async function resolveGradingScale(
   db: DbClient,
   params: {
     organization_id: string;
-    assignmentScaleId: string | null;
-    classScaleId: string | null;
+    assignment_scale_id: string | null;
+    class_scale_id: string | null;
   },
 ): Promise<ScaleWithBands> {
-  const schoolDefault = await db.gradingScale.findFirst({
+  const school_default = await db.gradingScale.findFirst({
     where: { organization_id: params.organization_id, is_default: true },
   });
-  if (!schoolDefault) {
+  if (!school_default) {
     throw conflict(
       "no_default_scale",
       "This school has no default grading scale",
@@ -23,9 +23,9 @@ export async function resolveGradingScale(
   }
 
   const id = resolveScaleId({
-    assignment: params.assignmentScaleId,
-    class: params.classScaleId,
-    schoolDefault: schoolDefault.id,
+    assignment: params.assignment_scale_id,
+    class: params.class_scale_id,
+    school_default: school_default.id,
   });
   const scale = await loadGradingScale(db, params.organization_id, id);
   if (!scale) throw notFound();

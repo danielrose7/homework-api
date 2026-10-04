@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
-import { submitRoute as submit } from "@/app/api/v1/orgs/[orgSlug]/assignments/[assignmentId]/submissions/route";
-import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/grade/route";
-import { getSubmissionRoute as getOne } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/route";
-import { listOwnRoute as listMine } from "@/app/api/v1/orgs/[orgSlug]/submissions/me/route";
+import { submitRoute as submit } from "@/app/api/v1/orgs/[org_slug]/assignments/[assignment_id]/submissions/route";
+import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/grade/route";
+import { getSubmissionRoute as getOne } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/route";
+import { listOwnRoute as listMine } from "@/app/api/v1/orgs/[org_slug]/submissions/me/route";
 import { callRoute } from "@/test/http";
 import { seedAssignment, seedSubmission } from "@/test/scenarios/class";
 import { testDb, withRollbackDb } from "@/test/rollback-db";
@@ -22,7 +22,7 @@ describe("denial logging", () => {
     const response = await callRoute(
       grade,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         submission_id: seeded.submission.id,
       },
       { method: "PUT", headers: student.headers, json: { points: 90 } },
@@ -49,7 +49,7 @@ describe("denial logging", () => {
     const response = await callRoute(
       getOne,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         submission_id: seeded.submission.id,
       },
       { headers: classmate.headers },
@@ -76,7 +76,7 @@ describe("denial logging", () => {
     const response = await callRoute(
       getOne,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         submission_id: seeded.submission.id,
       },
       { headers: outsider.headers },
@@ -96,7 +96,7 @@ describe("denial logging", () => {
     const response = await callRoute(
       submit,
       {
-        orgSlug: seeded.school.organization.slug,
+        org_slug: seeded.school.organization.slug,
         assignment_id: seeded.assignment.id,
       },
       { headers: seeded.school.students[0]!.headers, json: { text: "late" } },
@@ -110,7 +110,7 @@ describe("denial logging", () => {
 
   it("does not log a plain 404, a 401, or a request that was allowed", async () => {
     const seeded = await seedSubmission();
-    const params = { orgSlug: seeded.school.organization.slug };
+    const params = { org_slug: seeded.school.organization.slug };
     const missing = "0198f0f0-0000-7000-8000-000000000000";
 
     await callRoute(
@@ -131,7 +131,7 @@ describe("read logging", () => {
   it("logs a single-record read, but not a list or the fetch after a grade", async () => {
     const seeded = await seedSubmission();
     const params = {
-      orgSlug: seeded.school.organization.slug,
+      org_slug: seeded.school.organization.slug,
       submission_id: seeded.submission.id,
     };
     const teacher = seeded.school.teachers[0]!;
@@ -147,7 +147,7 @@ describe("read logging", () => {
     });
     await callRoute(
       listMine,
-      { orgSlug: params.orgSlug },
+      { org_slug: params.org_slug },
       { headers: seeded.school.students[0]!.headers },
     );
     expect(await reads()).toEqual([]);

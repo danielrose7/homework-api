@@ -6,5 +6,5 @@ export const testEnv = {
   adminUrl,
   database: "homework_test",
   appUrl: "postgresql://app_user:app_user@localhost:5433/homework_test",
-  ownerUrl: "postgresql://app_owner:app_owner@localhost:5433/homework_test",
+  owner_url: "postgresql://app_owner:app_owner@localhost:5433/homework_test",
 } as const;

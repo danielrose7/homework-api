@@ -18,7 +18,7 @@ const bodySchema = z.strictObject({
 
 export const gradeSubmissionRoute = defineRoute({
   resource: "submission",
-  idParam: "submission_id",
+  id_param: "submission_id",
   handle: async ({ ctx, input }) => {
     const { submission_id } = input.params(params);
     const body = await input.body(bodySchema);

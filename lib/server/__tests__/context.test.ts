@@ -61,7 +61,7 @@ describe("resolveContext", () => {
       auth,
       db: testDb(),
       headers: adminHeaders,
-      organizationSlug: "sandbox",
+      organization_slug: "sandbox",
     });
     expect(ctx.organization_id).toBe(schoolId);
     expect(ctx.role).toBe("administrator");
@@ -73,7 +73,7 @@ describe("resolveContext", () => {
         auth,
         db: testDb(),
         headers: new Headers(),
-        organizationSlug: "sandbox",
+        organization_slug: "sandbox",
       }),
       STATUS.unauthorized,
     );
@@ -86,7 +86,7 @@ describe("resolveContext", () => {
         auth,
         db: testDb(),
         headers: outsider,
-        organizationSlug: "sandbox",
+        organization_slug: "sandbox",
       }),
       STATUS.not_found,
     );
@@ -95,7 +95,7 @@ describe("resolveContext", () => {
         auth,
         db: testDb(),
         headers: outsider,
-        organizationSlug: "no-such-school",
+        organization_slug: "no-such-school",
       }),
       STATUS.not_found,
     );
@@ -114,7 +114,7 @@ describe("resolveContext", () => {
       auth,
       db: testDb(),
       headers: studentHeaders,
-      organizationSlug: "sandbox",
+      organization_slug: "sandbox",
     });
     expect(ctx.role).toBe("student");
     expect(() => requireRole(ctx, "administrator", "teacher")).toThrow(
