@@ -15,6 +15,8 @@ export interface RequestContext {
   userId: string;
   memberId: string;
   role: RoleName;
+  ipAddress: string | null;
+  userAgent: string | null;
 }
 
 type Permissions = {
@@ -63,6 +65,8 @@ export async function resolveContext(params: {
     userId: session.user.id,
     memberId: member.id,
     role: member.role,
+    ipAddress: headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null,
+    userAgent: headers.get("user-agent"),
   };
 }
 

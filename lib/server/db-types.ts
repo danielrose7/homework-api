@@ -1,3 +1,7 @@
-import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
+import type { AppPrismaClient } from "@/lib/server/db";
 
-export type DbClient = PrismaClient | Prisma.TransactionClient;
+export type AppTransactionClient = Parameters<
+  Parameters<AppPrismaClient["$transaction"]>[0]
+>[0];
+
+export type DbClient = AppPrismaClient | AppTransactionClient;

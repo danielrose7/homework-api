@@ -1,18 +1,18 @@
 import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
 
-import type { Prisma, PrismaClient } from "@/lib/generated/prisma/client";
-import { createPrismaClient } from "@/lib/server/db";
+import { createPrismaClient, type AppPrismaClient } from "@/lib/server/db";
+import type { AppTransactionClient } from "@/lib/server/db-types";
 
 import { testEnv } from "./env";
 
 class Rollback extends Error {}
 
-let client: PrismaClient | undefined;
-let current: Prisma.TransactionClient | undefined;
+let client: AppPrismaClient | undefined;
+let current: AppTransactionClient | undefined;
 let release: (() => void) | undefined;
 let finished: Promise<unknown> | undefined;
 
-export function testDb(): Prisma.TransactionClient {
+export function testDb(): AppTransactionClient {
   if (!current) throw new Error("testDb() used outside a test");
   return current;
 }
