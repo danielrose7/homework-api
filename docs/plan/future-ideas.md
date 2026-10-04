@@ -46,6 +46,25 @@ a deadline, which needs a nullable resolve-by date and a scheduled job.
 Averages over `points`-graded work, optional category weights, and the extra-credit rules above. `band`-graded
 (pass/fail) work has no percentage and is excluded.
 
+## Rate limits
+
+Nothing limits request volume today. A sign-in endpoint that accepts unlimited password guesses and a submit route
+that buffers up to five 5 MB files per request are the two obvious targets.
+
+- **Already prepared:** every `/api/v1` request passes through `serve`, so one limiter there covers all routes. The
+  request context already carries the user, member, school and IP, and each route is a `defineRoute` definition that
+  could name its own limit class. Responses already carry `x-request-id`, and errors already have one shape.
+- **What it would take:** a limiter keyed by member (falling back to IP for unauthenticated calls), with tighter
+  limits for writes and uploads than for reads; a `429` that uses the shared error shape plus `Retry-After`
+  (`STATUS` gains `too_many_requests`); and standard `RateLimit` headers so Python and Node clients can back off.
+- **Storage:** an in-memory counter is enough for one process and fine for a demo. Several instances need a shared
+  store, such as Postgres or Redis, or the limit moves to the platform edge (a WAF rule) instead of the app.
+- **Sign-in:** Better Auth ships its own rate limiter for `/api/auth/*`. Before relying on it, check its defaults
+  and storage, because they differ between development and production. Lockout after repeated failures is a
+  separate product decision.
+- **Open questions:** whether a school gets a shared budget on top of the per-member one, and whether a `429` is
+  logged (it is not an authorization denial, so it would not use the denied row today).
+
 ## Row-level security
 
 Schema is RLS-ready (see [auth-and-tenancy.md](auth-and-tenancy.md)); enabling it is writing policies, a

@@ -240,4 +240,4 @@ Deliberately deferred; none block the required API. Details, options and researc
 [future-ideas.md](future-ideas.md).
 
 - Extra credit, late work, retention and purge, graded work with no upload,
-  excused work, an Incomplete deadline, class averages and weighting, RLS, tamper-evident audit log.
+  excused work, an Incomplete deadline, class averages and weighting, RLS, tamper-evident audit log, rate limits.
