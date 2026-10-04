@@ -10,11 +10,9 @@ import {
   type BandInput,
 } from "@/lib/domain/grading";
 import { applyGrade } from "@/modules/submissions/mutations/grade-submission";
-import {
-  addBands,
-  resolveGradingScale,
-  toBand,
-} from "@/lib/server/services/grading-scales";
+import { addBands } from "@/modules/grading-scales/mutations/add-bands";
+import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
+import { toBand } from "@/modules/grading-scales/serializers";
 
 import { memberFactory, type MemberRecord } from "./member";
 import { organizationFactory } from "./organization";

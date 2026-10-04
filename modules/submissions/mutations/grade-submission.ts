@@ -12,12 +12,10 @@ import { recordActivity } from "@/lib/server/activity";
 import { requirePermission, type RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
 import { notFound, validationFailed } from "@/lib/server/errors";
-import {
-  loadScale,
-  resolveGradingScale,
-} from "@/lib/server/services/grading-scales";
 import { transact } from "@/lib/server/transaction";
 import { requireTeachesClass } from "@/modules/academics/queries/access";
+import { loadGradingScale } from "@/modules/grading-scales/queries/load-grading-scale";
+import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
 
 export interface GradeResult {
   submissionId: string;
@@ -137,7 +135,11 @@ export async function gradeSubmission(
     await requireTeachesClass(scoped, assignment.classId);
 
     const scale = submission.gradingScaleId
-      ? await loadScale(tx, ctx.organizationId, submission.gradingScaleId)
+      ? await loadGradingScale(
+          tx,
+          ctx.organizationId,
+          submission.gradingScaleId,
+        )
       : await resolveGradingScale(tx, {
           organizationId: ctx.organizationId,
           assignmentScaleId: assignment.gradingScaleId,

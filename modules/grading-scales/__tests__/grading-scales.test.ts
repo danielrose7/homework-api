@@ -4,13 +4,11 @@ import { PASS_FAIL, PLUS_MINUS, STANDARD_AF } from "@/lib/domain/grading";
 import { STATUS } from "@/lib/http-status";
 import { createAuth } from "@/lib/server/auth-factory";
 import { ApiError } from "@/lib/server/errors";
-import {
-  createGradingScale,
-  getGradingScale,
-  listGradingScales,
-  resolveGradingScale,
-  setDefaultGradingScale,
-} from "@/lib/server/services/grading-scales";
+import { createGradingScale } from "@/modules/grading-scales/mutations/create-grading-scale";
+import { setDefaultGradingScale } from "@/modules/grading-scales/mutations/set-default-grading-scale";
+import { getGradingScale } from "@/modules/grading-scales/queries/get-grading-scale";
+import { listGradingScales } from "@/modules/grading-scales/queries/list-grading-scales";
+import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
 import { seedSchool } from "@/test/scenarios/school";
 import { testDb, withRollbackDb } from "@/test/rollback-db";
 

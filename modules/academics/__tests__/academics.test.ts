@@ -12,7 +12,7 @@ import {
   validateAssignmentInput,
   type AssignmentInput,
 } from "@/modules/academics/validation";
-import { createGradingScale } from "@/lib/server/services/grading-scales";
+import { createGradingScale } from "@/modules/grading-scales/mutations/create-grading-scale";
 import { PASS_FAIL } from "@/lib/domain/grading";
 import { seedSchool } from "@/test/scenarios/school";
 import { testDb, withRollbackDb } from "@/test/rollback-db";

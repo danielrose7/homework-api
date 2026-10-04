@@ -8,11 +8,9 @@ import {
 } from "@/lib/domain/grading";
 import type { Auth } from "@/lib/server/auth-factory";
 import type { AppPrismaClient } from "@/lib/server/db";
-import {
-  addBands,
-  createDefaultGradingScale,
-  resolveGradingScale,
-} from "@/lib/server/services/grading-scales";
+import { addBands } from "@/modules/grading-scales/mutations/add-bands";
+import { createDefaultGradingScale } from "@/modules/grading-scales/mutations/create-default-grading-scale";
+import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
 import {
   ASSIGNMENTS,
   CLASSES,

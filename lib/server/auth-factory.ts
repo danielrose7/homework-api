@@ -5,7 +5,7 @@ import { v7 as uuidv7 } from "uuid";
 
 import type { DbClient } from "@/lib/server/db-types";
 import { ac, roles } from "@/lib/server/permissions";
-import { createDefaultGradingScale } from "@/lib/server/services/grading-scales";
+import { createDefaultGradingScale } from "@/modules/grading-scales/mutations/create-default-grading-scale";
 import { createDefaultOrganizationPreferences } from "@/modules/organizations/mutations/create-default-preferences";
 
 export function createAuth(db: DbClient) {
