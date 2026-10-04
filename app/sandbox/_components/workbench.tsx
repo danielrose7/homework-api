@@ -14,6 +14,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { SiteNav } from "@/app/_components/site-nav";
 import { ExchangeView } from "@/app/sandbox/_components/exchange-view";
 import { NetworkDock } from "@/app/sandbox/_components/network-dock";
 import { ResetDialog } from "@/app/sandbox/_components/reset-dialog";
@@ -55,15 +56,6 @@ export function Workbench({ children }: { children: ReactNode }) {
   const [reset, setReset] = useState<{ note: string | null } | null>(null);
   const [resetting, setResetting] = useState(false);
   const settle = useRef<((confirmed: boolean) => void) | null>(null);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const apply = () =>
-      document.documentElement.classList.toggle("dark", media.matches);
-    apply();
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
-  }, []);
 
   useEffect(() => {
     if (!session.get().active) void switchPersona(DEFAULT_PERSONA);
@@ -116,10 +108,7 @@ export function Workbench({ children }: { children: ReactNode }) {
     <ResetContext.Provider value={requestReset}>
       <div className="bg-background text-foreground flex min-h-dvh flex-col font-(family-name:--font-app) text-[12.5px] leading-normal md:h-dvh">
         <header className="bg-card flex flex-wrap items-center gap-x-5 gap-y-2 border-b px-4 py-2.5">
-          <div className="flex items-baseline gap-2 font-bold">
-            homework-api{" "}
-            <span className="text-muted-foreground font-normal">/ sandbox</span>
-          </div>
+          <SiteNav section="sandbox" sandbox />
           <div className="ml-auto flex flex-wrap items-center gap-1.5">
             <span className="text-muted-foreground mr-1 text-[11px] tracking-wider uppercase">
               Sign in as
