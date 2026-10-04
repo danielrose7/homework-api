@@ -43,6 +43,6 @@ Submission response includes: assignment, student, `submitted_at`, `graded_at`, 
 
 ## UI (Phase 6)
 
-- Lightweight, shadcn/ui; student and teacher views loosely modeled on `../goji-health`.
-- `useOptimistic` + `startTransition` for submit/grade, but the UI talks to the same REST API (not server-only
-  actions) so the API stays the real product surface.
+Dev-flavored, monospace, demo-friendly; details in [demo-and-seed.md](demo-and-seed.md). shadcn/ui, with
+`useOptimistic` + `startTransition` for submit/grade. The UI calls the same REST API (not server-only actions)
+so the API stays the real product surface, and a request inspector shows each call.

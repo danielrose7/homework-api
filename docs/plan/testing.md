@@ -17,17 +17,58 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
 5. **Guard tests:**
    - every Prisma model has `createdAt` + `@updatedAt` unless allowlisted (`activity_log`, `submission_grade_event`)
    - every tenant table has `organization_id`, composite FK to its parents
-   - (when RLS is on) every tenant table has RLS enabled + forced and ≥1 policy
 6. **Soft-delete tests:** default reads exclude deleted rows (including via relation includes); partial unique
    indexes allow re-creating a deleted natural key; DELETE requires a reason on education records; purge
    removes content but keeps the id-only `activity_log`.
-7. **Cross-tenant leak test:** two orgs; as `app_user` with org A's context, every table returns zero org B rows
-   and cross-org writes fail.
+7. **Cross-tenant isolation test:** two schools; as a member of school A, every route and service returns
+   nothing from school B and cross-school writes fail. Enforced in the service layer (no RLS).
+
+## Factories (Fishery)
+
+- Persistence happens in Fishery's `onCreate` hook: `build()` returns plain objects, `create()` inserts through
+  the Prisma client. Factories receive the client through a transient param so the same factory works with the
+  rollback client in tests and the real client in the seed script.
+- Traits are agreed with Daniel before the factories are written. Proposed starting set is in the "Factory
+  traits" section of this doc; edit it there.
+- Associations are created lazily in `onCreate` (a `submission` creates its `assignment`, `class_seat`, etc. if
+  none are passed), so `submissionFactory.create()` alone yields a valid row.
+- Sequences for emails and names; no real faker data in assertions.
+
+## Route test helpers
+
+Setup helpers build a ready-to-use context so a route test is a few lines:
+
+- `createSchoolContext()` returns the school, administrator, teacher, students, a term, a class with seats and
+  a published assignment.
+- Each persona carries a signed-in Bearer token and a `request(as, method, path, body?)` helper that calls the
+  route handler in-process with the right headers and returns status, headers and parsed JSON.
+- Variants for common scenarios: `withGradedSubmission()`, `withTwoSchools()`, `withMissingWork()`.
+- All run inside the rollback harness, so helpers never need cleanup.
 
 ## Harness notes
 
-- Test client runs `SET LOCAL ROLE app_user` plus the `app.*` settings so policies/grants are exercised rather
-  than bypassed by a superuser.
-- Seed/reset scripts for local dev are separate from test factories.
+- Test client runs `SET LOCAL ROLE app_user` so grants (append-only tables) are exercised rather than bypassed
+  by a superuser.
+- Seed/reset scripts for local dev are separate from test data; see demo-and-seed.md.
 - Race tests to write: N parallel submits with `max_submissions = 1` → exactly one success, rest `409`;
   idempotent retry returns the original; concurrent regrades → one `412`.
+
+## Factory traits (proposal — to review together)
+
+Not final. Mark up what to add, drop or rename.
+
+| Factory                 | Traits                                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `user`                  | `withPassword`, `unverified`                                                                                             |
+| `organization`          | `withDefaultTerm`                                                                                                        |
+| `member`                | `administrator`, `teacher`, `student`                                                                                    |
+| `academicYear` / `term` | `current`, `past`, `upcoming`, `overlapping` (for validation tests)                                                      |
+| `class`                 | `withTeacher`, `withSeats(n)`, `inPastTerm`                                                                              |
+| `classSeat`             | `active`, `dropped`                                                                                                      |
+| `assignment`            | `homework`, `exam`, `project`, `draft` (unpublished), `published`, `pastDue`, `singleAttempt`, `multiAttempt`, `deleted` |
+| `submission`            | `ungraded`, `graded(points)`, `incomplete`, `late`, `regraded`, `deleted`                                                |
+| `gradeEvent`            | `first`, `regrade` (requires reason)                                                                                     |
+| `activityLog`           | `read`, `denied`, `system`                                                                                               |
+
+Open: should grade-band traits exist (`gradedA`…`gradedF`) or only `graded(points)` plus a table-driven boundary
+test? Should `submission.graded()` also write a matching `gradeEvent` so history is never out of sync?

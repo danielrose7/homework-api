@@ -46,8 +46,8 @@ then trust the stale text over the code.
 ## Project rules
 
 - pnpm only (no npm/yarn).
-- All DB access goes through `withTenant` once it exists; no raw-SQL writes in app code (`updated_at` is set by
-  the Prisma client).
+- Services take an explicit `RequestContext` and scope every query by `organizationId`. No RLS for now, but keep
+  the schema RLS-ready. No raw-SQL writes in app code (`updated_at` is set by the Prisma client).
 - Every domain table: UUIDv7 id, `organization_id`, `createdAt`/`updatedAt` (see `docs/plan/data-model.md`).
 - The API never hard-deletes: `DELETE` is a soft delete (`deletedAt`/`deletedBy`/`deletionReason`).
 - Letter grades are computed from points, never stored.

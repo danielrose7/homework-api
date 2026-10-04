@@ -25,7 +25,7 @@
 - **Deletes:** `ON DELETE RESTRICT`; the API never hard-deletes. See "Soft deletes and FERPA" below.
 - **Indexes:** `organization_id` is the leading column of any index used by filters/policies.
 - **Auth global tables** (`user`, `session`, `account`, `verification`) have no org; keep them in a separate
-  Postgres schema (`auth`) — see auth-tenancy-rls.md.
+  Postgres schema (`auth`) — see auth-and-tenancy.md.
 
 ## Tables
 
@@ -82,8 +82,8 @@ one, and retention periods are configuration, not hard-coded. Not legal advice �
   `assignment`, `assignment_submission`): `deletedAt DateTime? @db.Timestamptz(3)`, `deletedBy` (member id),
   `deletionReason`. Append-only tables (`activity_log`, `submission_grade_event`) are never soft-deleted.
 - **Default invisibility:** a Prisma client extension adds `deletedAt: null` to reads. It does not cover raw SQL
-  or relation includes reliably, so a guard test checks the extension, and RLS later adds
-  `deleted_at IS NULL` for `app_user` as the backstop.
+  or relation includes reliably, so a guard test checks the extension and raw queries are
+  banned in app code.
 - **Uniqueness:** natural-key unique constraints become partial indexes `WHERE deleted_at IS NULL` (hand-written
   migration SQL; Prisma can't express them) so a deleted name can be reused.
 - **What `DELETE` may do:** terms, classes, assignments, seats (drop) and teacher assignments by admins. A

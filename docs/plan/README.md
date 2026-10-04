@@ -7,13 +7,15 @@ purpose. Be ready to discuss, defend and extend every part.
 
 This directory is the living plan. Update it as we go (tick boxes, add to the decision log).
 
-| Doc                                                      | Contents                                                             |
-| -------------------------------------------------------- | -------------------------------------------------------------------- |
-| [data-model.md](data-model.md)                           | Tables, conventions (UUIDv7, timestamps, org scoping), grading rules |
-| [auth-tenancy-rls.md](auth-tenancy-rls.md)               | Better Auth, roles, tenant context, DB roles, RLS prep               |
-| [audit-and-grade-history.md](audit-and-grade-history.md) | HIPAA-style `activity_log`, grade events, regrade concurrency        |
-| [testing.md](testing.md)                                 | Rollback-per-test, Fishery, guard tests, race tests                  |
-| [api-and-docs.md](api-and-docs.md)                       | REST design, OpenAPI, tabbed examples, UI                            |
+| Doc                                                      | Contents                                                              |
+| -------------------------------------------------------- | --------------------------------------------------------------------- |
+| [data-model.md](data-model.md)                           | Tables, conventions (UUIDv7, timestamps, org scoping), grading rules  |
+| [auth-and-tenancy.md](auth-and-tenancy.md)               | Better Auth, roles, request context, DB roles, RLS-ready schema rules |
+| [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                 |
+| [audit-and-grade-history.md](audit-and-grade-history.md) | HIPAA-style `activity_log`, grade events, regrade concurrency         |
+| [demo-and-seed.md](demo-and-seed.md)                     | Seed data, reset button, dev-style UI                                 |
+| [testing.md](testing.md)                                 | Rollback-per-test, Fishery, guard tests, race tests                   |
+| [api-and-docs.md](api-and-docs.md)                       | REST design, OpenAPI, tabbed examples, UI                             |
 
 ## Assignment requirements → where they land
 
@@ -24,27 +26,30 @@ This directory is the living plan. Update it as we go (tick boxes, add to the de
 
 ## Stack
 
-Next.js (App Router) + TypeScript, Postgres, **Prisma**, **Better Auth** (self-hosted; organization + bearer
-
-- API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
+Next.js (App Router) + TypeScript, Postgres, **Prisma**, **Better Auth** (self-hosted; organization, bearer and
+API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 
 ## Decision log
 
-| Decision                                                                                             | Status  | Notes                                                                                                                        |
-| ---------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Next.js + Prisma + Postgres + Better Auth (self-hosted)                                              | Decided |                                                                                                                              |
-| REST route handlers + OpenAPI generated from Zod, **no tRPC**                                        | Decided | tRPC can't be called cleanly from Python/curl. Standard verbs: GET / POST / PUT / PATCH / DELETE                             |
-| Soft deletes (`deleted_at`/`deleted_by`/`deletion_reason`) with a separate, logged purge path        | Decided | FERPA-supportive; see data-model.md. Retention periods are district/state policy, not hard-coded                             |
-| Stale-grade check uses `If-Match` ETag derived from `graded_at` (412/428), not `If-Unmodified-Since` | Decided | HTTP dates have 1s precision                                                                                                 |
-| `class_enrollment` renamed `class_seat`                                                              | Decided |                                                                                                                              |
-| `feedback` renamed `teacher_notes`                                                                   | Decided | Matches the spec wording                                                                                                     |
-| Timestamps (not revision numbers) for grade history + concurrency                                    | Decided | `Timestamptz(3)` everywhere to avoid ms/µs mismatch                                                                          |
-| `created_at`/`updated_at` both `@default(now())`; `updated_at` also `@updatedAt`; **no DB trigger**  | Decided | DB default covers inserts; client sets updates. Raw SQL updates bypass `updated_at`, so we ban raw writes outside migrations |
-| Append-only tables enforced by role grants + Prisma extension, **no DB trigger**                     | Decided |                                                                                                                              |
-| Letter grade is computed, never stored                                                               | Decided |                                                                                                                              |
-| Work in small reviewable commits (verb-first title + short narrative body)                           | Decided | See `AGENTS.md`                                                                                                              |
-| Fully typed, `tsc --noEmit` as we go; boilerplate Prettier                                           | Decided |                                                                                                                              |
-| RLS: prepare schema + roles + `withTenant` now; enable policies later                                | Decided | Enable for real in Phase 4–5 if Better Auth tables cooperate                                                                 |
+| Decision                                                                                              | Status  | Notes                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Next.js + Prisma + Postgres + Better Auth (self-hosted)                                               | Decided |                                                                                                                              |
+| REST route handlers + OpenAPI generated from Zod, **no tRPC**                                         | Decided | tRPC can't be called cleanly from Python/curl. Standard verbs: GET / POST / PUT / PATCH / DELETE                             |
+| Soft deletes (`deleted_at`/`deleted_by`/`deletion_reason`) with a separate, logged purge path         | Decided | FERPA-supportive; see data-model.md. Retention periods are district/state policy, not hard-coded                             |
+| Stale-grade check uses `If-Match` ETag derived from `graded_at` (412/428), not `If-Unmodified-Since`  | Decided | HTTP dates have 1s precision                                                                                                 |
+| `class_enrollment` renamed `class_seat`                                                               | Decided |                                                                                                                              |
+| `feedback` renamed `teacher_notes`                                                                    | Decided | Matches the spec wording                                                                                                     |
+| Timestamps (not revision numbers) for grade history + concurrency                                     | Decided | `Timestamptz(3)` everywhere to avoid ms/µs mismatch                                                                          |
+| `created_at`/`updated_at` both `@default(now())`; `updated_at` also `@updatedAt`; **no DB trigger**   | Decided | DB default covers inserts; client sets updates. Raw SQL updates bypass `updated_at`, so we ban raw writes outside migrations |
+| Append-only tables enforced by role grants + Prisma extension, **no DB trigger**                      | Decided |                                                                                                                              |
+| Letter grade is computed, never stored                                                                | Decided |                                                                                                                              |
+| Work in small reviewable commits (verb-first title + short narrative body)                            | Decided | See `AGENTS.md`                                                                                                              |
+| Fully typed, `tsc --noEmit` as we go; boilerplate Prettier                                            | Decided |                                                                                                                              |
+| RLS is **out of scope**; the schema is RLS-ready (`organization_id` almost everywhere, composite FKs) | Decided | Isolation is enforced in the service layer; see auth-and-tenancy.md appendix                                                 |
+| UI is dev/API-flavored, monospace, demo-friendly, with a seed script and a reset button               | Decided | See demo-and-seed.md                                                                                                         |
+| Fishery factories persist in `onCreate`; traits agreed together before writing                        | Decided | See testing.md                                                                                                               |
+| Route tests build context through setup helpers                                                       | Decided | See testing.md                                                                                                               |
+| Demo seed data is separate from CI factories                                                          | Decided | Deterministic, readable names; see demo-and-seed.md                                                                          |
 
 ## Phases
 
@@ -59,8 +64,10 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] Prisma setup; two connection strings (`DATABASE_URL` app role, migration URL owner)
 - [ ] Better Auth: email+password, organization plugin (custom roles), bearer plugin, UUIDv7 ids
 - [ ] Shared timestamp conventions; schema guard test (every model has `createdAt` + `@updatedAt` unless allowlisted)
-- [ ] `withTenant(ctx, fn)` helper (sets `app.*` settings per transaction)
-- [ ] Vitest + rollback-per-test Prisma client + Fishery factories
+- [ ] `RequestContext` type and member/role guard helpers
+- [ ] Vitest + rollback-per-test Prisma client
+- [ ] Fishery factories (traits agreed with Daniel first; persistence in `onCreate`)
+- [ ] Route-test setup helpers that build a context (school, users, tokens)
 - **Done when:** a test signs up a user, creates an org, checks a role, and rolls back cleanly.
 
 ### Phase 2 — Data model and domain logic
@@ -86,8 +93,8 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] "Missing submission" view
 - [ ] Submit race protection + non-transactional race tests
 - [ ] Regrade flow with ETag `412`/`428`; history + activity endpoints
-- [ ] Enable RLS policies + cross-tenant leak test (if feasible)
-- [ ] Seed script
+- [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
+- [ ] Seed script and demo reset (see demo-and-seed.md)
 
 ### Phase 5 — Docs
 
@@ -97,7 +104,8 @@ Each phase ends with passing tests. Tick as we go.
 
 ### Phase 6 — Lightweight UI
 
-- [ ] Student + teacher views (shadcn), `useOptimistic` + `startTransition`, via the REST API
+- [ ] Dev-flavored monospace UI (shadcn), `useOptimistic` + `startTransition`, via the REST API
+- [ ] Persona sign-in, API request viewer, reset button (demo-and-seed.md)
 
 ### Phase 7 — Polish
 
