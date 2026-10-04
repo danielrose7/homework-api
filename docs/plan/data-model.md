@@ -29,21 +29,21 @@
 
 ## Tables
 
-| Table                                             | Key columns / notes                                                                                                                                                                                                                                                            |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `user`, `session`, `account`, `verification`      | Better Auth (username + password sign-in; email required but contact-only)                                                                                                                                                                                                     |
-| `organization` (= school), `member`, `invitation` | Better Auth org plugin. Roles: `administrator`, `teacher`, `student` (+ `owner`)                                                                                                                                                                                               |
-| `academic_year`                                   | org, name, start/end dates                                                                                                                                                                                                                                                     |
-| `term`                                            | org, academic_year, name, start/end; no overlap within a year                                                                                                                                                                                                                  |
-| `grading_scale`                                   | org, name, `is_default`, optional `supersedes_id`; one default per school; see Grading scales                                                                                                                                                                                  |
-| `grading_scale_band`                              | org, scale, `label`, `group_label`, `min_percent`, `gpa_points`, `is_passing`, `sort_order`                                                                                                                                                                                    |
-| `class`                                           | org, term, name, optional `grading_scale_id` override                                                                                                                                                                                                                          |
-| `class_teacher`                                   | org, class, teacher member (role must be teacher)                                                                                                                                                                                                                              |
-| `class_seat`                                      | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at`                                                                                                                                                                                 |
-| `assignment`                                      | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `max_points`, optional `grading_scale_id` override, `due_at`, `max_submissions` (default 1), `published_at`                                                                                                 |
-| `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded`, `status` (`submitted`/`graded`/`incomplete`), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group`, `teacher_notes`, `graded_at`, `graded_by` |
-| `submission_grade_event`                          | append-only grade history — see audit-and-grade-history.md                                                                                                                                                                                                                     |
-| `activity_log`                                    | append-only audit log — see audit-and-grade-history.md                                                                                                                                                                                                                         |
+| Table                                             | Key columns / notes                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user`, `session`, `account`, `verification`      | Better Auth (username + password sign-in; email required but contact-only)                                                                                                                                                                                                                           |
+| `organization` (= school), `member`, `invitation` | Better Auth org plugin. Roles: `administrator`, `teacher`, `student` (+ `owner`)                                                                                                                                                                                                                     |
+| `academic_year`                                   | org, name, start/end dates                                                                                                                                                                                                                                                                           |
+| `term`                                            | org, academic_year, name, start/end; no overlap within a year                                                                                                                                                                                                                                        |
+| `grading_scale`                                   | org, name, `is_default`, optional `supersedes_id`; one default per school; see Grading scales                                                                                                                                                                                                        |
+| `grading_scale_band`                              | org, scale, `label`, `group_label`, `min_percent`, `gpa_points`, `is_passing`, `sort_order`                                                                                                                                                                                                          |
+| `class`                                           | org, term, name, optional `grading_scale_id` override                                                                                                                                                                                                                                                |
+| `class_teacher`                                   | org, class, teacher member (role must be teacher)                                                                                                                                                                                                                                                    |
+| `class_seat`                                      | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at`                                                                                                                                                                                                       |
+| `assignment`                                      | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `grading_mode` (`points`/`band`), `max_points` (null in `band` mode), optional `grading_scale_id` override, `due_at`, `max_submissions` (default 1), `published_at`                                                               |
+| `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded` (null in `band` mode), `status` (`submitted`/`graded`/`incomplete`), `grading_scale_id`, `grade_band_id`, `grade_label`, `grade_group`, `teacher_notes`, `graded_at`, `graded_by` |
+| `submission_grade_event`                          | append-only grade history — see audit-and-grade-history.md                                                                                                                                                                                                                                           |
+| `activity_log`                                    | append-only audit log — see audit-and-grade-history.md                                                                                                                                                                                                                                               |
 
 `assignment_submission` references `class_seat` (not a bare student) so a submission can only exist for an
 enrolled student. Unique: `(assignment_id, class_seat_id, attempt_number)`.
@@ -79,6 +79,31 @@ relabel grades students already saw.
   label. Unused scales can be replaced freely (old bands are soft-deleted).
 - Re-labelling existing work is an explicit action ("regrade with scale X") that writes grade events with a reason.
 - Soft-deleting a scale is blocked while it is the default or referenced.
+
+## Grading modes (points vs. pass/fail)
+
+Pass/fail comes in two shapes, so `assignment.grading_mode` has two values:
+
+- **`points`**: the teacher enters points; the band comes from the scale lookup. This covers lettered work and also
+  "pass at 60%" using a Pass/Fail scale. `max_points` is required and greater than zero.
+- **`band`**: the teacher picks a band directly (`Pass`, `Fail`, or any label on the resolved scale). There are no
+  points and no percentage, so `max_points` is null.
+
+Rules:
+
+- In both modes `grade_band_id` is the authoritative result; `grade_label`/`grade_group` are copies of it.
+- Check constraints (hand-written migration SQL, Prisma can't express them):
+  - `points` mode: `max_points IS NOT NULL AND max_points > 0`.
+  - A graded submission has `grade_band_id` set; `points_awarded` is set in `points` mode and null in `band` mode.
+  - An `incomplete` submission has no band and no points.
+- `submission_grade_event.points_awarded` and `max_points` are nullable for the same reason.
+- `grading_mode`, `max_points` and the scale cannot change after the first grade is given.
+- "Fail" is a graded result. `incomplete` is the teacher saying the work isn't gradeable yet; it carries no band
+  and doesn't count as a fail.
+- Class averages (not built) would only use `points`-mode work; `band`-mode work has no percentage to average.
+- Grade payload is a discriminated union, validated against the assignment's mode:
+  `{ "points": 42, "teacher_notes": … }` or `{ "band": "Pass", "teacher_notes": … }`. The wrong shape is `422`. The
+  band label is resolved against the assignment's resolved scale, never across scales.
 
 ## Grade states and filters
 
@@ -131,3 +156,14 @@ one, and retention periods are configuration, not hard-coded. Not legal advice �
   refused while a hold or an open records request exists (a `records_hold` flag on the org/student is a later
   addition). Users are tombstoned (PII scrubbed, id retained) rather than row-deleted so history stays joinable.
 - **Amendment requests:** handled as normal regrades/edits with a reason, not deletion.
+
+### Follow-up: grades with no student submission
+
+Exams and in-class work are often graded without the student uploading anything. Today a grade lives on
+`assignment_submission`, which presumes a submission. The smallest extension, not built yet:
+
+- `assignment.submission_mode`: `online` (default) or `none`.
+- For `none`, grading creates the submission row at that moment, with `submitted_at` null (made nullable) and
+  `graded_by` set; the "missing" view skips `none` assignments.
+
+Deferred until the required API (Phase 3) is done.

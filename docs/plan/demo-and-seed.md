@@ -12,7 +12,8 @@ so a demo script can say "sign in as Ms. Alvarez".
 - One school (e.g. "Riverside Academy", slug `riverside`) with an academic year and two terms (one current).
 - Administrator, 2–3 teachers, ~8 students with fixed names, emails and a shared dev password.
 - Three grading scales: "Standard A–F" (school default), "Plus/minus" (one class override) and "Pass/Fail"
-  (one pass/fail assignment inside a lettered class).
+  (one assignment graded directly as Pass or Fail, with no points, inside a lettered class; plus one points-based
+  assignment that passes at 60%).
 - Usernames are short and memorable (`alvarez`, `chen`, `maya`) with one shared dev password.
 - 3–4 classes across subjects, with seats, and a spread of assignments of every type.
 - Submissions in every interesting state, deliberately: ungraded, graded A–F (one per letter), `incomplete`,

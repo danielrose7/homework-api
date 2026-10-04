@@ -43,6 +43,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | `created_at`/`updated_at` both `@default(now())`; `updated_at` also `@updatedAt`; **no DB trigger**                            | Decided | DB default covers inserts; client sets updates. Raw SQL updates bypass `updated_at`, so we ban raw writes outside migrations |
 | Append-only tables enforced by role grants + Prisma extension, **no DB trigger**                                               | Decided |                                                                                                                              |
 | Grading scales are table-driven (`grading_scale` + `grading_scale_band`), with a school default and class/assignment overrides | Decided | Supports +/- letters and pass/fail                                                                                           |
+| Assignments have a `grading_mode`: `points` (scale lookup) or `band` (teacher picks Pass/Fail directly, no points)             | Decided | Pass/fail with no points needs nullable points and `max_points`; check constraints keep rows consistent                      |
 | The graded result (band, label, group) is snapshotted on the submission and grade event; scales are immutable once used        | Decided | Reverses "letter never stored": editable scales would otherwise relabel past grades                                          |
 | Sign-in is username + password (username plugin); email is required by Better Auth but contact-only                            | Decided | Usernames globally unique; `/sign-in/email` disabled                                                                         |
 | Work in small reviewable commits (verb-first title + short narrative body)                                                     | Decided | See `AGENTS.md`                                                                                                              |
@@ -79,6 +80,7 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] `submission_grade_event`, `activity_log`, `recordActivity`, append-only extension
 - [ ] Soft-delete columns, Prisma read filter, partial unique indexes
 - [ ] Grading scale + band tables, school default created on org creation, scale resolution
+- [ ] `grading_mode` on assignments, nullable points, check constraints (hand-written SQL)
 - [ ] Pure functions: points→grade band lookup, scale validation, term overlap, submission eligibility
 - [ ] Service layer with org + role guards
 - **Done when:** unit tests cover band boundaries across scale types, scoping, permissions.
@@ -118,4 +120,6 @@ Each phase ends with passing tests. Tick as we go.
 
 ## Open questions
 
+- Teacher-recorded work with no student submission (in-class exam, participation): do we model it now? See
+  data-model.md, "Grading modes" follow-ups.
 - Do students re-submit (`max_submissions` > 1) in the demo, or default to 1?
