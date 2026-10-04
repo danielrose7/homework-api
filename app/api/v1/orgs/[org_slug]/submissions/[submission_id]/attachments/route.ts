@@ -1,10 +1,9 @@
 import { z } from "zod";
 
-import { listJson } from "@/lib/server/list-json";
 import { defineRoute } from "@/lib/server/route";
 import { serve } from "@/lib/server/serve";
 import { listSubmissionAttachments } from "@/modules/attachments/queries/list-submission-attachments";
-import { serializeAttachment } from "@/modules/attachments/serializers";
+import { serializeAttachmentList } from "@/modules/attachments/serializers";
 
 const params = z.object({ submission_id: z.uuid() });
 
@@ -15,7 +14,7 @@ export const listAttachmentsRoute = defineRoute({
     const { submission_id } = input.params(params);
     const attachments = await listSubmissionAttachments(ctx, submission_id);
     const url = `/api/v1/orgs/${ctx.organization_slug}/submissions/${submission_id}/attachments`;
-    return Response.json(listJson(url, attachments.map(serializeAttachment)));
+    return Response.json(serializeAttachmentList(url, attachments));
   },
 });
 

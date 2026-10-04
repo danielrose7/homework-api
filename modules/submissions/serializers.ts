@@ -1,5 +1,7 @@
 import { percentOf } from "@/lib/domain/grading";
 import { listJson } from "@/lib/server/list-json";
+import { serializeAttachmentList } from "@/modules/attachments/serializers";
+import type { AttachmentSummary } from "@/modules/attachments/types";
 import type {
   SubmissionPage,
   SubmissionRow,
@@ -72,4 +74,15 @@ export function serializeSubmission(view: SubmissionView) {
 
 export function serializeSubmissionPage(url: string, page: SubmissionPage) {
   return listJson(url, page.items.map(serializeSubmission), page.has_more);
+}
+
+export function serializeSubmittedSubmission(
+  submission: SubmissionView,
+  attachments_url: string,
+  attachments: AttachmentSummary[],
+) {
+  return {
+    ...serializeSubmission(submission),
+    attachments: serializeAttachmentList(attachments_url, attachments),
+  };
 }

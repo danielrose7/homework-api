@@ -3,12 +3,10 @@ import { z } from "zod";
 import type { UploadInput } from "@/lib/domain/uploads";
 import { STATUS } from "@/lib/http-status";
 import { validationFailed } from "@/lib/server/errors";
-import { listJson } from "@/lib/server/list-json";
 import { defineRoute } from "@/lib/server/route";
 import { serve } from "@/lib/server/serve";
-import { serializeAttachment } from "@/modules/attachments/serializers";
 import { submitAssignment } from "@/modules/submissions/mutations/submit-assignment";
-import { serializeSubmission } from "@/modules/submissions/serializers";
+import { serializeSubmittedSubmission } from "@/modules/submissions/serializers";
 
 const jsonSubmission = z.strictObject({ text: z.string() });
 const multipartSubmission = z.object({
@@ -65,13 +63,11 @@ export const submitRoute = defineRoute({
     const result = await submitAssignment(ctx, assignment_id, { text, files });
     const base = `/api/v1/orgs/${ctx.organization_slug}`;
     return Response.json(
-      {
-        ...serializeSubmission(result.submission),
-        attachments: listJson(
-          `${base}/submissions/${result.submission.id}/attachments`,
-          result.attachments.map(serializeAttachment),
-        ),
-      },
+      serializeSubmittedSubmission(
+        result.submission,
+        `${base}/submissions/${result.submission.id}/attachments`,
+        result.attachments,
+      ),
       {
         status: STATUS.created,
         headers: { location: `${base}/submissions/${result.submission.id}` },
