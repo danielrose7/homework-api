@@ -5,17 +5,18 @@
 Student records are FERPA, not HIPAA, but the audit shape is the same. Mirrors `../goji-health`'s `audit_logs`
 conventions (`docs/tech-stack.md` → "PHI access logging").
 
-| Group | Columns |
-|---|---|
-| Who | `actor_user_id`, `actor_member_id`, `actor_type` (`user`/`system`/`api_key`), `actor_role`, `api_key_id` |
-| What | `action` (`read`, `create`, `update`, `grade`, `export`, `login`, `denied`), `resource_type`, `resource_id` |
-| Where from | `organization_id`, `request_id`, `ip_address`, `user_agent` |
-| Outcome | `outcome` (`success`/`denied`/`error`) |
-| When | `created_at` only (no `updated_at`) |
-| Extra | `metadata` jsonb |
+| Group      | Columns                                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------- |
+| Who        | `actor_user_id`, `actor_member_id`, `actor_type` (`user`/`system`/`api_key`), `actor_role`, `api_key_id`    |
+| What       | `action` (`read`, `create`, `update`, `grade`, `export`, `login`, `denied`), `resource_type`, `resource_id` |
+| Where from | `organization_id`, `request_id`, `ip_address`, `user_agent`                                                 |
+| Outcome    | `outcome` (`success`/`denied`/`error`)                                                                      |
+| When       | `created_at` only (no `updated_at`)                                                                         |
+| Extra      | `metadata` jsonb                                                                                            |
 
 Rules:
-- **IDs only.** `metadata` holds ids and changed field *names* — never names, notes or grade contents.
+
+- **IDs only.** `metadata` holds ids and changed field _names_ — never names, notes or grade contents.
 - **Log single-record reads** (submission detail, a student's gradebook). Not list endpoints or searches.
 - **Log authorization denials.**
 - Mutations: log row written in the **same transaction** as the change (via `recordActivity(tx, …)`).

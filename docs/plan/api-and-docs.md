@@ -12,16 +12,16 @@
 
 ### Routes (draft)
 
-| Method + path | Who | Purpose |
-|---|---|---|
-| `POST /assignments/{id}/submissions` | student | Submit (idempotent via `Idempotency-Key`; `409` over limit) |
-| `GET /submissions/me?grade=&assignment=` | student | Own submissions; grade ∈ `A–F`, `incomplete`, `ungraded` |
-| `GET /submissions?assignment=&from=&to=&student=` | teacher/admin | Overview |
-| `PATCH /submissions/{id}/grade` | teacher | Points + `teacher_notes`; stale timestamp → `409` |
-| `GET /submissions/{id}/history` | teacher/admin | Grade events |
-| `GET /assignments/{id}/missing` | teacher/admin | Enrolled students with no submission |
-| `GET /activity` | admin | Audit log |
-| Terms / classes / seats / assignments CRUD | admin/teacher | Phase 4 |
+| Method + path                                     | Who           | Purpose                                                     |
+| ------------------------------------------------- | ------------- | ----------------------------------------------------------- |
+| `POST /assignments/{id}/submissions`              | student       | Submit (idempotent via `Idempotency-Key`; `409` over limit) |
+| `GET /submissions/me?grade=&assignment=`          | student       | Own submissions; grade ∈ `A–F`, `incomplete`, `ungraded`    |
+| `GET /submissions?assignment=&from=&to=&student=` | teacher/admin | Overview                                                    |
+| `PATCH /submissions/{id}/grade`                   | teacher       | Points + `teacher_notes`; stale timestamp → `409`           |
+| `GET /submissions/{id}/history`                   | teacher/admin | Grade events                                                |
+| `GET /assignments/{id}/missing`                   | teacher/admin | Enrolled students with no submission                        |
+| `GET /activity`                                   | admin         | Audit log                                                   |
+| Terms / classes / seats / assignments CRUD        | admin/teacher | Phase 4                                                     |
 
 Submission response includes: assignment, student, `submitted_at`, `graded_at`, `letter_grade` (computed),
 `points_awarded`, `teacher_notes`.

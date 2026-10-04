@@ -29,19 +29,19 @@
 
 ## Tables
 
-| Table | Key columns / notes |
-|---|---|
-| `user`, `session`, `account`, `verification` | Better Auth (email + password; username plugin TBD) |
-| `organization` (= school), `member`, `invitation` | Better Auth org plugin. Roles: `administrator`, `teacher`, `student` (+ `owner`) |
-| `academic_year` | org, name, start/end dates |
-| `term` | org, academic_year, name, start/end; no overlap within a year |
-| `class` | org, term, name, optional grading-scale override |
-| `class_teacher` | org, class, teacher member (role must be teacher) |
-| `class_seat` | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at` |
-| `assignment` | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `max_points`, `due_at`, `max_submissions` (default 1), `published_at` |
-| `assignment_submission` | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded`, `status` (`submitted`/`graded`/`incomplete`), `teacher_notes`, `graded_at`, `graded_by` |
-| `submission_grade_event` | append-only grade history — see audit-and-grade-history.md |
-| `activity_log` | append-only audit log — see audit-and-grade-history.md |
+| Table                                             | Key columns / notes                                                                                                                                                                                         |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user`, `session`, `account`, `verification`      | Better Auth (email + password; username plugin TBD)                                                                                                                                                         |
+| `organization` (= school), `member`, `invitation` | Better Auth org plugin. Roles: `administrator`, `teacher`, `student` (+ `owner`)                                                                                                                            |
+| `academic_year`                                   | org, name, start/end dates                                                                                                                                                                                  |
+| `term`                                            | org, academic_year, name, start/end; no overlap within a year                                                                                                                                               |
+| `class`                                           | org, term, name, optional grading-scale override                                                                                                                                                            |
+| `class_teacher`                                   | org, class, teacher member (role must be teacher)                                                                                                                                                           |
+| `class_seat`                                      | org, class, student member (role must be student), `status` (`active`/`dropped`), `dropped_at`                                                                                                              |
+| `assignment`                                      | org, class, title, `type` enum (`homework`, `exam`, `project`, …), `max_points`, `due_at`, `max_submissions` (default 1), `published_at`                                                                    |
+| `assignment_submission`                           | org, assignment, `class_seat_id`, `attempt_number`, `content`, `submitted_at`, **current grade**: `points_awarded`, `status` (`submitted`/`graded`/`incomplete`), `teacher_notes`, `graded_at`, `graded_by` |
+| `submission_grade_event`                          | append-only grade history — see audit-and-grade-history.md                                                                                                                                                  |
+| `activity_log`                                    | append-only audit log — see audit-and-grade-history.md                                                                                                                                                      |
 
 `assignment_submission` references `class_seat` (not a bare student) so a submission can only exist for an
 enrolled student. Unique: `(assignment_id, class_seat_id, attempt_number)`.
@@ -62,6 +62,7 @@ enrolled student. Unique: `(assignment_id, class_seat_id, attempt_number)`.
 ## Submission concurrency (block over-submission)
 
 Three layers; the database is the final guard.
+
 1. Transaction takes a lock on the (assignment, seat) pair (`SELECT … FOR UPDATE` on the seat row or
    `pg_advisory_xact_lock`), counts attempts, inserts with the next `attempt_number`.
 2. Unique `(assignment_id, class_seat_id, attempt_number)` rejects any extra row → API returns `409`.

@@ -19,22 +19,24 @@ Sources: better-auth.com/docs/plugins/{bearer,api-key,organization}.
 ## Tenant context: `withTenant`
 
 All DB access goes through `withTenant(ctx, async (tx) => …)`, an interactive transaction that first runs
+
 ```sql
 SELECT set_config('app.organization_id', $1, true),
        set_config('app.member_id',       $2, true),
        set_config('app.role',            $3, true);
 ```
+
 (`true` = transaction-local; safe under transaction-mode pooling.) Built in Phase 1, before RLS exists, so
 enabling RLS later changes no application code. The same context object feeds `recordActivity` (actor, org,
 request id). API-key requests set org + fixed role, no member.
 
 ## DB roles
 
-| Role | Purpose | Privileges |
-|---|---|---|
-| `app_owner` | Owns objects; runs migrations only | DDL |
-| `app_user` | Runtime role for the app | `NOBYPASSRLS`; DML only; no DDL/`TRUNCATE` |
-| `app_readonly` | Reporting / ad hoc | `SELECT` only, subject to RLS |
+| Role           | Purpose                            | Privileges                                 |
+| -------------- | ---------------------------------- | ------------------------------------------ |
+| `app_owner`    | Owns objects; runs migrations only | DDL                                        |
+| `app_user`     | Runtime role for the app           | `NOBYPASSRLS`; DML only; no DDL/`TRUNCATE` |
+| `app_readonly` | Reporting / ad hoc                 | `SELECT` only, subject to RLS              |
 
 - `FORCE ROW LEVEL SECURITY` on tenant tables so an owner connection can't leak.
 - `app_user` gets `INSERT`/`SELECT` only on `activity_log` and `submission_grade_event` (append-only enforced by
