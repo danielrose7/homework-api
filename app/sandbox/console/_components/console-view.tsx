@@ -9,11 +9,9 @@ import { useExchanges } from "@/app/sandbox/_lib/exchange-store";
 import { roleOf } from "@/app/sandbox/_lib/people";
 import { session, useSession } from "@/app/sandbox/_lib/session";
 import {
-  ALL_ITEMS,
-  CATALOG,
   presetsFor,
-  sampleBody,
   subLabel,
+  type CatalogGroup,
   type CatalogItem,
   type Preset,
 } from "@/app/sandbox/console/_components/catalog";
@@ -39,7 +37,10 @@ interface Draft {
 }
 
 function makeDraft(item: CatalogItem, persona: string): Draft {
-  const sample = sampleBody(item.key, persona);
+  const sample =
+    item.key === "sign_in" && item.sample
+      ? { ...item.sample, username: persona }
+      : item.sample;
   return {
     path: item.path,
     query: (item.query ?? []).map((k) => ({ k, v: "", on: false })),
@@ -53,22 +54,29 @@ function makeDraft(item: CatalogItem, persona: string): Draft {
 const varsIn = (path: string) =>
   [...path.matchAll(/\{(\w+)\}/g)].map((match) => match[1] ?? "");
 
-export function ConsoleView({ options }: { options: SandboxOptions }) {
+export function ConsoleView({
+  catalog,
+  options,
+}: {
+  catalog: CatalogGroup[];
+  options: SandboxOptions;
+}) {
+  const allItems = catalog.flatMap((group) => group.items);
   const { active } = useSession();
   const persona = active ?? "";
   const { exchanges, selectedId } = useExchanges();
   const selected = exchanges.find((item) => item.id === selectedId) ?? null;
-  const [key, setKey] = useState("signin");
+  const [key, setKey] = useState("sign_in");
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [sending, setSending] = useState(false);
 
-  const item = ALL_ITEMS.find((candidate) => candidate.key === key);
+  const item = allItems.find((candidate) => candidate.key === key);
   if (!item) return null;
-  const draftKey = (k: string) => (k === "signin" ? `signin:${persona}` : k);
+  const draftKey = (k: string) => (k === "sign_in" ? `sign_in:${persona}` : k);
   const draft = drafts[draftKey(key)] ?? makeDraft(item, persona);
   const patch = (changes: Partial<Draft>, forKey = key) =>
     setDrafts((current) => {
-      const target = ALL_ITEMS.find((candidate) => candidate.key === forKey);
+      const target = allItems.find((candidate) => candidate.key === forKey);
       if (!target) return current;
       return {
         ...current,
@@ -186,7 +194,7 @@ export function ConsoleView({ options }: { options: SandboxOptions }) {
         aria-label="Request collection"
         className="bg-card max-h-48 overflow-auto border-b py-2 md:max-h-none md:border-r md:border-b-0"
       >
-        {CATALOG.map((section) => (
+        {catalog.map((section) => (
           <div key={section.group}>
             <h4 className="text-muted-foreground mx-3.5 mt-2.5 mb-1 text-[10.5px] tracking-widest uppercase">
               {section.group}

@@ -1,117 +1,22 @@
-import { BASE } from "@/app/sandbox/_lib/api";
 import { roleOf } from "@/app/sandbox/_lib/people";
 import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
-import { SANDBOX_PASSWORD } from "@/app/sandbox/_server/seed-data";
 
 export interface CatalogItem {
   key: string;
   name: string;
-  method: "GET" | "POST" | "PUT";
+  method: string;
   path: string;
   note: string;
   auth?: "none";
   /** Query parameter names offered as rows. */
   query?: string[];
+  /** Body the console starts with, from the route's first example. */
+  sample: object | null;
 }
 
-export const CATALOG: Array<{ group: string; items: CatalogItem[] }> = [
-  {
-    group: "Auth",
-    items: [
-      {
-        key: "signin",
-        name: "Sign in",
-        method: "POST",
-        path: "/api/auth/sign-in/username",
-        auth: "none",
-        note: "Returns the bearer token in the body and in the set-auth-token header. A wrong password is 401.",
-      },
-    ],
-  },
-  {
-    group: "Student",
-    items: [
-      {
-        key: "submit",
-        name: "Submit homework",
-        method: "POST",
-        path: `${BASE}/assignments/{assignment_id}/submissions`,
-        note: "201 with Location. 409 submission_limit_reached on a second try, 422 on blank text, 403 for teachers.",
-      },
-      {
-        key: "mine",
-        name: "My submissions",
-        method: "GET",
-        path: `${BASE}/submissions/me`,
-        query: ["grade", "assignment", "limit", "starting_after"],
-        note: "Filter by grade (A-F, incomplete, ungraded) and assignment name. Newest first.",
-      },
-    ],
-  },
-  {
-    group: "Teacher",
-    items: [
-      {
-        key: "overview",
-        name: "Submissions overview",
-        method: "GET",
-        path: `${BASE}/submissions`,
-        query: [
-          "assignment",
-          "student",
-          "from",
-          "to",
-          "grade",
-          "limit",
-          "starting_after",
-        ],
-        note: "Teachers see their own classes, administrators the whole school. Students get 403.",
-      },
-      {
-        key: "grade",
-        name: "Grade a submission",
-        method: "PUT",
-        path: `${BASE}/submissions/{submission_id}/grade`,
-        note: "Send points or band, plus teacher_notes. A regrade needs a reason. Every issue comes back in one 422.",
-      },
-    ],
-  },
-  {
-    group: "Shared",
-    items: [
-      {
-        key: "get",
-        name: "Get a submission",
-        method: "GET",
-        path: `${BASE}/submissions/{submission_id}`,
-        note: "Students read their own. A single-record read is written to the activity log.",
-      },
-      {
-        key: "files",
-        name: "List attachments",
-        method: "GET",
-        path: `${BASE}/submissions/{submission_id}/attachments`,
-        note: "Same access rules as the submission.",
-      },
-    ],
-  },
-];
-
-export const ALL_ITEMS = CATALOG.flatMap((group) => group.items);
-
-export function sampleBody(key: string, persona: string): object | null {
-  if (key === "signin")
-    return { username: persona, password: SANDBOX_PASSWORD };
-  if (key === "submit")
-    return {
-      text: "Solved both equations by isolating x, then checked by substitution.",
-    };
-  if (key === "grade")
-    return {
-      points: 42,
-      teacher_notes: "Clear working, nice check at the end.",
-    };
-  return null;
+export interface CatalogGroup {
+  group: string;
+  items: CatalogItem[];
 }
 
 type Submission = SandboxOptions["submissions"][number];
@@ -179,7 +84,7 @@ export function presetsFor(
       : s.teacher;
 
   const groups: Record<string, PresetGroup> = {
-    mine: {
+    list_own: {
       roles: ["student"],
       as: "maya",
       items: [
@@ -198,7 +103,7 @@ export function presetsFor(
         { label: "bogus=1", q: { bogus: "1" }, err: "422" },
       ],
     },
-    overview: {
+    list_overview: {
       roles: ["teacher", "administrator"],
       as: "reyes",
       pin: true,
@@ -345,7 +250,7 @@ export function presetsFor(
         { label: "maya reads jon's", pick: () => jons, as: "maya", err: "404" },
       ],
     },
-    files: {
+    list_attachments: {
       roles: ["student", "teacher", "administrator"],
       as: "reyes",
       items: [
