@@ -1,7 +1,7 @@
 import { listJson } from "@/lib/server/list-json";
 import type { AttachmentSummary } from "@/modules/attachments/types";
 
-export function serializeAttachment(attachment: AttachmentSummary) {
+function serializeAttachment(attachment: AttachmentSummary) {
   return {
     id: attachment.attachment_id,
     object: "attachment" as const,

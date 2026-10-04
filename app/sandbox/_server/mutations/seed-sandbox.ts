@@ -23,7 +23,7 @@ import {
 } from "@/app/sandbox/_server/seed-data";
 import { createDefaultOrganizationPreferences } from "@/modules/organizations/mutations/create-default-preferences";
 
-export class SeedRefusedError extends Error {
+class SeedRefusedError extends Error {
   constructor() {
     super(
       "The database already has data. Run `pnpm db:reset` to clear it and seed again.",

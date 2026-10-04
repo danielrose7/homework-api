@@ -5,7 +5,7 @@ import {
 import { session } from "@/app/sandbox/_lib/session";
 import { SANDBOX_PASSWORD } from "@/app/sandbox/_server/seed-data";
 
-export const ORG = "sandbox";
+const ORG = "sandbox";
 export const BASE = `/api/v1/orgs/${ORG}`;
 
 export type AuthMode = "persona" | "none" | "bad";

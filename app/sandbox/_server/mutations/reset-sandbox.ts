@@ -8,7 +8,7 @@ import {
 } from "@/app/sandbox/_server/mutations/seed-sandbox";
 
 /** Truncating needs the owner role: `app_user` has no TRUNCATE grant. */
-export async function truncateAllTables(owner_url: string) {
+async function truncateAllTables(owner_url: string) {
   const pool = new Pool({ connectionString: owner_url, max: 1 });
   try {
     const { rows } = await pool.query<{ tablename: string }>(

@@ -77,20 +77,6 @@ export function resolveScaleId(ids: {
   return ids.assignment ?? ids.class ?? ids.school_default;
 }
 
-/** `B` matches B+, B and B-; `B+` matches only B+. */
-export function matchesGradeFilter(
-  band: Pick<Band, "label" | "group_label"> | null,
-  filter: string,
-): boolean {
-  const wanted = filter.trim().toLowerCase();
-  if (wanted === "ungraded") return band === null;
-  if (band === null) return false;
-  return (
-    band.label.toLowerCase() === wanted ||
-    (band.group_label ?? band.label).toLowerCase() === wanted
-  );
-}
-
 const INCOMPLETE: BandInput = {
   label: "Incomplete",
   group_label: null,

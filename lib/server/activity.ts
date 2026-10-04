@@ -66,7 +66,7 @@ const FORBIDDEN_KEYS = new Set([
   "originalfilename",
 ]);
 
-export function assertIdOnlyMetadata(metadata: ActivityMetadata) {
+function assertIdOnlyMetadata(metadata: ActivityMetadata) {
   for (const key of Object.keys(metadata)) {
     const normalized_key = key.toLowerCase().replaceAll(/[^a-z0-9]/g, "");
     if (FORBIDDEN_KEYS.has(normalized_key)) {

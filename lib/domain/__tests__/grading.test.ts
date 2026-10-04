@@ -8,7 +8,6 @@ import {
   findManualBand,
   isManualOnly,
   lookupBand,
-  matchesGradeFilter,
   percentOf,
   resolveScaleId,
   type Band,
@@ -167,26 +166,5 @@ describe("resolveScaleId", () => {
     expect(
       resolveScaleId({ assignment: null, class: null, school_default: "d" }),
     ).toBe("d");
-  });
-});
-
-describe("matchesGradeFilter", () => {
-  const b = (label: string, group_label: string | null = null) => ({
-    label,
-    group_label,
-  });
-
-  it("matches a group as well as an exact label, ignoring case", () => {
-    expect(matchesGradeFilter(b("B+", "B"), "b")).toBe(true);
-    expect(matchesGradeFilter(b("B+", "B"), "B+")).toBe(true);
-    expect(matchesGradeFilter(b("B-", "B"), "B+")).toBe(false);
-    expect(matchesGradeFilter(b("C"), "C")).toBe(true);
-  });
-
-  it("treats Incomplete as an ordinary label and ungraded as no band", () => {
-    expect(matchesGradeFilter(b("Incomplete"), "incomplete")).toBe(true);
-    expect(matchesGradeFilter(null, "ungraded")).toBe(true);
-    expect(matchesGradeFilter(b("A"), "ungraded")).toBe(false);
-    expect(matchesGradeFilter(null, "A")).toBe(false);
   });
 });

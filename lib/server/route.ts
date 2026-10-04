@@ -43,7 +43,7 @@ export const defineRoute = (definition: RouteDefinition) => definition;
 
 type RouteParams = Record<string, string | string[] | undefined>;
 
-export function zodDetails(error: z.ZodError): ErrorDetail[] {
+function zodDetails(error: z.ZodError): ErrorDetail[] {
   return error.issues.map((item) => ({
     field: item.path.join("."),
     code: item.code,

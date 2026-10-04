@@ -33,7 +33,7 @@ async function gradeFilterIssue(
       ];
 }
 
-export function gradeWhere(
+function gradeWhere(
   grade: string | undefined,
 ): Prisma.AssignmentSubmissionWhereInput {
   if (grade === undefined) return {};

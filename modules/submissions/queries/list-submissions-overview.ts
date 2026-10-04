@@ -17,9 +17,7 @@ export interface OverviewFilters extends Omit<
 
 export const MIN_STUDENT_FILTER_LENGTH = 2;
 
-export function validateOverviewFilters(
-  filters: OverviewFilters,
-): ValidationIssue[] {
+function validateOverviewFilters(filters: OverviewFilters): ValidationIssue[] {
   const issues = validateDayRange(filters);
   if (
     filters.student !== undefined &&
