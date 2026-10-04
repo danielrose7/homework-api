@@ -57,6 +57,9 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Sign-in is username + password (username plugin); email is required by Better Auth but contact-only                                                                  | Decided | Usernames globally unique; `/sign-in/email` disabled                                                                         |
 | Work in small reviewable commits (verb-first title + short narrative body)                                                                                           | Decided | See `AGENTS.md`                                                                                                              |
 | Fully typed, `tsc --noEmit` as we go; boilerplate Prettier                                                                                                           | Decided |                                                                                                                              |
+| Pointer columns end in `_id` and the Prisma relation drops the suffix (`graded_by_id` / `gradedBy`)                                                                  | Decided | Enforced by `test/schema-conventions.test.ts`; see schema-conventions.md                                                     |
+| Migration history stays clean start to end: edit the migration that introduced a thing, never rework it in a follow-up (pre-release); rebuild with `pnpm db:fresh`   | Decided | See schema-conventions.md                                                                                                    |
+| Tests may not import the app-wide `auth` or `prisma` singletons (ESLint rule)                                                                                        | Decided | They commit outside the test transaction; see testing.md                                                                     |
 | RLS is **out of scope**; the schema is RLS-ready (`organization_id` almost everywhere, composite FKs)                                                                | Decided | Isolation is enforced in the service layer; see auth-and-tenancy.md appendix                                                 |
 | The demo school is named "Sandbox" (slug `sandbox`), in the seed and in all docs examples                                                                            | Decided | Slug is reserved                                                                                                             |
 | UI is dev/API-flavored, monospace, demo-friendly, with a seed script and a reset button                                                                              | Decided | See demo-and-seed.md                                                                                                         |
@@ -108,7 +111,7 @@ Each phase ends with passing tests. Tick as we go.
 ### Phase 2 — Data model and domain logic
 
 - [x] Full schema + migrations (see data-model.md), composite org FKs, `RESTRICT`
-- [x] DB roles + grants migration: the append-only tables are narrowed to `INSERT`/`SELECT` for `app_user`
+- [x] DB roles (created by `db/init/01-roles.sql`, since roles are cluster-level) and a grants migration: the append-only and immutable tables are narrowed to `INSERT`/`SELECT` for `app_user`
 - [x] `submission_grade_event`, `activity_log`, `recordActivity`, append-only extension
 - [x] Soft-delete columns, Prisma read filter, partial unique indexes
 - [x] Grading scale + band tables, school default created on org creation, scale resolution
@@ -120,9 +123,16 @@ Each phase ends with passing tests. Tick as we go.
 
 ### Phase 3 — Required API (the assignment)
 
-- [ ] Student: submit; list own submissions (grade / assignment-name filters)
-- [ ] Teacher: overview (assignment, date range, student-name filters); grade with points + `teacher_notes`
+- [ ] Route plumbing: mount Better Auth's HTTP handler (`/api/auth/*`) so curl, Python and Node can sign up, sign in
+      for a Bearer token and create a school; a small route wrapper that builds the `RequestContext`, parses with Zod and
+      turns `ApiError` into the shared JSON error shape
+- [ ] Student: submit as JSON (text) or `multipart/form-data` (files, using `createBlob` + `attachBlobToSubmission` and
+      `submissionEligibility` in one transaction); list own submissions (grade / assignment-name filters)
+- [ ] Attachments: list and download routes (downloads are logged reads)
+- [ ] Teacher: overview (assignment, date range, student-name filters); grade route `PUT …/grade` over
+      `gradeSubmission`, returning the grade version as an ETag and honoring `If-Match` (`428`/`412`)
 - [ ] Shared error shape; Zod boundary validation plus `validate*` functions returning `422` with field-level issues
+- [ ] Log authorization denials to the activity log from the route layer (the guards only throw today)
 - [ ] Pagination, per-route integration tests (including `400`/`422` cases)
 - **Done when:** every bullet in the PDF has a passing test.
 
@@ -131,8 +141,10 @@ Each phase ends with passing tests. Tick as we go.
 - [ ] Academic years, terms, classes, seats, assignments, gradebook
 - [ ] Grading scale endpoints (create, new version, set default) and scale overrides
 - [ ] "Missing submission" view
-- [ ] Submit race protection + non-transactional race tests
-- [ ] Regrade flow with ETag `412`/`428`; history + activity endpoints
+- [ ] Submit race protection + non-transactional race tests; allocate attempt numbers as the maximum over all rows
+      including soft-deleted ones
+- [ ] Grade history and activity endpoints (regrade logic and version checks already live in `gradeSubmission`)
+- [ ] Soft-delete (`DELETE`) and administrator restore endpoints, with an unfiltered read path for deleted rows
 - [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
 - [ ] Seed script and demo reset (see demo-and-seed.md)
 

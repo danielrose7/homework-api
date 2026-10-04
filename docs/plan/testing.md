@@ -75,24 +75,24 @@ Setup helpers build a ready-to-use context so a route test is a few lines:
 - Race tests to write: N parallel submits with `max_submissions = 1` → exactly one success, rest `409`;
   idempotent retry returns the original; concurrent regrades → one `412`.
 
-## Factory traits (proposal — to review together)
+## Factory traits
 
-Not final. Mark up what to add, drop or rename.
+Built (see `test/factories/`):
 
-| Factory                 | Traits                                                                                                                                                           |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user`                  | `withPassword`, `unverified`                                                                                                                                     |
-| `organization`          | `withDefaultTerm`                                                                                                                                                |
-| `member`                | `administrator`, `teacher`, `student`                                                                                                                            |
-| `academicYear` / `term` | `current`, `past`, `upcoming`, `overlapping` (for validation tests)                                                                                              |
-| `class`                 | `withTeacher`, `withSeats(n)`, `inPastTerm`                                                                                                                      |
-| `gradingScale`          | `standardAF` (default), `plusMinus`, `passFail`, `asDefault`, `used` (has a graded submission)                                                                   |
-| `gradingScaleBand`      | `top`, `bottom` (min 0), `failing`                                                                                                                               |
-| `classSeat`             | `active`, `dropped`                                                                                                                                              |
-| `assignment`            | `pointsGraded`, `passFail` (band mode), `homework`, `exam`, `project`, `draft` (unpublished), `published`, `pastDue`, `singleAttempt`, `multiAttempt`, `deleted` |
-| `submission`            | `ungraded`, `graded(points)`, `markedBand(label)`, `incomplete` (manual-only band), `regraded`, `deleted`                                                        |
-| `gradeEvent`            | `first`, `regrade` (requires reason)                                                                                                                             |
-| `activityLog`           | `read`, `denied`, `system`                                                                                                                                       |
+| Factory                     | Traits                                                                                                                                                                     |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user`                      | none; always a real Better Auth sign-up                                                                                                                                    |
+| `organization`              | `sandbox()`; creates the default grading scale                                                                                                                             |
+| `member`                    | `administrator()`, `teacher()`, `student()`                                                                                                                                |
+| `academicYear`              | none                                                                                                                                                                       |
+| `term`                      | `current()`, `past()`, `upcoming()`                                                                                                                                        |
+| `gradingScale`              | `standardAF()`, `plusMinus()`, `passFail()`, `asDefault()`                                                                                                                 |
+| `class`                     | `withTeachers(n)`, `withStudents(n)` (transient counts)                                                                                                                    |
+| `classTeacher`, `classSeat` | `classSeat`: `active()`, `dropped()`                                                                                                                                       |
+| `assignment`                | `homework()`, `exam()`, `quiz()`, `project()`, `pointsGraded(max)`, `passFail()`, `draft()`, `published()`, `pastDue()`, `singleAttempt()`, `multiAttempt(n)`, `deleted()` |
+| `submission`                | `ungraded()`, `graded(points, notes?)`, `markedBand(label, notes?)`, `incomplete(notes?)`, `deleted()`                                                                     |
 
-Open: should grade-band traits exist (`gradedA`…`gradedF`) or only `graded(points)` plus a table-driven boundary
-test? Should `submission.graded()` also write a matching `gradeEvent` so history is never out of sync?
+A graded submission goes through the same write path as `gradeSubmission`, so its grade-history row always exists.
+
+Not built yet, add when a test needs them: a `regraded` submission trait, `gradingScale.used`, `term.overlapping`,
+a `gradeEvent` factory and an `activityLog` factory.
