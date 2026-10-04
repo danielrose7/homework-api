@@ -95,6 +95,8 @@ Recorded as work lands; each is small but worth a look at the gate.
   concurrent double submit is caught by the unique attempt number and answered `409`.
 - Denials are logged for school members only: `403`s and the deliberate `404` refusals. A request from a
   non-member, an unauthenticated one, or one for a missing id leaves no `denied` row.
+- `GET /submissions/{id}` was not in the route plan. It was added because submit returns a `Location` pointing at it
+  and because it is where a client reads the grade `ETag`; reading it is a logged single-record read.
 - No `Idempotency-Key` on submit; the attempt limit already makes a repeated request a `409`.
 
 ## Phases
