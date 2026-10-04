@@ -7,7 +7,7 @@ import {
   type BandInput,
 } from "@/lib/domain/grading";
 import type { Auth } from "@/lib/server/auth-factory";
-import type { AppPrismaClient } from "@/lib/server/db";
+import type { DbClient } from "@/lib/server/db-types";
 import { addBands } from "@/modules/grading-scales/mutations/add-bands";
 import { createDefaultGradingScale } from "@/modules/grading-scales/mutations/create-default-grading-scale";
 import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
@@ -43,7 +43,7 @@ const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
 async function createScale(
-  db: AppPrismaClient,
+  db: DbClient,
   organization_id: string,
   name: string,
   bands: readonly BandInput[],
@@ -56,7 +56,7 @@ async function createScale(
 }
 
 export async function seedSandbox(
-  db: AppPrismaClient,
+  db: DbClient,
   auth: Auth,
 ): Promise<SeedSummary> {
   if ((await db.user.count()) > 0 || (await db.organization.count()) > 0) {

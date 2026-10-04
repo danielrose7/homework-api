@@ -21,7 +21,7 @@ export const listAttachmentsRoute = defineRoute({
     title: "List attachments",
     summary: "List the metadata of the files attached to a submission.",
     description:
-      "Same access rules as the submission. Each item carries a `url` to download the bytes.",
+      "Same access rules as the submission. Download a file with its `id`.",
     roles: ["student", "teacher", "administrator"],
     params,
     success: {
