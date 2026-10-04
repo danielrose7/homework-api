@@ -12,12 +12,12 @@ import { recordActivity } from "@/lib/server/activity";
 import { requirePermission, type RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
 import { notFound, validationFailed } from "@/lib/server/errors";
-import { requireTeachesClass } from "@/lib/server/services/academics";
 import {
   loadScale,
   resolveGradingScale,
 } from "@/lib/server/services/grading-scales";
 import { transact } from "@/lib/server/transaction";
+import { requireTeachesClass } from "@/modules/academics/queries/access";
 
 export interface GradeResult {
   submissionId: string;

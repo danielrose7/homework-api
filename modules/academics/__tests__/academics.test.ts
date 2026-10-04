@@ -2,16 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
+import { addClassSeat } from "@/modules/academics/mutations/add-class-seat";
+import { addClassTeacher } from "@/modules/academics/mutations/add-class-teacher";
+import { createAcademicYear } from "@/modules/academics/mutations/create-academic-year";
+import { createAssignment } from "@/modules/academics/mutations/create-assignment";
+import { createClass } from "@/modules/academics/mutations/create-class";
+import { createTerm } from "@/modules/academics/mutations/create-term";
 import {
-  addClassSeat,
-  addClassTeacher,
-  createAcademicYear,
-  createAssignment,
-  createClass,
-  createTerm,
   validateAssignmentInput,
   type AssignmentInput,
-} from "@/lib/server/services/academics";
+} from "@/modules/academics/validation";
 import { createGradingScale } from "@/lib/server/services/grading-scales";
 import { PASS_FAIL } from "@/lib/domain/grading";
 import { seedSchool } from "@/test/scenarios/school";
