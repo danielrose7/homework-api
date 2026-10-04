@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import { STATUS } from "@/lib/http-status";
 import { listAll, listMine, submit } from "@/lib/server/routes/submissions";
@@ -207,6 +208,22 @@ describe("GET /submissions/me", () => {
     ]);
   });
 
+  it("writes timestamps as ISO 8601 UTC", async () => {
+    const seeded = await seedSubmission({ grade: { points: "92" } });
+
+    const response = await callRoute(
+      listMine,
+      { orgSlug: seeded.school.organization.slug },
+      { headers: seeded.school.students[0]!.headers },
+    );
+
+    const [row] = (await json(response)).data as Json[];
+    for (const field of ["submitted_at", "graded_at"]) {
+      expect(z.iso.datetime().safeParse(row?.[field]).success).toBe(true);
+      expect(row?.[field]).toMatch(/\.\d{3}Z$/);
+    }
+  });
+
   it("applies grade and assignment filters from the query string", async () => {
     const seeded = await seedSubmission({
       grade: { points: "92" },
@@ -310,6 +327,19 @@ describe("GET /submissions", () => {
     expect(
       (await errorOf(response)).details?.map((d) => d.field).sort(),
     ).toEqual(["from", "student"]);
+    for (const from of [
+      "2026-02-30",
+      "2026-3-10",
+      "20260310",
+      "2026-03-10T00:00:00Z",
+    ]) {
+      const bad = await callRoute(
+        listAll,
+        { orgSlug: seeded.school.organization.slug },
+        { headers: seeded.school.admin.headers, query: { from } },
+      );
+      expect(bad.status).toBe(STATUS.unprocessable_content);
+    }
     expect(inverted.status).toBe(STATUS.unprocessable_content);
     expect((await errorOf(inverted)).details?.[0]?.code).toBe(
       "date_range_inverted",
