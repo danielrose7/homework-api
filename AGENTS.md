@@ -13,7 +13,7 @@ Choices are settled (see the decision log in `docs/plan/README.md`); don't swap 
 - Postgres 17 (docker-compose, port 5433) with **Prisma 7.10** and the `pg` driver adapter. Not Drizzle.
 - **Better Auth**, self-hosted: email+password, organization, bearer and API key plugins.
 - **Plain REST** route handlers under `/api/v1` using GET/POST/PUT/PATCH/DELETE. Not tRPC. Zod schemas are the
-  source of truth for validation, types and the generated OpenAPI spec.
+  source of truth for validation, types and the field tables on the docs page. There is no OpenAPI spec.
 - shadcn/ui for the UI; `useOptimistic` + `startTransition` against the same REST API.
 - Vitest + Fishery. Integration tests run in rolled-back transactions; concurrency tests are a separate,
   non-transactional suite.

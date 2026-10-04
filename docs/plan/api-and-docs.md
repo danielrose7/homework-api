@@ -1,9 +1,9 @@
-# API design, OpenAPI docs, UI
+# API design, docs, UI
 
 ## API (REST — pending confirmation, see README decision log)
 
 - Route Handlers under `/api/v1/orgs/{org_slug}/…`. Zod schemas are the single source of truth for validation,
-  types and OpenAPI (`zod-to-openapi` or similar). Handlers are thin; logic lives in a service layer that the UI
+  types and the docs page's field tables. Handlers are thin; logic lives in a service layer that the UI
   also calls.
 - Handlers are wrapped in `serve(...)` (`lib/server/serve.ts`), which resolves the `RequestContext` from the bearer
   token and the `org_slug` path segment, gives the handler `input.params/query/body(zodSchema)` parsers, and maps
@@ -129,12 +129,12 @@ one error; `details` still lists them all.
 | List filters  | `from` ≤ `to`; ISO dates; `grade` is a known label, group or `ungraded`; `limit` within bounds; `starting_after` is in the list; unknown query params rejected                                                                                                                                       |
 
 Each rule gets a stable `code`, a unit test on the validator, and a route test asserting the `422` body. The
-OpenAPI spec documents the codes per endpoint.
+docs page lists the codes per endpoint.
 
 ## Docs (Phase 5)
 
-- OpenAPI served at `/api/openapi.json`; docs page in-app.
-- Sections: **project background**, **authentication** (Bearer flow, API keys), **routes** (generated).
+- No OpenAPI spec. A custom in-app docs page is generated from a route registry plus Zod's JSON Schema output.
+- Sections: **project background**, **authentication** (Bearer flow, API keys), **routes** (from the registry), and a high-level **codebase guide** with links to the code on GitHub.
 - Examples for every key route in **tabbed curl / Python (`requests`) / Node (`fetch`)**: sign in → token →
   submit → grade.
 

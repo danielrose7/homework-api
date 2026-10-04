@@ -51,7 +51,7 @@ so a demo script can say "sign in as Ms. Alvarez".
 - Everything lives under `/sandbox` (Console, App, Data, Brief checks) and is hidden unless `SANDBOX_MODE=true`. The Data
   tab is a server component that reads tables through the owner connection; the other tabs are plain clients of the
   public API, so the network log shows real calls.
-- Links to the OpenAPI docs and the activity log from the nav.
+- Links to the docs page and the activity log from the nav.
 - Optimistic updates (`useOptimistic` + `startTransition`) on submit and grade.
 
 ## Docs tie-in

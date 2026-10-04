@@ -16,7 +16,7 @@ This directory is the living plan. Update it as we go (tick boxes, add to the de
 | [audit-and-grade-history.md](audit-and-grade-history.md) | HIPAA-style `activity_log`, grade events, regrade concurrency             |
 | [future-ideas.md](future-ideas.md)                       | Deferred features, options considered, and what is already prepared       |
 | [testing.md](testing.md)                                 | Rollback-per-test, Fishery, guard tests, race tests                       |
-| [api-and-docs.md](api-and-docs.md)                       | REST design, OpenAPI, tabbed examples, UI                                 |
+| [api-and-docs.md](api-and-docs.md)                       | REST design, docs page, tabbed examples, UI                               |
 
 ## Assignment requirements → where they land
 
@@ -35,7 +35,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Decision                                                                                                                                                             | Status  | Notes                                                                                                                        |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Next.js + Prisma + Postgres + Better Auth (self-hosted)                                                                                                              | Decided |                                                                                                                              |
-| REST route handlers + OpenAPI generated from Zod, **no tRPC**                                                                                                        | Decided | tRPC can't be called cleanly from Python/curl. Standard verbs: GET / POST / PUT / PATCH / DELETE                             |
+| REST route handlers, documented by a Zod-driven route registry on an in-app docs page; **no tRPC, no OpenAPI**                                                       | Decided | tRPC can't be called cleanly from Python/curl. Standard verbs: GET / POST / PUT / PATCH / DELETE                             |
 | Soft deletes (`deleted_at`/`deleted_by_id`/`deletion_reason`); app and API code never hard-delete                                                                    | Decided | Only dev tooling (seed, reset, test cleanup) hard-deletes, via the owner connection                                          |
 | Retention is indefinite; no purge feature                                                                                                                            | Decided | FERPA-supportive; purge and retention windows are future decisions                                                           |
 | "Incomplete" is a manual-only, neutral grade band (not a status, not null); `ungraded` = no band                                                                     | Decided | Matches the brief's grade list; no `status` column                                                                           |
@@ -209,16 +209,16 @@ script and the test factories only. Decisions 1 to 5 below belong to the deferre
 
 **Decide before starting** (recommendation in italics):
 
-1. How the OpenAPI document is produced: _Zod's built-in JSON Schema output plus a small route registry; spike
-   `zod-to-openapi` first and keep whichever is less code._
-2. Docs renderer: _an off-the-shelf viewer (such as Scalar) over the generated spec, not a custom one._
-3. Keeping examples honest: _one definition per route generates the curl, Python and Node tabs, and a test runs each
-   example against the seeded `sandbox` school._
-4. Source of the project-background copy: _a Markdown file rendered on the page._
+Decided (2026-10-04): no OpenAPI spec; accurate hand-built docs are enough for this project. The docs page is custom,
+built from a small route registry (method, path, role, Zod schemas, error codes) with Zod's JSON Schema output for
+field tables. One example definition per route generates the curl, Python and Node tabs, and a test runs each against
+the seeded `sandbox` school. Background, authentication and a high-level codebase guide (key decisions, with links to
+the code on GitHub) are Markdown rendered on the page.
 
-- [ ] OpenAPI spec generated from Zod, served at `/api/openapi.json`
-- [ ] Docs page: background, authentication, routes
-- [ ] Tabbed curl / Python / Node examples
+- [ ] Route registry and the docs page: background, authentication, routes
+- [ ] Tabbed curl / Python / Node examples, tested against the sandbox school
+- [ ] Codebase guide: layout, key decisions, links to the code
+- [ ] Sandbox console reads routes from the registry instead of `catalog.ts`
 
 ### Phase 6 — Lightweight UI
 
