@@ -28,7 +28,7 @@ so a demo script can say "sign in as Ms. Alvarez".
 
 ## Reset
 
-- **CLI:** `pnpm db:reset` truncates and re-seeds (not built yet). `pnpm db:fresh`, which exists today, is the
+- **CLI:** `pnpm db:reset` truncates every table through the owner connection and re-seeds. `pnpm db:seed` refuses a database that already has data. `pnpm db:fresh`, which exists today, is the
   heavier tool: it recreates the Docker volume and rebuilds the database from the migrations.
 - **Button:** a "Reset demo data" control in the UI that calls `POST /api/v1/dev/reset`.
 - Truncates every table and re-runs the seed, including Better Auth tables, so any signed-in session is

@@ -75,6 +75,9 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Submit takes JSON `{ "text" }` or multipart (`text` plus repeated `files`); attachments cannot be added after submitting                                             | Decided |                                                                                                                              |
 | Any JSON stored in the database is `JSONB` (Prisma `Json`)                                                                                                           | Decided | `storage_blob.metadata` and `activity_log.metadata` already are                                                              |
 | Each school has a time zone in a new `organization_preferences` table; date filters and date-only inputs are read in it, not UTC                                     | Decided | Timestamps in responses stay ISO 8601 with an offset; see api-and-docs.md                                                    |
+| The seed creates people through Better Auth sign-up, with one shared dev password (`sandbox-dev`)                                                                    | Decided | Phase 4 decision 8; passwords hash the way sign-in expects                                                                   |
+| `pnpm db:seed` refuses a database that has data; `pnpm db:reset` truncates every table (auth included) through the owner connection and re-seeds                     | Decided | Phase 4 decisions 6 and 9. The UI reset button asks for confirmation first                                                   |
+| UI authenticates with a Bearer token kept in memory and `sessionStorage`; screens are console, app, brief checks, and a data view behind `DEMO_MODE`                 | Decided | Phase 6 decisions 1 and 3; the data view reads tables through a dev-only route                                               |
 
 ## Deviations from the plan
 
@@ -194,7 +197,8 @@ Each phase ends with passing tests. Tick as we go.
       to the member (`deletedBy`, `uploadedBy`), as `graded_by_id` already is, when these endpoints start writing them;
       edit the domain migration in place
 - [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
-- [ ] Seed script and demo reset (see demo-and-seed.md)
+- [x] Seed script and `pnpm db:seed` / `pnpm db:reset` (see demo-and-seed.md)
+- [ ] Demo reset endpoint and UI button (Phase 6)
 
 ### Phase 5 — Docs
 
