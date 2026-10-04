@@ -93,7 +93,9 @@ Recorded as work lands; each is small but worth a look at the gate.
   ones, while the limit counts only live rows, because the attempt number is unique unconditionally.
 - Top-level reads hide soft-deleted rows; an administrator restore flow needs an unfiltered read path, to be
   added in Phase 4 with the restore endpoints.
-- The submit service and the race-protection tests are Phase 3/4; only submission eligibility rules exist now.
+- The submit service exists (Phase 3). Race protection and the non-transactional race tests are Phase 4; until then a
+  concurrent double submit is caught by the unique attempt number and answered `409`.
+- No `Idempotency-Key` on submit; the attempt limit already makes a repeated request a `409`.
 
 ## Phases
 
@@ -146,7 +148,7 @@ Each phase ends with passing tests. Tick as we go.
 - [x] Route plumbing: mount Better Auth's HTTP handler (`/api/auth/*`) so curl, Python and Node can sign up, sign in
       for a Bearer token and create a school; a small route wrapper that builds the `RequestContext`, parses with Zod and
       turns `ApiError` into the shared JSON error shape
-- [ ] Student: submit as JSON (text) or `multipart/form-data` (files, using `createBlob` + `attachBlobToSubmission` and
+- [x] Student: submit as JSON (text) or `multipart/form-data` (files, using `createBlob` + `attachBlobToSubmission` and
       `submissionEligibility` in one transaction); list own submissions (grade / assignment-name filters)
 - [ ] Attachments: list and download routes (downloads are logged reads)
 - [ ] Teacher: overview (assignment, date range, student-name filters); grade route `PUT …/grade` over

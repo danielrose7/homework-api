@@ -17,6 +17,7 @@ export interface RouteDeps {
 }
 
 export interface RouteInput {
+  parse<S extends z.ZodType>(schema: S, value: unknown): z.output<S>;
   params<S extends z.ZodType>(schema: S): z.output<S>;
   query<S extends z.ZodType>(schema: S): z.output<S>;
   body<S extends z.ZodType>(schema: S): Promise<z.output<S>>;
@@ -46,6 +47,7 @@ function parseWith<S extends z.ZodType>(schema: S, value: unknown) {
 
 function createInput(request: Request, params: RouteParams): RouteInput {
   return {
+    parse: parseWith,
     params: (schema) => parseWith(schema, params),
     query: (schema) =>
       parseWith(schema, Object.fromEntries(new URL(request.url).searchParams)),
