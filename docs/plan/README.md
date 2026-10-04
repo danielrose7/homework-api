@@ -100,8 +100,9 @@ Recorded as work lands; each is small but worth a look at the gate.
   ones, while the limit counts only live rows, because the attempt number is unique unconditionally.
 - Top-level reads hide soft-deleted rows; an administrator restore flow needs an unfiltered read path, to be
   added with the restore endpoints, which are deferred.
-- The submit service exists (Phase 3). Race protection and the non-transactional race tests are in Phase 4; until then a
-  concurrent double submit is caught by the unique attempt number and answered `409`.
+- Parallel submits are serialized by the unique attempt number: the loser's transaction aborts, `submitAssignment`
+  runs it again (up to 5 times), and the second pass answers `409 submission_limit_reached` or takes the next free
+  attempt. The race tests run in their own database, `homework_race`, because they commit.
 - Denials are logged for school members only: `403`s and the deliberate `404` refusals. A request from a
   non-member, an unauthenticated one, or one for a missing id leaves no `denied` row.
 - `GET /submissions/{id}` was not in the route plan. It was added because submit returns a `Location` pointing at it
@@ -198,9 +199,9 @@ script and the test factories only. Decisions 1 to 5 below belong to the deferre
 9. Running the seed on a database that already has data: _refuse and point at `pnpm db:reset`, rather than merging
    or duplicating._
 
-- [ ] Submit race protection + non-transactional race tests; allocate attempt numbers as the maximum over all rows
-      including soft-deleted ones
-- [ ] Cross-tenant isolation test at the service/route level (RLS is out of scope)
+- [x] Submit race protection + non-transactional race tests (`pnpm test:race`); allocate attempt numbers as the
+      maximum over all rows including soft-deleted ones
+- [x] Cross-tenant isolation test at the route level (`test/tenant-isolation.test.ts`; RLS is out of scope)
 - [x] Remove the production-dead module code (deleted with its tests; the deferred endpoints would rebuild it)
 - [x] Seed script and `pnpm db:seed` / `pnpm db:reset` (see sandbox-and-seed.md)
 - [x] Sandbox reset endpoint (`POST /sandbox/api/reset`) and confirmed UI button

@@ -27,7 +27,9 @@ export interface EligibilityInput {
     max_submissions: number;
   };
   seat: { status: "active" | "dropped"; deleted_at: Date | null };
-  attempts_so_far: number;
+  live_attempts: number;
+  /** Highest attempt number ever used, soft-deleted rows included: the attempt number is unique regardless of deletion. */
+  highest_attempt_number: number;
 }
 
 /**
@@ -38,21 +40,21 @@ export interface EligibilityInput {
 export function submissionEligibility(
   input: EligibilityInput,
 ): EligibilityResult {
-  const { assignment, seat, attempts_so_far } = input;
+  const { assignment, seat, live_attempts, highest_attempt_number } = input;
   if (assignment.deleted_at !== null || assignment.published_at === null) {
     return { ok: false, status: STATUS.not_found, code: "not_found" };
   }
   if (seat.status !== "active" || seat.deleted_at !== null) {
     return { ok: false, status: STATUS.forbidden, code: "seat_not_active" };
   }
-  if (attempts_so_far >= assignment.max_submissions) {
+  if (live_attempts >= assignment.max_submissions) {
     return {
       ok: false,
       status: STATUS.conflict,
       code: "submission_limit_reached",
     };
   }
-  return { ok: true, attempt_number: attempts_so_far + 1 };
+  return { ok: true, attempt_number: highest_attempt_number + 1 };
 }
 
 export interface SubmissionContent {

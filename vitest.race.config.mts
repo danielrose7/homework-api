@@ -1,8 +1,8 @@
 import { fileURLToPath } from "node:url";
 
-import { configDefaults, defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
-import { testEnv } from "./test/env.ts";
+import { raceEnv } from "./test/env.ts";
 
 export default defineConfig({
   resolve: {
@@ -10,13 +10,12 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    exclude: [...configDefaults.exclude, "test/race/**"],
-    globalSetup: ["./test/global-setup.ts"],
-    setupFiles: ["./test/setup.ts"],
+    include: ["test/race/**/*.test.ts"],
+    globalSetup: ["./test/race/global-setup.ts"],
     fileParallelism: false,
     env: {
-      DATABASE_URL: testEnv.appUrl,
-      MIGRATION_DATABASE_URL: testEnv.owner_url,
+      DATABASE_URL: raceEnv.appUrl,
+      MIGRATION_DATABASE_URL: raceEnv.owner_url,
       BETTER_AUTH_SECRET: "test-secret-test-secret-test-secret-1234",
       BETTER_AUTH_URL: "http://localhost:3000",
     },

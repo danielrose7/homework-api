@@ -14,7 +14,7 @@ Integration tests against real Postgres are the backbone; unit tests cover pure 
    malformed JSON.
    call route handlers with real Bearer-authenticated requests inside the same rollback harness.
 4. **Concurrency suite (non-transactional):** parallel requests need separate connections, which a single
-   wrapping transaction cannot model. Runs against a separate database/schema, truncates between tests, kept
+   wrapping transaction cannot model. Runs against a separate database (`homework_race`), truncates between tests, kept
    small and clearly labelled.
 5. **Guard tests:**
    - every domain Prisma model has `created_at` + `@updatedAt` unless allowlisted (`activity_log`, `submission_grade_event`)
@@ -75,8 +75,14 @@ Route handlers are `defineRoute` definitions, so a test runs one through the rea
 - Test client runs `SET LOCAL ROLE app_user` so grants (append-only tables) are exercised rather than bypassed
   by a superuser.
 - Seed/reset scripts for local dev are separate from test data; see sandbox-and-seed.md.
-- Race tests to write: N parallel submits with `max_submissions = 1` → exactly one success, rest `409`;
-  idempotent retry returns the original; concurrent regrades → both applied in order, two history rows.
+- Race tests (`test/race/`, `pnpm test:race`, also part of `pnpm test`) commit for real in their own database,
+  `homework_race`, and truncate every table between tests through the owner role. They reuse the factories and
+  scenarios by pointing `setFactoryDb` at the committed client. Built: parallel submits with `max_submissions = 1`
+  give one success and the rest `409`; with `max_submissions = 3` exactly attempts 1 to 3 are saved; two students
+  do not block each other. Concurrent regrades are last-write-wins and not tested as a race.
+- `test/tenant-isolation.test.ts` seeds two schools and walks every route: school A's administrator, teacher and
+  student get `404` for school B's ids and for B's slug, except where the role check legitimately answers `403`
+  first, and lists never include B's rows.
 
 ## Factory traits
 

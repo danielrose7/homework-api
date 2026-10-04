@@ -138,6 +138,22 @@ describe("submitAssignment", () => {
     ]).toEqual([1, 2]);
   });
 
+  it("numbers past a soft-deleted attempt, which still holds its attempt number", async () => {
+    const seeded = await seedSubmission({ assignment: { max_submissions: 2 } });
+    await testDb().assignmentSubmission.update({
+      where: { id: seeded.submission.id },
+      data: { deleted_at: new Date(), deletion_reason: "Wrong file" },
+    });
+    const ctx = await seeded.school.students[0]!.context();
+
+    const { submission } = await submitAssignment(ctx, seeded.assignment.id, {
+      text: "again",
+      files: [],
+    });
+
+    expect(submission.attempt_number).toBe(2);
+  });
+
   it("keeps a failed file from leaving a half-made submission behind", async () => {
     const seeded = await seedAssignment();
     const ctx = await seeded.school.students[0]!.context();
