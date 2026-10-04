@@ -169,6 +169,12 @@ Each phase ends with passing tests. Tick as we go.
 4. Gradebook shape: _students by assignments, each cell the grade label and points; no averages._
 5. Restore rules: _administrator only, logged, and refused while the parent record is still deleted._
 6. What reset clears: _every table through the owner connection, including auth, so sessions end._
+7. Seed scope: _the seed script is the only way people get into a school, since there are no member endpoints; the
+   Sandbox school is the one in demo-and-seed.md, with the default `America/New_York` time zone._
+8. How the seed creates people: _through Better Auth's own sign-up, so passwords are hashed the way sign-in expects,
+   with one shared dev password._
+9. Running the seed on a database that already has data: _refuse and point at `pnpm db:reset`, rather than merging
+   or duplicating._
 
 - [ ] Academic years, terms, classes, seats, assignments, gradebook
 - [ ] Grading scale endpoints (create, new version, set default) and scale overrides
