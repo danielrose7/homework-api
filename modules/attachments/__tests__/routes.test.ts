@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { downloadAttachmentRoute as download } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/attachments/[attachmentId]/route";
+import { listAttachmentsRoute as list } from "@/app/api/v1/orgs/[orgSlug]/submissions/[submissionId]/attachments/route";
 import { STATUS } from "@/lib/http-status";
-import { download, list } from "@/lib/server/routes/attachments";
 import { submitAssignment } from "@/modules/submissions/mutations/submit-assignment";
 import { callRoute } from "@/test/http";
 import { seedAssignment } from "@/test/scenarios/class";

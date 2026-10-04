@@ -15,12 +15,10 @@ import {
   notFound,
   validationFailed,
 } from "@/lib/server/errors";
-import {
-  attachBlobToSubmission,
-  createBlob,
-  listSubmissionAttachments,
-} from "@/lib/server/services/attachments";
 import { transact } from "@/lib/server/transaction";
+import { attachBlobToSubmission } from "@/modules/attachments/mutations/attach-blob-to-submission";
+import { createBlob } from "@/modules/attachments/mutations/create-blob";
+import { listSubmissionAttachments } from "@/modules/attachments/queries/list-submission-attachments";
 import { toSubmissionView } from "@/modules/submissions/serializers";
 import { submissionInclude } from "@/modules/submissions/types";
 

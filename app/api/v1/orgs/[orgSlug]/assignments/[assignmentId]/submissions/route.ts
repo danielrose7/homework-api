@@ -5,8 +5,8 @@ import { STATUS } from "@/lib/http-status";
 import { validationFailed } from "@/lib/server/errors";
 import { listJson } from "@/lib/server/list-json";
 import { defineRoute } from "@/lib/server/route";
-import { attachmentJson } from "@/lib/server/routes/attachments";
 import { serve } from "@/lib/server/serve";
+import { serializeAttachment } from "@/modules/attachments/serializers";
 import { submitAssignment } from "@/modules/submissions/mutations/submit-assignment";
 import { serializeSubmission } from "@/modules/submissions/serializers";
 
@@ -69,7 +69,7 @@ export const submitRoute = defineRoute({
         ...serializeSubmission(result.submission),
         attachments: listJson(
           `${base}/submissions/${result.submission.id}/attachments`,
-          result.attachments.map(attachmentJson),
+          result.attachments.map(serializeAttachment),
         ),
       },
       {

@@ -5,12 +5,10 @@ import { describe, expect, it } from "vitest";
 import { MAX_FILES_PER_RECORD, MAX_UPLOAD_BYTES } from "@/lib/domain/uploads";
 import { STATUS } from "@/lib/http-status";
 import { ApiError } from "@/lib/server/errors";
-import {
-  attachBlobToSubmission,
-  createBlob,
-  downloadAttachment,
-  listSubmissionAttachments,
-} from "@/lib/server/services/attachments";
+import { attachBlobToSubmission } from "@/modules/attachments/mutations/attach-blob-to-submission";
+import { createBlob } from "@/modules/attachments/mutations/create-blob";
+import { downloadAttachment } from "@/modules/attachments/queries/download-attachment";
+import { listSubmissionAttachments } from "@/modules/attachments/queries/list-submission-attachments";
 import {
   seedAssignment,
   seedClass,
