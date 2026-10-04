@@ -1,28 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
-import { toCurl } from "@/app/sandbox/_lib/api";
+import { JsonView } from "@/app/sandbox/_components/json-view";
+import { StatusChip } from "@/app/sandbox/_components/ui";
+import { toCurl } from "@/app/sandbox/_lib/curl";
 import type { Exchange } from "@/app/sandbox/_lib/exchange-store";
 import { cn } from "@/lib/utils";
 
-import { JsonView } from "@/app/sandbox/_components/json-view";
-import { MethodTag, StatusChip } from "@/app/sandbox/_components/ui";
-
 const TABS = [
-  ["body", "Response"],
-  ["headers", "Headers"],
   ["request", "Request"],
+  ["response", "Response"],
   ["curl", "cURL"],
 ] as const;
 
 type Tab = (typeof TABS)[number][0];
 
-function HeaderTable({ headers }: { headers: Record<string, string> }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mb-4">
+      <h4 className="text-muted-foreground mb-1 text-[10.5px] tracking-widest uppercase">
+        {title}
+      </h4>
+      {children}
+    </section>
+  );
+}
+
+function Rows({ rows }: { rows: Array<[string, ReactNode]> }) {
   return (
     <table>
       <tbody>
-        {Object.entries(headers).map(([name, value]) => (
+        {rows.map(([name, value]) => (
           <tr key={name}>
             <td className="text-muted-foreground pr-4 align-top whitespace-nowrap">
               {name}
@@ -35,8 +44,70 @@ function HeaderTable({ headers }: { headers: Record<string, string> }) {
   );
 }
 
+const headerRows = (headers: Record<string, string>) =>
+  Object.entries(headers) as Array<[string, string]>;
+
+function prettyRequest(body: string): string {
+  try {
+    return JSON.stringify(JSON.parse(body), null, 2);
+  } catch {
+    return body;
+  }
+}
+
+function RequestTab({ exchange }: { exchange: Exchange }) {
+  const sent = new Date(exchange.at);
+  return (
+    <>
+      <Section title="Request">
+        <Rows
+          rows={[
+            [
+              "Time",
+              `${sent.toLocaleTimeString("en-GB")}.${String(sent.getMilliseconds()).padStart(3, "0")} · ${sent.toLocaleDateString("en-CA")}`,
+            ],
+            ["Method", exchange.method],
+            ["URL", `${window.location.origin}${exchange.path}`],
+            ["As", exchange.persona],
+          ]}
+        />
+      </Section>
+      <Section title="Headers">
+        <Rows rows={headerRows(exchange.requestHeaders)} />
+      </Section>
+      {exchange.requestBody !== null && (
+        <Section title="Body">
+          <JsonView text={prettyRequest(exchange.requestBody)} />
+        </Section>
+      )}
+    </>
+  );
+}
+
+function ResponseTab({ exchange }: { exchange: Exchange }) {
+  return (
+    <>
+      <Section title="Response">
+        <Rows
+          rows={[
+            ["Status", <StatusChip key="s" status={exchange.status} />],
+            ["Took", `${exchange.ms} ms`],
+            ["Size", `${new Blob([exchange.responseText]).size} bytes`],
+          ]}
+        />
+      </Section>
+      <Section title="Headers">
+        <Rows rows={headerRows(exchange.responseHeaders)} />
+      </Section>
+      <Section title="Body">
+        <JsonView text={exchange.responseText} />
+      </Section>
+    </>
+  );
+}
+
 export function ExchangeView({ exchange }: { exchange: Exchange | null }) {
-  const [tab, setTab] = useState<Tab>("body");
+  const [tab, setTab] = useState<Tab>("request");
   const [copied, setCopied] = useState(false);
   if (!exchange) {
     return (
@@ -49,17 +120,10 @@ export function ExchangeView({ exchange }: { exchange: Exchange | null }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
-        <MethodTag method={exchange.method} />
-        <span className="break-all">{exchange.path}</span>
-      </div>
-      <div className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
-        <StatusChip status={exchange.status} />
-        <span className="text-muted-foreground">{exchange.ms} ms</span>
-        <span className="text-muted-foreground">as {exchange.persona}</span>
         <span
-          className="ml-auto flex gap-3.5"
           role="tablist"
-          aria-label="Response view"
+          aria-label="Exchange view"
+          className="flex gap-3.5"
         >
           {TABS.map(([id, label]) => (
             <button
@@ -78,48 +142,32 @@ export function ExchangeView({ exchange }: { exchange: Exchange | null }) {
               {label}
             </button>
           ))}
-          <button
-            type="button"
-            className="border-input rounded border px-2 text-[11.5px]"
-            onClick={() => {
-              navigator.clipboard
-                .writeText(curl)
-                .then(() => setCopied(true))
-                .catch(() => setTab("curl"));
-              setTimeout(() => setCopied(false), 1200);
-            }}
-          >
-            {copied ? "Copied" : "Copy cURL"}
-          </button>
+        </span>
+        <button
+          type="button"
+          className="border-input rounded border px-2 text-[11.5px]"
+          onClick={() => {
+            navigator.clipboard
+              .writeText(curl)
+              .then(() => setCopied(true))
+              .catch(() => setTab("curl"));
+            setTimeout(() => setCopied(false), 1200);
+          }}
+        >
+          {copied ? "Copied" : "Copy cURL"}
+        </button>
+        <span className="ml-auto flex items-center gap-2">
+          <StatusChip status={exchange.status} />
+          <span className="text-muted-foreground">{exchange.ms} ms</span>
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-4 py-2.5">
-        {tab === "body" && <JsonView text={exchange.responseText} />}
-        {tab === "headers" && (
-          <HeaderTable headers={exchange.responseHeaders} />
-        )}
-        {tab === "request" && (
-          <>
-            <HeaderTable headers={exchange.requestHeaders} />
-            {exchange.requestBody ? (
-              <div className="mt-3">
-                <JsonView text={prettyRequest(exchange.requestBody)} />
-              </div>
-            ) : null}
-          </>
-        )}
+        {tab === "request" && <RequestTab exchange={exchange} />}
+        {tab === "response" && <ResponseTab exchange={exchange} />}
         {tab === "curl" && (
           <pre className="break-words whitespace-pre-wrap">{curl}</pre>
         )}
       </div>
     </div>
   );
-}
-
-function prettyRequest(body: string): string {
-  try {
-    return JSON.stringify(JSON.parse(body), null, 2);
-  } catch {
-    return body;
-  }
 }

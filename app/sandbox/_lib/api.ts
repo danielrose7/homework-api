@@ -117,18 +117,6 @@ export async function devJson<T>(path: string): Promise<T | null> {
   return exchange.status === 200 ? (exchange.json as T) : null;
 }
 
-export function toCurl(exchange: Exchange, origin: string): string {
-  const parts = [`curl -X ${exchange.method} '${origin}${exchange.path}'`];
-  for (const [name, value] of Object.entries(exchange.requestHeaders)) {
-    if (name === "accept") continue;
-    parts.push(`-H '${name}: ${value}'`);
-  }
-  if (exchange.requestBody) {
-    parts.push(`-d '${exchange.requestBody.replace(/'/g, "'\\''")}'`);
-  }
-  return parts.join(" \\\n  ");
-}
-
 /** Makes `username` the active persona, signing in first unless a token is already held. */
 export async function switchPersona(username: string, fresh = false) {
   if (fresh || !session.tokenFor(username)) await signIn(username);
