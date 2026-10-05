@@ -45,7 +45,7 @@ export function PersonalNote() {
           My wife was out of town over the weekend so I went a tad too hard on
           this project. Not like 10&apos;s of hours hard! Still close to the
           assignment&apos;s allowance. I just think it&apos;s a little more than
-          a simple DRF repo with a local db and some generated docs.
+          a simple FastAPI repo with a local db and some generated docs.
         </p>
         <p>
           I started by brainstorming the general schema. Gist can be found in
