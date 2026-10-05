@@ -7,6 +7,7 @@ const BETTER_AUTH_URL = "https://www.better-auth.com";
 const PRISMA_URL = "https://www.prisma.io/orm";
 const NEXT_ROUTING_URL =
   "https://nextjs.org/docs/app/getting-started/project-structure";
+const PERSONAL_SITE_URL = "https://gobloom.io";
 const SCHEMA_URL = `${MAIN}/prisma/schema.prisma`;
 
 const READ_THESE = [
@@ -204,6 +205,11 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
             . Rather than a routes file that helps orient the server to go route
             -&gt; controller -&gt; view, the route file is the controller and
             its file path matches the param
+          </p>
+          <p>
+            If you want to know more about me, my personal dev site at{" "}
+            <ExternalLink href={PERSONAL_SITE_URL}>gobloom.io</ExternalLink> has
+            a resume and such.
           </p>
           <p>
             Anyhow... super excited to meet you each in a few days time and
