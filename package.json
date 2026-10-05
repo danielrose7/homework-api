@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "MIGRATION_DATABASE_URL=${MIGRATION_DATABASE_URL:-postgresql://unused@localhost/unused} prisma generate && next build && prisma migrate deploy",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
