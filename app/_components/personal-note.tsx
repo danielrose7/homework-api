@@ -44,31 +44,31 @@ export function PersonalNote() {
         <p>
           My wife was out of town over the weekend so I went a tad too hard on
           this project. Not like 10&apos;s of hours hard! Still close to the
-          assignment&apos;s allowance. I just think is a little more than a
-          simple DRF repo with a local db and some generated docs.
+          assignment&apos;s allowance. I just think it&apos;s a little more than
+          a simple DRF repo with a local db and some generated docs.
         </p>
         <p>
           I started by brainstorming the general schema. Gist can be found in
           the <ExternalLink href={SCHEMA_URL}>prisma schema file</ExternalLink>.
           I have a love/hate relationship with prisma. It was what I was most
           recently using in production at another Fractal company and is fairly
-          easily to read + setup. As such I thought it&apos;d be an alright
+          easy to read + setup. As such I thought it&apos;d be an alright
           choice. It&apos;s fully typesafe and supports DB enums well but I have
           my gripes.
         </p>
         <p>
           For the PK id&apos;s of the tables, I went with v7 UUID&apos;s.
-          v7&apos;s are nice as they are lexigraphically sortable and also as
+          v7&apos;s are nice as they are lexicographically sortable and also as
           random as a more classic v4 UUID. I think for the
           assignment-as-written sequential integers (1, 2, 3...) would have
-          probably been ok but might was well use some fancy juice. In addition
+          probably been ok but might as well use some fancy juice. In addition
           to these standards, I added some generated timestamps (created_at,
           updated_at).
         </p>
         <p>
           While working through the skinny version of schema required by the
-          assignment, I realized would be good to have some users. I reached for
-          better auth--an open source auth library that&apos;s now part of
+          assignment, I realized it would be good to have some users. I reached
+          for better auth--an open source auth library that&apos;s now part of
           vercel. It has some quirks for this simple use case but handles users,
           session mgmt, and organizations. &quot;Organizations&quot; in this
           context are setup as schools. Most every table has organization_id on
@@ -98,10 +98,10 @@ export function PersonalNote() {
           coverage. There are a few levels but simply put tests can be found in
           __tests__ in a JS/TS convention that is generally co-located to the
           functionality that is being tested. I worked up a little integration
-          test suite on top of libaries like thoughtbot&apos;s fishery (similar
+          test suite on top of libraries like thoughtbot&apos;s fishery (similar
           to FactoryBot in ruby on rails projects). This allows for tests to
           seed data, login a user, and run the API endpoint against
-          expectations. Each test is isloated in a DB transaction that is rolled
+          expectations. Each test is isolated in a DB transaction that is rolled
           back at the end of the test (pass or fail). These tests aren&apos;t as
           fast as pure unit tests as they actually interact with a database.
           They also aren&apos;t as slow as e2e tests, which I generally like as
@@ -143,8 +143,8 @@ export function PersonalNote() {
         <p>
           If you aren&apos;t familiar, NextJS offers file-based routing. Rather
           than a routes file that helps orient the server to go route -&gt;
-          controller -&gt; view, the route file is the and its file path matches
-          the param
+          controller -&gt; view, the route file is the controller and its file
+          path matches the param
         </p>
         <p>
           for example app/api/v1/orgs/[org_slug]/submissions/route.ts handles
