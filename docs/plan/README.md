@@ -257,7 +257,7 @@ the code on GitHub) are Markdown rendered on the page.
 3. README scope: _what it is, run it, run the tests, the design decisions worth discussing, and what was deferred._
 
 - [ ] README: setup, design decisions, how to run tests
-- [ ] Docs site: move `lib/docs` into `app/docs/_lib`; shared site shell (header, theme, fonts) used by home, docs and
+- [x] Docs site: move `lib/docs` into `app/docs/_lib`; shared site shell (header, theme, fonts) used by home, docs and
       sandbox; docs split into pages with a tree nav and per-endpoint reference pages; guides; sandbox and docs
       cross-links; homepage
 - [ ] CI; final test-suite pass
