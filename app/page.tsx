@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PersonalNote } from "@/app/_components/personal-note";
 import { GITHUB_URL } from "@/app/_components/site-nav";
 import { SiteHeader } from "@/app/_components/site-header";
 import { ExampleFor } from "@/app/docs/_components/example-for";
@@ -127,6 +128,8 @@ export default function Home() {
               API reference
             </Link>
           </div>
+
+          <PersonalNote />
 
           <dl className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4">
             {[
