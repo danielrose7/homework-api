@@ -86,6 +86,24 @@ const DECISIONS = [
   ],
 ] as const;
 
+const UNDER_THE_HOOD = [
+  [
+    "/docs/architecture/overview",
+    "Codebase layout",
+    "Where routes, queries, mutations and serializers live, and the dependency rules between them.",
+  ],
+  [
+    "/docs/architecture/testing",
+    "Testing",
+    "Real Postgres, rolled-back transactions, a separate race suite, and the commands to run them.",
+  ],
+  [
+    "/docs/architecture/deferred",
+    "Deferred ideas",
+    "What was left out on purpose, and what a next iteration would pick up.",
+  ],
+] as const;
+
 export const dynamic = "force-dynamic";
 
 export default function Home() {
@@ -221,6 +239,26 @@ export default function Home() {
                   className="bg-card hover:border-ring rounded-xl border p-4"
                 >
                   <span className="font-bold">{title}</span>
+                  <span className="text-muted-foreground mt-1.5 block font-sans text-[14px] leading-6">
+                    {body}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-20">
+            <h2 className="font-display font-semibold text-3xl">
+              Under the hood
+            </h2>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {UNDER_THE_HOOD.map(([href, title, body]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="bg-card hover:border-ring rounded-xl border p-4"
+                >
+                  <span className="font-bold">{title} →</span>
                   <span className="text-muted-foreground mt-1.5 block font-sans text-[14px] leading-6">
                     {body}
                   </span>
