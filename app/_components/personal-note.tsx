@@ -23,9 +23,9 @@ const TLDR = [
     Next.js, TypeScript, Postgres, Prisma and{" "}
     <ExternalLink href={BETTER_AUTH_URL}>Better Auth</ExternalLink>.
   </>,
-  "Grading scales are data (letters, plus/minus, pass/fail) and points are kept, so a gradebook can come later.",
-  "Tests run against a real database, each in a rolled-back transaction. The docs examples run as tests too.",
   "The sandbox's brief checks click through the assignment's requirements against the real routes.",
+  "Tests run against a real database, each in a rolled-back transaction. The docs examples run as tests too.",
+  "Grading scales are data (letters, plus/minus, pass/fail) and points are kept, so a gradebook can come later.",
 ] as const;
 
 function ExternalLink({
