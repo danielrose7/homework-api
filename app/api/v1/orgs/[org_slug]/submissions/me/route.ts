@@ -59,12 +59,7 @@ export const listOwnRoute = defineRoute({
   handle: async ({ ctx, input }) => {
     const query = input.query(querySchema);
     const url = `/api/v1/orgs/${ctx.organization_slug}/submissions/me`;
-    const page = await listOwnSubmissions(ctx, {
-      grade: query.grade,
-      assignment: query.assignment,
-      limit: query.limit,
-      starting_after: query.starting_after,
-    });
+    const page = await listOwnSubmissions(ctx, query);
     return Response.json(serializeSubmissionPage(url, page));
   },
 });

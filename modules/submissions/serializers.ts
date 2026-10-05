@@ -3,6 +3,7 @@ import { listJson } from "@/lib/server/list-json";
 import { serializeAttachmentList } from "@/modules/attachments/serializers";
 import type { AttachmentSummary } from "@/modules/attachments/types";
 import type {
+  GradeResult,
   SubmissionPage,
   SubmissionRow,
   SubmissionView,
@@ -40,6 +41,37 @@ export function toSubmissionView(row: SubmissionRow): SubmissionView {
                 : null,
             scale_id: row.grading_scale_id,
           },
+  };
+}
+
+export function toGradeResult(params: {
+  submission_id: string;
+  graded_at: Date;
+  teacher_notes: string | null;
+  scale_id: string;
+  band_id: string;
+  label: string;
+  group: string;
+  points_awarded: string | null;
+  max_points: string | null;
+}): GradeResult {
+  const { points_awarded, max_points } = params;
+  return {
+    submission_id: params.submission_id,
+    graded_at: params.graded_at.toISOString(),
+    teacher_notes: params.teacher_notes,
+    grade: {
+      band_id: params.band_id,
+      scale_id: params.scale_id,
+      label: params.label,
+      group: params.group,
+      points_awarded,
+      max_points,
+      percent:
+        points_awarded !== null && max_points !== null
+          ? percentOf(points_awarded, max_points)
+          : null,
+    },
   };
 }
 

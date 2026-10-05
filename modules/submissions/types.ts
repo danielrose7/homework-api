@@ -48,3 +48,18 @@ export interface SubmissionPage {
   items: SubmissionView[];
   has_more: boolean;
 }
+
+export interface GradeResult {
+  submission_id: string;
+  graded_at: string;
+  teacher_notes: string | null;
+  grade: {
+    band_id: string;
+    scale_id: string;
+    label: string;
+    group: string;
+    points_awarded: string | null;
+    max_points: string | null;
+    percent: string | null;
+  };
+}

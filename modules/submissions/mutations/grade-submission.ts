@@ -1,9 +1,4 @@
-import {
-  findManualBand,
-  lookupBand,
-  percentOf,
-  type Band,
-} from "@/lib/domain/grading";
+import { findManualBand, lookupBand, type Band } from "@/lib/domain/grading";
 import { toHundredths } from "@/lib/domain/decimal";
 import {
   validateGradeRequest,
@@ -15,23 +10,10 @@ import type { DbClient } from "@/lib/server/db-types";
 import { notFound, validationFailed } from "@/lib/server/errors";
 import { transact } from "@/lib/server/transaction";
 import { requireTeachesClass } from "@/lib/server/access";
+import { toGradeResult } from "@/modules/submissions/serializers";
+import type { GradeResult } from "@/modules/submissions/types";
 import { loadGradingScale } from "@/modules/grading-scales/queries/load-grading-scale";
 import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
-
-export interface GradeResult {
-  submission_id: string;
-  graded_at: string;
-  teacher_notes: string | null;
-  grade: {
-    band_id: string;
-    scale_id: string;
-    label: string;
-    group: string;
-    points_awarded: string | null;
-    max_points: string | null;
-    percent: string | null;
-  };
-}
 
 function samePoints(current: string | null, requested: string | null) {
   if (current === null || requested === null) return current === requested;
@@ -55,60 +37,68 @@ export async function applyGrade(
   tx: DbClient,
   params: ApplyGradeParams,
 ): Promise<GradeResult> {
-  const group = params.band.group_label ?? params.band.label;
+  const { organization_id, submission_id, band, now } = params;
+  const group = band.group_label ?? band.label;
+  const snapshot = {
+    points_awarded: params.points_awarded,
+    grading_scale_id: params.scale_id,
+    grade_band_id: band.id,
+    grade_label: band.label,
+    grade_group: group,
+    teacher_notes: params.teacher_notes,
+    graded_by_id: params.graded_by_id,
+  };
 
   await tx.assignmentSubmission.update({
-    where: {
-      organization_id_id: {
-        organization_id: params.organization_id,
-        id: params.submission_id,
-      },
-    },
-    data: {
-      points_awarded: params.points_awarded,
-      grading_scale_id: params.scale_id,
-      grade_band_id: params.band.id,
-      grade_label: params.band.label,
-      grade_group: group,
-      teacher_notes: params.teacher_notes,
-      graded_at: params.now,
-      graded_by_id: params.graded_by_id,
-    },
+    where: { organization_id_id: { organization_id, id: submission_id } },
+    data: { ...snapshot, graded_at: now },
   });
   await tx.submissionGradeEvent.create({
     data: {
-      organization_id: params.organization_id,
-      submission_id: params.submission_id,
-      points_awarded: params.points_awarded,
+      ...snapshot,
+      organization_id,
+      submission_id,
       max_points: params.max_points,
-      grading_scale_id: params.scale_id,
-      grade_band_id: params.band.id,
-      grade_label: params.band.label,
-      grade_group: group,
-      teacher_notes: params.teacher_notes,
       reason: params.reason,
-      graded_by_id: params.graded_by_id,
-      created_at: params.now,
+      created_at: now,
     },
   });
 
-  return {
-    submission_id: params.submission_id,
-    graded_at: params.now.toISOString(),
+  return toGradeResult({
+    submission_id,
+    graded_at: now,
     teacher_notes: params.teacher_notes,
-    grade: {
-      band_id: params.band.id,
-      scale_id: params.scale_id,
-      label: params.band.label,
-      group,
-      points_awarded: params.points_awarded,
-      max_points: params.max_points,
-      percent:
-        params.points_awarded !== null && params.max_points !== null
-          ? percentOf(params.points_awarded, params.max_points)
-          : null,
+    scale_id: params.scale_id,
+    band_id: band.id,
+    label: band.label,
+    group,
+    points_awarded: params.points_awarded,
+    max_points: params.max_points,
+  });
+}
+
+async function loadGradingTarget(
+  tx: DbClient,
+  ctx: RequestContext,
+  submission_id: string,
+) {
+  const submission = await tx.assignmentSubmission.findFirst({
+    where: { id: submission_id, organization_id: ctx.organization_id },
+  });
+  if (!submission) throw notFound();
+  const assignment = await tx.assignment.findFirst({
+    where: {
+      id: submission.assignment_id,
+      organization_id: ctx.organization_id,
     },
-  };
+  });
+  if (!assignment) throw notFound();
+  const klass = await tx.class.findFirst({
+    where: { id: assignment.class_id, organization_id: ctx.organization_id },
+  });
+  if (!klass) throw notFound();
+  await requireTeachesClass({ ...ctx, db: tx }, assignment.class_id);
+  return { submission, assignment, klass };
 }
 
 export async function gradeSubmission(
@@ -119,26 +109,13 @@ export async function gradeSubmission(
   requirePermission(ctx, { grade: ["update"] });
 
   return transact(ctx.db, async (tx) => {
-    const scoped: RequestContext = { ...ctx, db: tx };
-
     await tx.$queryRaw`SELECT id FROM assignment_submission WHERE id = ${submission_id}::uuid AND organization_id = ${ctx.organization_id}::uuid FOR UPDATE`;
 
-    const submission = await tx.assignmentSubmission.findFirst({
-      where: { id: submission_id, organization_id: ctx.organization_id },
-    });
-    if (!submission) throw notFound();
-    const assignment = await tx.assignment.findFirst({
-      where: {
-        id: submission.assignment_id,
-        organization_id: ctx.organization_id,
-      },
-    });
-    if (!assignment) throw notFound();
-    const klass = await tx.class.findFirst({
-      where: { id: assignment.class_id, organization_id: ctx.organization_id },
-    });
-    if (!klass) throw notFound();
-    await requireTeachesClass(scoped, assignment.class_id);
+    const { submission, assignment, klass } = await loadGradingTarget(
+      tx,
+      ctx,
+      submission_id,
+    );
 
     const scale = submission.grading_scale_id
       ? await loadGradingScale(
@@ -181,23 +158,17 @@ export async function gradeSubmission(
 
     if (!band) throw notFound();
     if (unchanged && submission.graded_at !== null) {
-      return {
+      return toGradeResult({
         submission_id,
-        graded_at: submission.graded_at.toISOString(),
+        graded_at: submission.graded_at,
         teacher_notes,
-        grade: {
-          band_id: band.id,
-          scale_id: scale.id,
-          label: submission.grade_label ?? band.label,
-          group: submission.grade_group ?? band.group_label ?? band.label,
-          points_awarded,
-          max_points,
-          percent:
-            points_awarded !== null && max_points !== null
-              ? percentOf(points_awarded, max_points)
-              : null,
-        },
-      };
+        scale_id: scale.id,
+        band_id: band.id,
+        label: submission.grade_label ?? band.label,
+        group: submission.grade_group ?? band.group_label ?? band.label,
+        points_awarded,
+        max_points,
+      });
     }
 
     const result = await applyGrade(tx, {
