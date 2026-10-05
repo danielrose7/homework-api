@@ -47,7 +47,7 @@ export const gradeSubmissionRoute = defineRoute({
     summary:
       "Set the current grade and teacher notes; a regrade needs a reason.",
     description:
-      "Idempotent: the body replaces the current grade. The resolved grade (label, group, percent and the scale used) is stored with the submission, and every change is kept in its grade history, so editing a scale later never relabels past work. A regrade is last-write-wins.",
+      "Idempotent: the body replaces the current grade, and repeating an identical replacement is a no-op. The resolved grade (label, group, percent and the scale used) is stored with the submission, and every change is kept in its grade history, so editing a scale later never relabels past work. A regrade is last-write-wins.",
     roles: ["teacher", "administrator"],
     params,
     bodies: [{ content_type: "application/json", schema: bodySchema }],

@@ -33,7 +33,7 @@ Rules:
 
 ## `submission_grade_event` — grade history
 
-One row per grading action; a regrade adds a row, never edits one. Ordered by `(created_at, id)` — UUIDv7 `id`
+One row per grade change; an identical `PUT` is a no-op, while a regrade adds a row and never edits one. Ordered by `(created_at, id)` — UUIDv7 `id`
 breaks ties within a millisecond.
 
 Columns: `organization_id`, `submission_id`, `points_awarded` (nullable), `teacher_notes`, `max_points`
@@ -52,7 +52,7 @@ stale regrade) is in [future-ideas.md](future-ideas.md). Relies on `Timestamptz(
 
 ## Tests
 
-- Event created per grade; history immutable; reason required on regrade.
+- Event created per grade change; identical replacement is a no-op; history immutable; reason required on regrade.
 - Concurrent regrades are applied one after the other; both stay in the history.
 - Rolled-back mutation leaves no log row; denied/read logs survive rollback.
 - `app_user` cannot `UPDATE`/`DELETE` the append-only tables (grant test, not just the Prisma extension).

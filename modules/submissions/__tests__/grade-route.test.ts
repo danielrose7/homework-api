@@ -4,8 +4,8 @@ import { STATUS } from "@/lib/http-status";
 import { gradeSubmissionRoute as grade } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/grade/route";
 import { getSubmissionRoute as getOne } from "@/app/api/v1/orgs/[org_slug]/submissions/[submission_id]/route";
 import { callRoute } from "@/test/http";
+import { testDb, withRollbackDb } from "@/test/rollback-db";
 import { seedSubmission } from "@/test/scenarios/class";
-import { withRollbackDb } from "@/test/rollback-db";
 
 withRollbackDb();
 
@@ -62,6 +62,35 @@ describe("PUT /submissions/{id}/grade", () => {
 
     expect(response.status).toBe(STATUS.ok);
     expect((await json(response)).grade).toMatchObject({ label: "B" });
+  });
+
+  it("treats an identical replacement as a no-op", async () => {
+    const { params, teacher } = await setup();
+    const request = () =>
+      callRoute(grade, params, {
+        method: "PUT",
+        headers: teacher,
+        json: { points: 92, teacher_notes: "Nice work" },
+      });
+
+    const first = await request();
+    const second = await request();
+    const firstBody = await json(first);
+    const secondBody = await json(second);
+
+    expect(first.status).toBe(STATUS.ok);
+    expect(second.status).toBe(STATUS.ok);
+    expect(secondBody.graded_at).toBe(firstBody.graded_at);
+    expect(
+      await testDb().submissionGradeEvent.count({
+        where: { submission_id: params.submission_id },
+      }),
+    ).toBe(1);
+    expect(
+      await testDb().activityLog.count({
+        where: { resource_id: params.submission_id, action: "grade" },
+      }),
+    ).toBe(1);
   });
 
   it("requires a reason to regrade", async () => {

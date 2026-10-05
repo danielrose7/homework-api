@@ -31,7 +31,8 @@ editing a scale later never relabels past work.
 
 ## Regrade
 
-Replacing an existing grade needs a `reason`. Without one, the request is a `422` with the code `reason_required`:
+Repeating the current grade and teacher notes is an idempotent no-op. Replacing either with something different needs
+a `reason`. Without one, the request is a `422` with the code `reason_required`:
 
 ```example
 grade | Regrade without a reason

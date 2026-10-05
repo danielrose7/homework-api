@@ -4,6 +4,7 @@ import {
   percentOf,
   type Band,
 } from "@/lib/domain/grading";
+import { toHundredths } from "@/lib/domain/decimal";
 import {
   validateGradeRequest,
   type GradeRequest,
@@ -30,6 +31,11 @@ export interface GradeResult {
     max_points: string | null;
     percent: string | null;
   };
+}
+
+function samePoints(current: string | null, requested: string | null) {
+  if (current === null || requested === null) return current === requested;
+  return toHundredths(current) === toHundredths(requested);
 }
 
 interface ApplyGradeParams {
@@ -150,18 +156,49 @@ export async function gradeSubmission(
     const max_points = assignment.max_points?.toString() ?? null;
     const current_band =
       scale.bands.find((band) => band.id === submission.grade_band_id) ?? null;
-    const issues = validateGradeRequest(command, {
-      assignment: { grading_mode: assignment.grading_mode, max_points },
-      bands: scale.bands,
-      current_band,
-    });
-    if (issues.length > 0) throw validationFailed(issues);
-
     const band =
       command.points != null && max_points !== null
         ? lookupBand(scale.bands, command.points, max_points)
         : findManualBand(scale.bands, command.band ?? "");
+    const points_awarded = command.points ?? null;
+    const teacher_notes = command.teacher_notes ?? null;
+    const unchanged =
+      band !== null &&
+      submission.grading_scale_id === scale.id &&
+      submission.grade_band_id === band.id &&
+      samePoints(
+        submission.points_awarded?.toString() ?? null,
+        points_awarded,
+      ) &&
+      submission.teacher_notes === teacher_notes;
+    const issues = validateGradeRequest(command, {
+      assignment: { grading_mode: assignment.grading_mode, max_points },
+      bands: scale.bands,
+      current_band,
+      unchanged,
+    });
+    if (issues.length > 0) throw validationFailed(issues);
+
     if (!band) throw notFound();
+    if (unchanged && submission.graded_at !== null) {
+      return {
+        submission_id,
+        graded_at: submission.graded_at.toISOString(),
+        teacher_notes,
+        grade: {
+          band_id: band.id,
+          scale_id: scale.id,
+          label: submission.grade_label ?? band.label,
+          group: submission.grade_group ?? band.group_label ?? band.label,
+          points_awarded,
+          max_points,
+          percent:
+            points_awarded !== null && max_points !== null
+              ? percentOf(points_awarded, max_points)
+              : null,
+        },
+      };
+    }
 
     const result = await applyGrade(tx, {
       organization_id: ctx.organization_id,
@@ -170,9 +207,9 @@ export async function gradeSubmission(
       now: new Date(),
       scale_id: scale.id,
       band,
-      points_awarded: command.points ?? null,
+      points_awarded,
       max_points,
-      teacher_notes: command.teacher_notes ?? null,
+      teacher_notes,
       reason: command.reason?.trim() || null,
     });
 

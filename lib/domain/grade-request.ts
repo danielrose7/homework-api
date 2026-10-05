@@ -14,6 +14,7 @@ export interface GradeContext {
   bands: readonly Band[];
   /** The band currently on the submission, or null if it has not been graded. */
   current_band: Band | null;
+  unchanged?: boolean;
 }
 
 export const NOTES_LIMIT = 5000;
@@ -111,7 +112,7 @@ export function validateGradeRequest(
   }
   const replacingRealGrade =
     context.current_band !== null && !isManualOnly(context.current_band);
-  if (replacingRealGrade && !reason) {
+  if (replacingRealGrade && !context.unchanged && !reason) {
     issues.push(
       issue("reason", "reason_required", "Say why the grade is changing"),
     );
