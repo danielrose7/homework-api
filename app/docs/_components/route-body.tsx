@@ -84,7 +84,7 @@ export function RouteBody({
         {consoleHref ? (
           <Link
             href={consoleHref}
-            className="ml-auto font-bold underline underline-offset-4"
+            className="bg-primary text-primary-foreground ml-auto rounded-md px-3 py-1 font-bold"
           >
             Try in the console →
           </Link>
@@ -156,6 +156,19 @@ export function RouteBody({
       {examples.length > 0 ? (
         <>
           <Label id="examples">Examples</Label>
+          {consoleHref ? (
+            <div className="bg-muted mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
+              <span className="font-sans text-[13.5px]">
+                Send this request as a seeded user, no setup.
+              </span>
+              <Link
+                href={consoleHref}
+                className="bg-primary text-primary-foreground rounded-md px-3 py-1 font-bold"
+              >
+                Try in the console →
+              </Link>
+            </div>
+          ) : null}
           <div className="space-y-2">
             {examples.map((example, index) => (
               <details key={example.id} open={index === 0} className="group">
