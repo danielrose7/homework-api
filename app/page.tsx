@@ -153,7 +153,7 @@ export default function Home() {
             </a>
           </div>
 
-          <PersonalNote />
+          <PersonalNote sandbox={sandbox} />
 
           <dl className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4">
             {[

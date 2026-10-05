@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { GITHUB_URL } from "@/app/_components/github";
 
 const MAIN = `${GITHUB_URL}/blob/main`;
@@ -23,9 +25,7 @@ const TLDR = [
     Next.js, TypeScript, Postgres, Prisma and{" "}
     <ExternalLink href={BETTER_AUTH_URL}>Better Auth</ExternalLink>.
   </>,
-  "The sandbox's brief checks click through the assignment's requirements against the real routes.",
   "Tests run against a real database, each in a rolled-back transaction. The docs examples run as tests too.",
-  "Grading scales are data (letters, plus/minus, pass/fail) and points are kept, so a gradebook can come later.",
 ] as const;
 
 function ExternalLink({
@@ -42,7 +42,7 @@ function ExternalLink({
   );
 }
 
-export function PersonalNote() {
+export function PersonalNote({ sandbox }: { sandbox: boolean }) {
   return (
     <section className="bg-card mt-12 max-w-3xl rounded-xl border p-6 font-sans text-[15px] leading-7">
       <p className="font-bold">Hey Stride team!</p>
@@ -51,9 +51,21 @@ export function PersonalNote() {
           TL;DR
         </p>
         <ul className="list-disc space-y-1 pl-6">
-          {TLDR.map((line, index) => (
-            <li key={index}>{line}</li>
-          ))}
+          <li>{TLDR[0]}</li>
+          {sandbox ? (
+            <li>
+              Check it out in the{" "}
+              <Link
+                href="/sandbox/checks"
+                className="text-foreground underline underline-offset-4"
+              >
+                sandbox
+              </Link>
+              : its brief checks click through the assignment&apos;s
+              requirements against the real routes.
+            </li>
+          ) : null}
+          <li>{TLDR[1]}</li>
         </ul>
         <p>
           Start with the{" "}
