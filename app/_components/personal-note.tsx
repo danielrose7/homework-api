@@ -4,6 +4,9 @@ import { GITHUB_URL } from "@/app/_components/github";
 
 const MAIN = `${GITHUB_URL}/blob/main`;
 const BETTER_AUTH_URL = "https://www.better-auth.com";
+const PRISMA_URL = "https://www.prisma.io/orm";
+const NEXT_ROUTING_URL =
+  "https://nextjs.org/docs/app/getting-started/project-structure";
 const SCHEMA_URL = `${MAIN}/prisma/schema.prisma`;
 
 const READ_THESE = [
@@ -89,8 +92,8 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
             heard of.
           </p>
           <p>
-            My wife was out of town over the weekend so I went a tad too hard on
-            this project. Not like 10&apos;s of hours hard! Still close to the
+            My wife was out of town over the weekend so I went a tad hard on
+            this project. Not like 10&apos;s of hours hard! Still around the
             assignment&apos;s allowance. I just think it&apos;s a little more
             than a simple FastAPI repo with a local db and some generated docs.
           </p>
@@ -98,9 +101,10 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
             I started by brainstorming the general schema. Gist can be found in
             the{" "}
             <ExternalLink href={SCHEMA_URL}>prisma schema file</ExternalLink>. I
-            have a love/hate relationship with prisma. It was what I was most
-            recently using in production at another Fractal company and is
-            fairly easy to read + setup. As such I thought it&apos;d be an
+            have a love/hate relationship with{" "}
+            <ExternalLink href={PRISMA_URL}>prisma</ExternalLink>. It was what I
+            was most recently using in production at another Fractal company and
+            is fairly easy to read + setup. As such I thought it&apos;d be an
             alright choice. It&apos;s fully typesafe and supports DB enums well
             but I have my gripes.
           </p>
@@ -190,19 +194,16 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
           <p>
             I tried to put together some thorough docs as well and generally
             stick towards snake_case over camelCase as I think that&apos;ll feel
-            more familiar to you each.
+            more familiar for a python team.
           </p>
           <p>
-            If you aren&apos;t familiar, NextJS offers file-based routing.
-            Rather than a routes file that helps orient the server to go route
+            If you aren&apos;t familiar, NextJS offers{" "}
+            <ExternalLink href={NEXT_ROUTING_URL}>
+              file-based routing
+            </ExternalLink>
+            . Rather than a routes file that helps orient the server to go route
             -&gt; controller -&gt; view, the route file is the controller and
             its file path matches the param
-          </p>
-          <p>
-            for example app/api/v1/orgs/[org_slug]/submissions/route.ts handles
-            the AWS lambda endpoint for the route GET
-            /api/v1/orgs/[org_slug]/submissions with &apos;org_slug&apos; being
-            a route-based param.
           </p>
           <p>
             Anyhow... super excited to meet you each in a few days time and
