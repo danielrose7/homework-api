@@ -81,7 +81,8 @@ pnpm test:watch  # watch mode
 ```
 
 Integration tests run each case in a transaction that is rolled back, against a separate `homework_test` database
-that Vitest creates. The race tests commit, so they use their own `homework_race` database. Before committing:
+that Vitest creates. The race tests commit, so they use their own `homework_race` database. There is no CI
+(GitHub Actions) for this project at this time, so run the checks by hand before committing:
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm format:check && pnpm test
