@@ -281,4 +281,4 @@ Deliberately deferred; none block the required API. Details, options and researc
 
 - Extra credit, late work, retention and purge, graded work with no upload,
   excused work, an Incomplete deadline, class averages and weighting, RLS, tamper-evident audit log, rate limits,
-  optimistic concurrency on regrades, more Stripe-style API conventions.
+  optimistic concurrency on regrades, more Stripe-style API conventions, Zod response schemas for serializers.

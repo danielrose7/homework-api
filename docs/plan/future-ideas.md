@@ -115,3 +115,17 @@ removed `modules/academics/mutations/`).
 - Grade history and activity endpoints (the data is already written by `gradeSubmission` and the activity log).
 - `DELETE` soft-delete, administrator restore and an unfiltered read path for deleted rows; with them,
   `deleted_by_id` and `storage_blob.uploaded_by_id` become real composite relations (edit the domain migration).
+
+## Response schemas in Zod
+
+Serializers in `modules/*/serializers.ts` are hand-written. `serializeSubmission` spreads the view and converts two
+dates; `serializeAttachment` and `toBand` copy fields one by one on purpose, because they receive rows with extra
+fields (a blob id, `organization_id`) that must not reach the API.
+
+Zod 4 could own this: a response schema per resource, run through `z.encode`. A non-strict `z.object` strips unknown
+keys at every depth, `z.codec` covers `Date` to ISO string, and the same schema could feed response field tables on
+the docs page the way request schemas do today. superjson is the wrong tool (it adds a `meta` block for JS-to-JS
+round trips), and `Response.json` already serializes dates and nested objects.
+
+- **Not tried:** `z.codec`/`z.encode` have not been run in this repo (Zod 4.6.5).
+- **Start with:** `serializeSubmission`, the largest and best-tested serializer; keep it only if it ends up shorter.
