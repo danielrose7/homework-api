@@ -34,6 +34,12 @@ export function StudentView({ options }: { options: SandboxOptions }) {
       .filter((row) => row.student === active)
       .map((row) => row.assignment_id),
   );
+  for (const [assignment_id, outcome] of Object.entries(outcomes)) {
+    if (outcome.status === 201) submitted.add(assignment_id);
+  }
+  const assignments = options.assignments.toSorted(
+    (a, b) => Number(submitted.has(a.id)) - Number(submitted.has(b.id)),
+  );
 
   function submit(assignment: SandboxOptions["assignments"][number]) {
     const text = answers[assignment.id] ?? "";
@@ -138,7 +144,7 @@ export function StudentView({ options }: { options: SandboxOptions }) {
           </span>
         }
       >
-        {options.assignments.map((assignment) => {
+        {assignments.map((assignment) => {
           const outcome = outcomes[assignment.id];
           return (
             <div
