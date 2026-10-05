@@ -1,7 +1,6 @@
 import { Factory } from "fishery";
 
-import { createDefaultGradingScale } from "@/modules/grading-scales/mutations/create-default-grading-scale";
-import { createDefaultOrganizationPreferences } from "@/modules/organizations/mutations/create-default-preferences";
+import { provisionOrganization } from "@/modules/organizations/mutations/provision-organization";
 
 import { factoryDb } from "./runtime";
 
@@ -29,8 +28,7 @@ export const organizationFactory = OrganizationFactory.define(
     onCreate(async (build) => {
       const db = factoryDb();
       const row = await db.organization.create({ data: build });
-      await createDefaultGradingScale(db, row.id);
-      await createDefaultOrganizationPreferences(db, row.id);
+      await provisionOrganization(db, row.id);
       return { ...build, id: row.id };
     });
 

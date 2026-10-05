@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createAuth } from "@/lib/server/auth-factory";
+import { createDefaultGradingScale } from "@/modules/grading-scales/mutations/create-default-grading-scale";
 import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
 import { gradingScaleFactory } from "@/test/factories/academics";
 import { seedSchool } from "@/test/scenarios/school";
@@ -54,6 +55,31 @@ describe("default grading scale", () => {
     });
     expect(scales).toHaveLength(1);
     expect(scales[0]?.is_default).toBe(true);
+  });
+
+  it("repairs a default scale left without bands", async () => {
+    const organization = await testDb().organization.create({
+      data: { name: "Repair School", slug: "repair-school" },
+    });
+    const existing = await testDb().gradingScale.create({
+      data: {
+        organization_id: organization.id,
+        name: "Standard A–F",
+        is_default: true,
+      },
+    });
+
+    expect(await createDefaultGradingScale(testDb(), organization.id)).toBe(
+      existing.id,
+    );
+    expect(
+      await testDb().gradingScaleBand.count({
+        where: {
+          organization_id: organization.id,
+          grading_scale_id: existing.id,
+        },
+      }),
+    ).toBe(6);
   });
 });
 

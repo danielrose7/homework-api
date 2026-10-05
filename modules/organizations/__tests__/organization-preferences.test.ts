@@ -44,4 +44,38 @@ describe("organization preferences", () => {
       });
     expect(preferences.timezone).toBe("America/New_York");
   });
+
+  it("removes a new school when provisioning fails", async () => {
+    const auth = createAuth(testDb(), {
+      provision: async () => {
+        throw new Error("provisioning failed");
+      },
+    });
+    await auth.api.signUpEmail({
+      body: {
+        name: "Ms. Alvarez",
+        email: "alvarez@sandbox.test",
+        password: "correct-horse-battery",
+        username: "alvarez",
+      },
+    });
+    const signIn = await auth.api.signInUsername({
+      body: { username: "alvarez", password: "correct-horse-battery" },
+      returnHeaders: true,
+    });
+
+    await expect(
+      auth.api.createOrganization({
+        body: { name: "Sandbox", slug: "sandbox" },
+        headers: new Headers({
+          authorization: `Bearer ${signIn.headers.get("set-auth-token")}`,
+        }),
+      }),
+    ).rejects.toThrow("provisioning failed");
+
+    expect(
+      await testDb().organization.findUnique({ where: { slug: "sandbox" } }),
+    ).toBeNull();
+    expect(await testDb().member.count()).toBe(0);
+  });
 });

@@ -8,8 +8,14 @@ export async function createDefaultGradingScale(
 ): Promise<string> {
   const existing = await db.gradingScale.findFirst({
     where: { organization_id, is_default: true },
+    include: { bands: { select: { id: true } } },
   });
-  if (existing) return existing.id;
+  if (existing) {
+    if (existing.bands.length === 0) {
+      await addBands(db, organization_id, existing.id, STANDARD_AF);
+    }
+    return existing.id;
+  }
 
   const scale = await db.gradingScale.create({
     data: { organization_id, name: "Standard A–F", is_default: true },

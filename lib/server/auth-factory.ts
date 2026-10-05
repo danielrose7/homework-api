@@ -5,10 +5,14 @@ import { v7 as uuidv7 } from "uuid";
 
 import type { DbClient } from "@/lib/server/db-types";
 import { ac, roles } from "@/lib/server/permissions";
-import { createDefaultGradingScale } from "@/modules/grading-scales/mutations/create-default-grading-scale";
-import { createDefaultOrganizationPreferences } from "@/modules/organizations/mutations/create-default-preferences";
+import { provisionOrganization } from "@/modules/organizations/mutations/provision-organization";
 
-export function createAuth(db: DbClient) {
+interface AuthFactoryOptions {
+  provision?: typeof provisionOrganization;
+}
+
+export function createAuth(db: DbClient, options: AuthFactoryOptions = {}) {
+  const provision = options.provision ?? provisionOrganization;
   return betterAuth({
     database: prismaAdapter(db, { provider: "postgresql" }),
     secret: process.env.BETTER_AUTH_SECRET,
@@ -25,8 +29,12 @@ export function createAuth(db: DbClient) {
         creatorRole: "administrator",
         organizationHooks: {
           afterCreateOrganization: async ({ organization: created }) => {
-            await createDefaultGradingScale(db, created.id);
-            await createDefaultOrganizationPreferences(db, created.id);
+            try {
+              await provision(db, created.id);
+            } catch (error) {
+              await db.organization.delete({ where: { id: created.id } });
+              throw error;
+            }
           },
         },
       }),

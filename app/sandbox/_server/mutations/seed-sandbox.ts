@@ -9,7 +9,6 @@ import {
 import type { Auth } from "@/lib/server/auth-factory";
 import type { DbClient } from "@/lib/server/db-types";
 import { addBands } from "@/modules/grading-scales/mutations/add-bands";
-import { createDefaultGradingScale } from "@/modules/grading-scales/mutations/create-default-grading-scale";
 import { resolveGradingScale } from "@/modules/grading-scales/queries/resolve-grading-scale";
 import {
   ASSIGNMENTS,
@@ -21,7 +20,7 @@ import {
   type GradeSpec,
   type ScaleKey,
 } from "@/app/sandbox/_server/seed-data";
-import { createDefaultOrganizationPreferences } from "@/modules/organizations/mutations/create-default-preferences";
+import { provisionOrganization } from "@/modules/organizations/mutations/provision-organization";
 
 class SeedRefusedError extends Error {
   constructor() {
@@ -66,8 +65,10 @@ export async function seedSandbox(
   const now = Date.now();
   const organization = await db.organization.create({ data: SANDBOX_SCHOOL });
   const organization_id = organization.id;
-  const standard_id = await createDefaultGradingScale(db, organization_id);
-  await createDefaultOrganizationPreferences(db, organization_id);
+  await provisionOrganization(db, organization_id);
+  const { id: standard_id } = await db.gradingScale.findFirstOrThrow({
+    where: { organization_id, is_default: true },
+  });
   const scale_ids: Record<ScaleKey, string> = {
     standard: standard_id,
     plus_minus: await createScale(
