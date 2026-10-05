@@ -1,10 +1,11 @@
-import { knownGradeNames, UNGRADED } from "@/lib/domain/submission-filters";
+import { knownGradeNames } from "@/lib/domain/submission-filters";
 import { issue, type ValidationIssue } from "@/lib/domain/validation";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/domain/pagination";
 import { Prisma } from "@/lib/generated/prisma/client";
 import type { RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
 import { validationFailed } from "@/lib/server/errors";
+import { submissionWhere } from "@/modules/submissions/utils/filter-where";
 import { toSubmissionView } from "@/modules/submissions/serializers";
 import {
   submissionInclude,
@@ -31,19 +32,6 @@ async function gradeFilterIssue(
           "That grade is not used by this school",
         ),
       ];
-}
-
-function gradeWhere(
-  grade: string | undefined,
-): Prisma.AssignmentSubmissionWhereInput {
-  if (grade === undefined) return {};
-  if (grade.toLowerCase() === UNGRADED) return { grade_label: null };
-  return {
-    OR: [
-      { grade_label: { equals: grade, mode: "insensitive" } },
-      { grade_group: { equals: grade, mode: "insensitive" } },
-    ],
-  };
 }
 
 export async function listSubmissions(
@@ -91,58 +79,7 @@ export async function listSubmissions(
   if (issues.length > 0) throw validationFailed(issues);
 
   const rows = await ctx.db.assignmentSubmission.findMany({
-    where: {
-      AND: [
-        { organization_id: ctx.organization_id },
-        scope,
-        gradeWhere(filters.grade),
-        filters.assignment === undefined
-          ? {}
-          : {
-              assignment: {
-                title: { contains: filters.assignment, mode: "insensitive" },
-              },
-            },
-        filters.student === undefined
-          ? {}
-          : {
-              class_seat: {
-                member: {
-                  user: {
-                    OR: [
-                      {
-                        name: {
-                          contains: filters.student,
-                          mode: "insensitive",
-                        },
-                      },
-                      {
-                        username: {
-                          contains: filters.student,
-                          mode: "insensitive",
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-        filters.submitted_from === undefined
-          ? {}
-          : { submitted_at: { gte: filters.submitted_from } },
-        filters.submitted_before === undefined
-          ? {}
-          : { submitted_at: { lt: filters.submitted_before } },
-        after === null
-          ? {}
-          : {
-              OR: [
-                { submitted_at: { lt: after.submitted_at } },
-                { submitted_at: after.submitted_at, id: { lt: after.id } },
-              ],
-            },
-      ],
-    },
+    where: submissionWhere(ctx.organization_id, scope, filters, after),
     include: submissionInclude,
     orderBy: [{ submitted_at: "desc" }, { id: "desc" }],
     take: limit + 1,

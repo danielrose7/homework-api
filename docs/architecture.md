@@ -12,6 +12,7 @@ modules/
     mutations/
     serializers.ts
     types.ts
+    utils/
 lib/
   domain/
   server/
@@ -41,6 +42,8 @@ A module owns application operations and representations for one domain resource
   fetch data and do not stringify JSON.
 - `types.ts` holds shared internal result and input types when putting them beside one operation would create a cycle
   or duplication.
+- `utils/` holds module-specific helpers shared by queries or mutations, such as the Prisma `where` builders in
+  `utils/filter-where.ts`. They take plain inputs and return plain values; they do not fetch data.
 - `__tests__/` holds focused query, mutation and route tests for the module. Keep cross-module acceptance, database and
   architecture tests in the top-level `test/` directory.
 
