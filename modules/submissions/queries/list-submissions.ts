@@ -5,7 +5,10 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import type { RequestContext } from "@/lib/server/context";
 import type { DbClient } from "@/lib/server/db-types";
 import { validationFailed } from "@/lib/server/errors";
-import { submissionWhere } from "@/modules/submissions/utils/filter-where";
+import {
+  submissionWhere,
+  type SubmissionCursor,
+} from "@/modules/submissions/utils/filter-where";
 import { toSubmissionView } from "@/modules/submissions/serializers";
 import {
   submissionInclude,
@@ -34,48 +37,67 @@ async function gradeFilterIssue(
       ];
 }
 
+function limitIssues(limit: number) {
+  return limit < 1 || limit > MAX_PAGE_SIZE
+    ? [
+        issue(
+          "limit",
+          "limit_out_of_range",
+          `Limit must be between 1 and ${MAX_PAGE_SIZE}`,
+        ),
+      ]
+    : [];
+}
+
+async function resolveCursor(
+  ctx: RequestContext,
+  scope: Prisma.AssignmentSubmissionWhereInput,
+  starting_after: string | undefined,
+): Promise<{ after: SubmissionCursor | null; issues: ValidationIssue[] }> {
+  if (starting_after === undefined) return { after: null, issues: [] };
+  const after = await ctx.db.assignmentSubmission.findFirst({
+    where: {
+      AND: [
+        { organization_id: ctx.organization_id },
+        scope,
+        { id: starting_after },
+      ],
+    },
+    select: { id: true, submitted_at: true },
+  });
+  return {
+    after,
+    issues:
+      after === null
+        ? [
+            issue(
+              "starting_after",
+              "unknown_starting_after",
+              "No submission with that id in this list",
+            ),
+          ]
+        : [],
+  };
+}
+
 export async function listSubmissions(
   ctx: RequestContext,
   scope: Prisma.AssignmentSubmissionWhereInput,
   filters: SubmissionFilters,
   earlier_issues: ValidationIssue[] = [],
 ): Promise<SubmissionPage> {
+  const limit = filters.limit ?? DEFAULT_PAGE_SIZE;
+  const { after, issues: cursorIssues } = await resolveCursor(
+    ctx,
+    scope,
+    filters.starting_after,
+  );
   const issues = [
     ...earlier_issues,
     ...(await gradeFilterIssue(ctx.db, ctx.organization_id, filters.grade)),
+    ...limitIssues(limit),
+    ...cursorIssues,
   ];
-  const limit = filters.limit ?? DEFAULT_PAGE_SIZE;
-  if (limit < 1 || limit > MAX_PAGE_SIZE) {
-    issues.push(
-      issue(
-        "limit",
-        "limit_out_of_range",
-        `Limit must be between 1 and ${MAX_PAGE_SIZE}`,
-      ),
-    );
-  }
-  const after =
-    filters.starting_after === undefined
-      ? null
-      : await ctx.db.assignmentSubmission.findFirst({
-          where: {
-            AND: [
-              { organization_id: ctx.organization_id },
-              scope,
-              { id: filters.starting_after },
-            ],
-          },
-          select: { id: true, submitted_at: true },
-        });
-  if (filters.starting_after !== undefined && after === null) {
-    issues.push(
-      issue(
-        "starting_after",
-        "unknown_starting_after",
-        "No submission with that id in this list",
-      ),
-    );
-  }
   if (issues.length > 0) throw validationFailed(issues);
 
   const rows = await ctx.db.assignmentSubmission.findMany({
