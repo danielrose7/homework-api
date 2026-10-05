@@ -119,6 +119,53 @@ export const ASSIGNMENTS: readonly AssignmentSpec[] = [
     scale: "pass_fail",
     due_in_days: 5,
   },
+  {
+    key: "inequalities",
+    class_key: "algebra",
+    title: "Inequalities practice",
+    type: "homework",
+    grading_mode: "points",
+    max_points: "25",
+    due_in_days: 6,
+  },
+  {
+    key: "functions",
+    class_key: "algebra",
+    title: "Functions and graphs",
+    type: "homework",
+    grading_mode: "points",
+    max_points: "60",
+    due_in_days: 11,
+  },
+  {
+    key: "macbeth",
+    class_key: "english",
+    title: "Macbeth reading journal",
+    type: "homework",
+    grading_mode: "points",
+    max_points: "30",
+    due_in_days: 8,
+  },
+  {
+    key: "ecosystems",
+    class_key: "biology",
+    title: "Ecosystems field notes",
+    type: "project",
+    grading_mode: "band",
+    max_points: null,
+    scale: "pass_fail",
+    due_in_days: 10,
+  },
+  {
+    key: "genetics",
+    class_key: "biology",
+    title: "Genetics problem set",
+    type: "homework",
+    grading_mode: "points",
+    max_points: "40",
+    scale: "pass_fail",
+    due_in_days: 13,
+  },
 ];
 
 export interface GradeSpec {
@@ -150,7 +197,8 @@ const day = (hours: number) => hours;
 
 /*
  * Students with no row for an assignment are the "missing" cases, for example sam and lena on the quiz.
- * Maya has one open assignment (the cell worksheet) so a demo can submit as her.
+ * No one submits inequalities, functions, macbeth, ecosystems or genetics, so every student can submit as them
+ * without hitting the one-submission limit.
  */
 export const SUBMISSIONS: readonly SubmissionSpec[] = [
   {
