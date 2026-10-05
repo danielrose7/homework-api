@@ -1,7 +1,7 @@
 # Homework API — Plan
 
 Take-home for Stride, a startup building a system of record for PT practices (assignment PDF:
-`../../project_overview.pdf`). Spec says Python; the hiring
+[`project_overview.pdf`](../../project_overview.pdf)). Spec says Python; the hiring
 manager explicitly OK'd any language/framework. Suggested effort: 3–4 hours; we are going deeper on
 purpose. Be ready to discuss, defend and extend every part.
 
@@ -28,7 +28,7 @@ This directory is the living plan. Update it as we go (tick boxes, add to the de
 ## Stack
 
 Next.js (App Router) + TypeScript, Postgres, **Prisma**, **Better Auth** (self-hosted; organization, bearer and
-API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
+API key plugins), shadcn/ui, Vitest + Fishery, pnpm.
 
 ## Decision log
 

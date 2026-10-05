@@ -2,8 +2,8 @@
 
 ## `activity_log` — HIPAA-style access log
 
-Student records are FERPA, not HIPAA, but the audit shape is the same. Mirrors `../goji-health`'s `audit_logs`
-conventions (`docs/tech-stack.md` → "PHI access logging").
+Student records are FERPA, not HIPAA, but the audit shape is the same. Rows record who touched which record and
+when, by ID only.
 
 | Group      | Columns                                                                                                     |
 | ---------- | ----------------------------------------------------------------------------------------------------------- |
