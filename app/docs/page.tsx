@@ -1,139 +1,105 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
-import { LanguageProvider } from "@/app/docs/_components/language";
-import { Markdown } from "@/app/docs/_components/markdown";
-import { RouteSection } from "@/app/docs/_components/route-section";
-import { readContent } from "@/app/docs/_lib/content";
-import { EXAMPLE_VARIABLES } from "@/app/docs/_lib/examples";
+import { sandboxEnabled } from "@/app/sandbox/_server/guard";
 import { ROUTE_DOCS } from "@/app/docs/_lib/registry";
-import type { RouteGroup } from "@/lib/server/route-doc";
 
 export const metadata: Metadata = {
-  title: "API docs · Homework API",
+  title: "Documentation",
   description:
-    "Reference for the Homework API: authentication, conventions, every route, and runnable curl, Python and Node examples.",
+    "Reference, guides and runnable curl, Python and Node examples for the Homework API.",
 };
 
-const GROUPS: RouteGroup[] = ["Auth", "Student", "Teacher", "Shared"];
+const PATHS = [
+  {
+    href: "/docs/getting-started",
+    title: "Getting started",
+    body: "Sign in, submit and grade in three calls, against a seeded school.",
+  },
+  {
+    href: "/docs/guides/submit-homework",
+    title: "Guides",
+    body: "Submit work with files, filter what is waiting, regrade with a reason.",
+  },
+  {
+    href: "/docs/api",
+    title: "API reference",
+    body: `All ${ROUTE_DOCS.length} routes with fields, errors and examples in three languages.`,
+  },
+  {
+    href: "/docs/architecture/decisions",
+    title: "Under the hood",
+    body: "The decisions behind the code: tenancy, grading scales, validation and more.",
+  },
+];
 
-const SECTIONS = [
-  ["background", "Background"],
-  ["authentication", "Authentication"],
-  ["conventions", "Conventions"],
-  ["resources", "Resources"],
-  ["examples", "Running the examples"],
-  ["routes", "Routes"],
-  ["codebase", "Codebase guide"],
+const CONCEPTS = [
+  ["/docs/authentication", "Authentication"],
+  ["/docs/errors", "Errors"],
+  ["/docs/pagination", "Pagination"],
+  ["/docs/resources/submission", "The submission object"],
+  ["/docs/schools-and-roles", "Schools and roles"],
 ] as const;
 
-function Heading({ id, children }: { id: string; children: string }) {
+export default function DocsHome() {
   return (
-    <h2 id={id} className="scroll-mt-6 pt-10 pb-1 text-2xl font-semibold">
-      {children}
-    </h2>
-  );
-}
+    <div className="mx-auto w-full max-w-5xl px-5 py-14 sm:px-8">
+      <p className="text-muted-foreground mb-3 text-[11px] tracking-wider uppercase">
+        Documentation
+      </p>
+      <h1 className="font-display max-w-2xl text-5xl leading-[1.05] tracking-tight sm:text-6xl">
+        Submit homework. List it. Grade it.
+      </h1>
+      <p className="text-muted-foreground mt-4 max-w-xl font-sans text-lg leading-7">
+        A plain REST API for schools, with JSON bodies you can call from curl,
+        Python or Node. Every example in these docs is a request that runs.
+      </p>
 
-export default async function DocsPage() {
-  const [
-    background,
-    authentication,
-    conventions,
-    resources,
-    examples,
-    codebase,
-  ] = await Promise.all([
-    readContent("background"),
-    readContent("authentication"),
-    readContent("conventions"),
-    readContent("resources"),
-    readContent("examples"),
-    readContent("codebase"),
-  ]);
-
-  return (
-    <LanguageProvider>
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-8 md:grid-cols-[14rem_minmax(0,1fr)]">
-        <nav
-          aria-label="Documentation"
-          className="text-sm md:sticky md:top-6 md:max-h-[calc(100vh-3rem)] md:self-start md:overflow-y-auto"
-        >
-          <p className="mb-3 font-semibold">Homework API</p>
-          <ul className="space-y-1">
-            {SECTIONS.map(([id, label]) => (
-              <li key={id}>
-                <a href={`#${id}`} className="hover:underline">
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ul>
-          {GROUPS.map((group) => (
-            <div key={group}>
-              <p className="text-muted-foreground mt-4 mb-1 text-xs tracking-wider uppercase">
-                {group}
-              </p>
-              <ul className="space-y-1">
-                {ROUTE_DOCS.filter((doc) => doc.group === group).map((doc) => (
-                  <li key={doc.id}>
-                    <a href={`#${doc.id}`} className="hover:underline">
-                      {doc.title}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
-
-        <main className="min-w-0">
-          <h1 className="text-3xl font-semibold">Homework API</h1>
-          <p className="text-muted-foreground mt-1">
-            Submit homework, list it, grade it.
-          </p>
-
-          <Heading id="background">Background</Heading>
-          <Markdown>{background}</Markdown>
-          <Heading id="authentication">Authentication</Heading>
-          <Markdown>{authentication}</Markdown>
-          <Heading id="conventions">Conventions</Heading>
-          <Markdown>{conventions}</Markdown>
-          <Heading id="resources">Resources</Heading>
-          <Markdown>{resources}</Markdown>
-          <Heading id="examples">Running the examples</Heading>
-          <Markdown>{examples}</Markdown>
-          <div className="my-3 overflow-x-auto rounded-lg border">
-            <table className="w-full border-collapse text-left text-sm">
-              <tbody>
-                {EXAMPLE_VARIABLES.map((variable) => (
-                  <tr key={variable.name}>
-                    <td className="border-b px-3 py-2 align-top font-mono text-[13px] last:border-b-0">
-                      {variable.name}
-                    </td>
-                    <td className="border-b px-3 py-2 align-top last:border-b-0">
-                      {variable.description}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <Heading id="routes">Routes</Heading>
-          {GROUPS.map((group) => (
-            <div key={group}>
-              <h3 className="text-muted-foreground mt-8 text-sm font-medium tracking-wider uppercase">
-                {group}
-              </h3>
-              {ROUTE_DOCS.filter((doc) => doc.group === group).map((doc) => (
-                <RouteSection key={doc.id} doc={doc} />
-              ))}
-            </div>
-          ))}
-          <Heading id="codebase">Codebase guide</Heading>
-          <Markdown>{codebase}</Markdown>
-        </main>
+      <div className="mt-10 grid gap-3 sm:grid-cols-2">
+        {PATHS.map((path) => (
+          <Link
+            key={path.href}
+            href={path.href}
+            className="bg-card hover:border-ring group rounded-xl border p-5"
+          >
+            <span className="font-bold">
+              {path.title}{" "}
+              <span className="text-muted-foreground transition-transform group-hover:translate-x-0.5">
+                →
+              </span>
+            </span>
+            <span className="text-muted-foreground mt-1.5 block font-sans text-[14.5px] leading-6">
+              {path.body}
+            </span>
+          </Link>
+        ))}
       </div>
-    </LanguageProvider>
+
+      <div className="mt-10 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+        <span className="text-muted-foreground text-[11px] tracking-wider uppercase">
+          Concepts
+        </span>
+        {CONCEPTS.map(([href, label]) => (
+          <Link key={href} href={href} className="hover:underline">
+            {label}
+          </Link>
+        ))}
+      </div>
+
+      {sandboxEnabled() ? (
+        <div className="bg-muted mt-12 flex flex-wrap items-center justify-between gap-4 rounded-xl border px-5 py-4">
+          <p className="font-sans text-[14.5px]">
+            Rather click than type? The sandbox console calls every route as a
+            seeded teacher or student and shows the request.
+          </p>
+          <Link
+            href="/sandbox/console"
+            className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 font-bold"
+          >
+            Open the sandbox
+          </Link>
+        </div>
+      ) : null}
+    </div>
   );
 }

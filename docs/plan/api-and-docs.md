@@ -137,9 +137,11 @@ docs page lists the codes per endpoint.
   `doc` on its `defineRoute` (id, method, path, roles, params/query/body schemas, errors); `app/docs/_lib/registry.ts`
   lists them, and `test/docs-registry.test.ts` fails if a route file has no entry or a different verb, path or path
   parameter.
-- Sections: background, authentication, conventions, resources, running the examples, routes, and a codebase guide
-  with links to the code on GitHub (`test/docs-codebase-links.test.ts` checks the links point at paths that exist).
-  Prose is Markdown in `app/docs/_content/`.
+- The docs are a multi-page site under `/docs`: a tree of Start, Guides, Concepts and Resources pages, one API
+  reference page per route (`/docs/api/<route-id>`), and the codebase guide under "Under the hood". Each prose page is
+  a small Markdown file in `app/docs/_content/`, listed in `app/docs/_lib/nav.ts`; `test/docs-pages.test.ts` fails if a
+  file and the nav disagree. A guide embeds a tested example with an ` ```example ` fence reading
+  `route | title`. `test/docs-codebase-links.test.ts` checks every GitHub link points at a path that exists.
 - Examples for every route are defined once in `app/docs/_lib/examples.ts` and rendered as curl, Python (`requests`) and
   Node (`fetch`) tabs by `app/docs/_lib/snippets.ts`. They read `HOST`, `TOKEN` and ids from environment variables.
   `test/docs-examples.test.ts` runs each against the seeded Sandbox school and checks the documented status and

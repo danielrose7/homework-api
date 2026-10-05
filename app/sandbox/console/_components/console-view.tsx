@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 import { ExchangeView } from "@/app/sandbox/_components/exchange-view";
-import { MethodTag, inputClass } from "@/app/sandbox/_components/ui";
+import { MethodTag } from "@/app/_components/method-tag";
+import { inputClass } from "@/app/sandbox/_components/ui";
 import { send, switchPersona, type AuthMode } from "@/app/sandbox/_lib/api";
 import { useExchanges } from "@/app/sandbox/_lib/exchange-store";
 import { roleOf } from "@/app/sandbox/_lib/people";

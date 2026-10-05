@@ -1,22 +1,43 @@
 import Link from "next/link";
+import { isValidElement, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { ExampleFor } from "@/app/docs/_components/example-for";
+import { headingId } from "@/app/docs/_lib/content";
 import { cn } from "@/lib/utils";
+
+function textOf(node: ReactNode): string {
+  if (typeof node === "string") return node;
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement<{ children?: ReactNode }>(node))
+    return textOf(node.props.children);
+  return "";
+}
 
 const components: Components = {
   h2: ({ children }) => (
-    <h3 className="mt-8 mb-2 text-lg font-semibold">{children}</h3>
+    <h2
+      id={headingId(textOf(children))}
+      className="mt-12 mb-3 scroll-mt-20 border-t pt-8 font-display text-3xl first:mt-0 first:border-t-0 first:pt-0"
+    >
+      {children}
+    </h2>
   ),
   h3: ({ children }) => (
-    <h4 className="mt-6 mb-2 text-base font-semibold">{children}</h4>
+    <h3
+      id={headingId(textOf(children))}
+      className="mt-8 mb-2 scroll-mt-20 text-lg font-semibold"
+    >
+      {children}
+    </h3>
   ),
-  p: ({ children }) => <p className="my-3 leading-7">{children}</p>,
+  p: ({ children }) => <p className="my-4 leading-7">{children}</p>,
   ul: ({ children }) => (
-    <ul className="my-3 list-disc space-y-1.5 pl-6 leading-7">{children}</ul>
+    <ul className="my-4 list-disc space-y-2 pl-6 leading-7">{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="my-3 list-decimal space-y-1.5 pl-6 leading-7">{children}</ol>
+    <ol className="my-4 list-decimal space-y-2 pl-6 leading-7">{children}</ol>
   ),
   a: ({ href = "", children }) =>
     href.startsWith("/") ? (
@@ -34,7 +55,7 @@ const components: Components = {
       </a>
     ),
   pre: ({ children }) => (
-    <pre className="bg-muted my-4 overflow-x-auto rounded-lg border p-3 font-mono text-[13px] leading-6">
+    <pre className="bg-muted my-5 overflow-x-auto rounded-lg border p-3 font-mono text-[12.5px] leading-6">
       {children}
     </pre>
   ),
@@ -42,13 +63,13 @@ const components: Components = {
     className ? (
       <code className={className}>{children}</code>
     ) : (
-      <code className="bg-muted rounded px-1 py-0.5 font-mono text-[0.9em]">
+      <code className="bg-muted rounded px-1 py-0.5 font-mono text-[0.85em]">
         {children}
       </code>
     ),
   table: ({ children }) => (
-    <div className="my-4 overflow-x-auto rounded-lg border">
-      <table className="w-full border-collapse text-left text-sm">
+    <div className="my-5 overflow-x-auto rounded-lg border font-(family-name:--font-app)">
+      <table className="w-full border-collapse text-left text-[12.5px]">
         {children}
       </table>
     </div>
@@ -61,6 +82,23 @@ const components: Components = {
   ),
 };
 
+const EXAMPLE_FENCE = /^```example\n(.+?)\n```$/gm;
+
+/** Splits on ```example fences, which stand for a tested example instead of literal code. */
+function segments(markdown: string) {
+  const parts: Array<
+    { kind: "text"; text: string } | { kind: "example"; spec: string }
+  > = [];
+  let last = 0;
+  for (const match of markdown.matchAll(EXAMPLE_FENCE)) {
+    parts.push({ kind: "text", text: markdown.slice(last, match.index) });
+    parts.push({ kind: "example", spec: match[1] ?? "" });
+    last = match.index + match[0].length;
+  }
+  parts.push({ kind: "text", text: markdown.slice(last) });
+  return parts;
+}
+
 export function Markdown({
   children,
   className,
@@ -69,10 +107,23 @@ export function Markdown({
   className?: string;
 }) {
   return (
-    <div className={cn("min-w-0", className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {children}
-      </ReactMarkdown>
+    <div className={cn("min-w-0 font-sans text-[15px]", className)}>
+      {segments(children).map((part, index) => {
+        if (part.kind === "text")
+          return (
+            <ReactMarkdown
+              key={index}
+              remarkPlugins={[remarkGfm]}
+              components={components}
+            >
+              {part.text}
+            </ReactMarkdown>
+          );
+        const [route = "", title = ""] = part.spec
+          .split("|")
+          .map((piece) => piece.trim());
+        return <ExampleFor key={index} route={route} title={title} />;
+      })}
     </div>
   );
 }

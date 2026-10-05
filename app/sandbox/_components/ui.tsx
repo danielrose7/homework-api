@@ -2,18 +2,6 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function MethodTag({ method }: { method: string }) {
-  const color =
-    method === "GET"
-      ? "text-method-get"
-      : method === "POST"
-        ? "text-method-post"
-        : method === "DELETE"
-          ? "text-destructive"
-          : "text-method-put";
-  return <span className={cn("text-[11px] font-bold", color)}>{method}</span>;
-}
-
 const STATUS_TEXT: Record<number, string> = {
   200: "OK",
   201: "Created",

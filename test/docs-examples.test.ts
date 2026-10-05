@@ -99,11 +99,10 @@ function keyPaths(value: unknown, prefix = ""): string[] {
   );
 }
 
-function documentedSample(heading: string): unknown {
-  const source = readFileSync("app/docs/_content/resources.md", "utf8");
-  const section = source.split(`## ${heading}\n`)[1] ?? "";
-  const block = /```json\n([\s\S]*?)```/.exec(section)?.[1];
-  if (!block) throw new Error(`no JSON sample under ${heading}`);
+function documentedSample(page: string): unknown {
+  const source = readFileSync(`app/docs/_content/${page}.md`, "utf8");
+  const block = /```json\n([\s\S]*?)```/.exec(source)?.[1];
+  if (!block) throw new Error(`no JSON sample in ${page}.md`);
   return JSON.parse(block);
 }
 
@@ -218,14 +217,14 @@ describe("docs examples", () => {
       token: expect.any(String),
     });
     expect(
-      keyPaths(documentedSample("Submission")).sort(),
+      keyPaths(documentedSample("submission")).sort(),
       "Submission sample",
     ).toEqual(keyPaths(bodies.get("Read one of my submissions")).sort());
     const { attachments } = bodies.get("Submit text and a file") as {
       attachments: { data: unknown[] };
     };
     expect(
-      keyPaths(documentedSample("Attachment")).sort(),
+      keyPaths(documentedSample("attachment")).sort(),
       "Attachment sample",
     ).toEqual(keyPaths(attachments.data[0]).sort());
   }, 60_000);

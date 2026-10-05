@@ -1,16 +1,10 @@
-import {
-  ExampleBlock,
-  type ExampleView,
-} from "@/app/docs/_components/example-block";
+import { ExampleBlock } from "@/app/docs/_components/example-block";
+import { examplesFor } from "@/app/docs/_components/example-for";
 import { FieldTable } from "@/app/docs/_components/field-table";
 import { InlineMarkdown, Markdown } from "@/app/docs/_components/markdown";
-import { EXAMPLES } from "@/app/docs/_lib/examples";
 import { fieldsOf, type FieldDoc } from "@/app/docs/_lib/fields";
-import {
-  LANGUAGES,
-  renderSnippet,
-  type Language,
-} from "@/app/docs/_lib/snippets";
+import type { Heading } from "@/app/docs/_lib/content";
+import { MethodTag } from "@/app/_components/method-tag";
 import type { RouteDoc } from "@/lib/server/route-doc";
 import { cn } from "@/lib/utils";
 
@@ -22,13 +16,6 @@ const ORG_SLUG_FIELD: FieldDoc = {
   description: "The school's slug, such as `sandbox`.",
   constraints: [],
 };
-
-function methodColor(method: string) {
-  if (method === "GET") return "text-method-get";
-  if (method === "POST") return "text-method-post";
-  if (method === "DELETE") return "text-destructive";
-  return "text-method-put";
-}
 
 function StatusChip({ status }: { status: number }) {
   const tone =
@@ -44,30 +31,34 @@ function StatusChip({ status }: { status: number }) {
   );
 }
 
-function Label({ children }: { children: string }) {
+function Label({ id, children }: { id: string; children: string }) {
   return (
-    <h5 className="text-muted-foreground mt-5 mb-1 text-xs font-medium tracking-wider uppercase">
+    <h2 id={id} className="mt-10 mb-3 scroll-mt-20 font-display text-2xl">
       {children}
-    </h5>
+    </h2>
   );
 }
 
-function examplesFor(doc: RouteDoc): ExampleView[] {
-  return EXAMPLES.filter((example) => example.route === doc.id).map(
-    (example, index) => ({
-      id: `${doc.id}-example-${index}`,
-      title: example.title,
-      as: example.as,
-      status: example.expect.status,
-      code: example.expect.code,
-      snippets: Object.fromEntries(
-        LANGUAGES.map(({ id }) => [id, renderSnippet(doc, example, id)]),
-      ) as Record<Language, string>,
-    }),
-  );
+function sectionsOf(doc: RouteDoc) {
+  const hasParams = doc.path.includes("{org_slug}") || Boolean(doc.params);
+  return [
+    hasParams && { id: "path-parameters", text: "Path parameters" },
+    doc.query && { id: "query-parameters", text: "Query parameters" },
+    (doc.bodies ?? []).length > 0 && {
+      id: "request-body",
+      text: "Request body",
+    },
+    { id: "response", text: "Response" },
+    doc.errors.length > 0 && { id: "errors", text: "Errors" },
+    examplesFor(doc).length > 0 && { id: "examples", text: "Examples" },
+  ].filter((entry): entry is { id: string; text: string } => Boolean(entry));
 }
 
-export function RouteSection({ doc }: { doc: RouteDoc }) {
+export function routeHeadings(doc: RouteDoc): Heading[] {
+  return sectionsOf(doc).map((entry) => ({ ...entry, level: 2 }));
+}
+
+export function RouteBody({ doc }: { doc: RouteDoc }) {
   const params = [
     ...(doc.path.includes("{org_slug}") ? [ORG_SLUG_FIELD] : []),
     ...(doc.params ? fieldsOf(doc.params) : []),
@@ -75,41 +66,40 @@ export function RouteSection({ doc }: { doc: RouteDoc }) {
   const examples = examplesFor(doc);
 
   return (
-    <section id={doc.id} className="scroll-mt-6 border-t py-8">
-      <h4 className="text-xl font-semibold">{doc.title}</h4>
-      <p className="my-3 flex flex-wrap items-baseline gap-x-2 font-mono text-[13.5px] break-all">
-        <span className={cn("font-bold", methodColor(doc.method))}>
-          {doc.method}
-        </span>
+    <section>
+      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border bg-card px-3 py-2.5 text-[13px] break-all">
+        <MethodTag method={doc.method} className="text-[13px]" />
         <span>{doc.path}</span>
       </p>
-      <p className="text-muted-foreground text-sm">
+      <p className="text-muted-foreground mt-3 text-[12.5px]">
         {doc.roles === "public"
           ? "No token needed."
           : `Who: ${doc.roles.join(", ")}.`}
       </p>
-      <Markdown className="mt-3">{`${doc.summary}\n\n${doc.description}`}</Markdown>
+      <Markdown className="mt-4">{doc.description}</Markdown>
 
       {params.length > 0 ? (
         <>
-          <Label>Path parameters</Label>
+          <Label id="path-parameters">Path parameters</Label>
           <FieldTable fields={params} />
         </>
       ) : null}
       {doc.query ? (
         <>
-          <Label>Query parameters</Label>
+          <Label id="query-parameters">Query parameters</Label>
           <FieldTable fields={fieldsOf(doc.query)} />
         </>
       ) : null}
-      {(doc.bodies ?? []).map((body) => (
+      {(doc.bodies ?? []).map((body, index) => (
         <div key={body.content_type}>
-          <Label>{`Body (${body.content_type})`}</Label>
+          <Label
+            id={index === 0 ? "request-body" : `request-body-${index}`}
+          >{`Request body (${body.content_type})`}</Label>
           <FieldTable fields={fieldsOf(body.schema)} />
         </div>
       ))}
 
-      <Label>Response</Label>
+      <Label id="response">Response</Label>
       <p className="flex items-baseline gap-2 text-sm">
         <StatusChip status={doc.success.status} />
         <span>
@@ -119,7 +109,7 @@ export function RouteSection({ doc }: { doc: RouteDoc }) {
 
       {doc.errors.length > 0 ? (
         <>
-          <Label>Errors</Label>
+          <Label id="errors">Errors</Label>
           <div className="my-3 overflow-x-auto rounded-lg border">
             <table className="w-full border-collapse text-left text-sm">
               <tbody>
@@ -146,7 +136,7 @@ export function RouteSection({ doc }: { doc: RouteDoc }) {
 
       {examples.length > 0 ? (
         <>
-          <Label>Examples</Label>
+          <Label id="examples">Examples</Label>
           <div className="space-y-2">
             {examples.map((example, index) => (
               <details key={example.id} open={index === 0} className="group">

@@ -8,7 +8,8 @@ import { BASE } from "@/app/sandbox/_lib/api";
 import { exchangeStore, useExchanges } from "@/app/sandbox/_lib/exchange-store";
 import { cn } from "@/lib/utils";
 
-import { MethodTag, StatusChip } from "@/app/sandbox/_components/ui";
+import { MethodTag } from "@/app/_components/method-tag";
+import { StatusChip } from "@/app/sandbox/_components/ui";
 
 const clock = (at: number) => new Date(at).toLocaleTimeString("en-GB");
 

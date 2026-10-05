@@ -1,12 +1,16 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
 const PREFIX = "https://github.com/danielrose7/homework-api/";
 
-describe("codebase guide", () => {
-  it("links only to files and folders that exist", () => {
-    const source = readFileSync("app/docs/_content/codebase.md", "utf8");
+const CONTENT = "app/docs/_content";
+
+describe("docs content", () => {
+  it("links only to repo files and folders that exist", () => {
+    const source = readdirSync(CONTENT)
+      .map((name) => readFileSync(`${CONTENT}/${name}`, "utf8"))
+      .join("\n");
     const paths = [
       ...source.matchAll(
         /\]\(https:\/\/github\.com\/danielrose7\/homework-api\/(?:blob|tree)\/main\/([^)]+)\)/g,
