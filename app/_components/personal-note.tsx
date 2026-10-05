@@ -93,6 +93,11 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
             heard of.
           </p>
           <p>
+            If you want to know more about me, my personal dev site at{" "}
+            <ExternalLink href={PERSONAL_SITE_URL}>gobloom.io</ExternalLink> has
+            a resume and such.
+          </p>
+          <p>
             My wife was out of town over the weekend so I went a tad hard on
             this project. Not like 10&apos;s of hours hard! Still around the
             assignment&apos;s allowance. I just think it&apos;s a little more
@@ -204,11 +209,6 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
             . Rather than a routes file that helps orient the server to go route
             -&gt; controller -&gt; view, the route file is the controller and
             its file path matches the param
-          </p>
-          <p>
-            If you want to know more about me, my personal dev site at{" "}
-            <ExternalLink href={PERSONAL_SITE_URL}>gobloom.io</ExternalLink> has
-            a resume and such.
           </p>
           <p>
             Anyhow... super excited to meet you each in a few days time and
