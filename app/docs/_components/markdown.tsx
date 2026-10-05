@@ -19,7 +19,7 @@ const components: Components = {
   h2: ({ children }) => (
     <h2
       id={headingId(textOf(children))}
-      className="mt-12 mb-3 scroll-mt-20 border-t pt-8 font-display text-3xl first:mt-0 first:border-t-0 first:pt-0"
+      className="mt-12 mb-3 scroll-mt-20 border-t pt-8 font-display font-semibold text-2xl first:mt-0 first:border-t-0 first:pt-0"
     >
       {children}
     </h2>

@@ -35,7 +35,10 @@ function StatusChip({ status }: { status: number }) {
 
 function Label({ id, children }: { id: string; children: string }) {
   return (
-    <h2 id={id} className="mt-10 mb-3 scroll-mt-20 font-display text-2xl">
+    <h2
+      id={id}
+      className="mt-10 mb-3 scroll-mt-20 font-display font-semibold text-2xl"
+    >
       {children}
     </h2>
   );

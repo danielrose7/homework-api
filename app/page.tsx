@@ -97,7 +97,7 @@ export default function Home() {
           <p className="text-muted-foreground mb-4 text-[11px] tracking-wider uppercase">
             A take-home for Stride
           </p>
-          <h1 className="font-display max-w-3xl text-6xl leading-[1] tracking-tight sm:text-7xl">
+          <h1 className="font-display font-semibold max-w-3xl text-5xl leading-[1.05] tracking-tight sm:text-6xl">
             Homework in. Grades out.
           </h1>
           <p className="text-muted-foreground mt-5 max-w-xl font-sans text-lg leading-7">
@@ -136,14 +136,14 @@ export default function Home() {
               [3, "roles: student, teacher, administrator"],
             ].map(([value, label]) => (
               <div key={label} className="bg-card px-4 py-3">
-                <dt className="font-display text-4xl">{value}</dt>
+                <dt className="font-display font-semibold text-3xl">{value}</dt>
                 <dd className="text-muted-foreground mt-0.5">{label}</dd>
               </div>
             ))}
           </dl>
 
           <section className="mt-20">
-            <h2 className="font-display text-4xl">Three calls</h2>
+            <h2 className="font-display font-semibold text-3xl">Three calls</h2>
             <p className="text-muted-foreground mt-2 font-sans text-base">
               Every request here is a real one, run against a seeded school.
             </p>
@@ -164,7 +164,9 @@ export default function Home() {
           </section>
 
           <section className="mt-20">
-            <h2 className="font-display text-4xl">The brief, mapped</h2>
+            <h2 className="font-display font-semibold text-3xl">
+              The brief, mapped
+            </h2>
             <p className="text-muted-foreground mt-2 font-sans text-base">
               Each requirement from the assignment and where it lives.
             </p>
@@ -199,7 +201,9 @@ export default function Home() {
           </section>
 
           <section className="mt-20">
-            <h2 className="font-display text-4xl">Decisions worth a look</h2>
+            <h2 className="font-display font-semibold text-3xl">
+              Decisions worth a look
+            </h2>
             <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {DECISIONS.map(([title, body]) => (
                 <Link

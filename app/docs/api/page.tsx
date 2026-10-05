@@ -28,7 +28,7 @@ export default function ApiIndexPage() {
         <section key={group}>
           <h2
             id={group.toLowerCase()}
-            className="font-display mt-10 mb-3 scroll-mt-20 text-3xl first:mt-0"
+            className="font-display font-semibold mt-10 mb-3 scroll-mt-20 text-3xl first:mt-0"
           >
             {group}
           </h2>

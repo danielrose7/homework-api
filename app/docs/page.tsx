@@ -47,7 +47,7 @@ export default function DocsHome() {
       <p className="text-muted-foreground mb-3 text-[11px] tracking-wider uppercase">
         Documentation
       </p>
-      <h1 className="font-display max-w-2xl text-5xl leading-[1.05] tracking-tight sm:text-6xl">
+      <h1 className="font-display font-semibold max-w-2xl text-4xl leading-[1.1] tracking-tight sm:text-5xl">
         Submit homework. List it. Grade it.
       </h1>
       <p className="text-muted-foreground mt-4 max-w-xl font-sans text-lg leading-7">

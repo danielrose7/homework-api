@@ -38,7 +38,7 @@ export function DocFrame({
           </Link>{" "}
           / {section}
         </p>
-        <h1 className="font-display text-5xl leading-[1.05] tracking-tight">
+        <h1 className="font-display font-semibold text-4xl leading-[1.1] tracking-tight">
           {title}
         </h1>
         <p className="text-muted-foreground mt-3 mb-10 max-w-xl font-sans text-lg leading-7">
