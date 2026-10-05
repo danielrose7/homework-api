@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { ViewTransition, startTransition, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 import { BASE } from "@/app/sandbox/_lib/api";
 import { exchangeStore, useExchanges } from "@/app/sandbox/_lib/exchange-store";
 import { cn } from "@/lib/utils";

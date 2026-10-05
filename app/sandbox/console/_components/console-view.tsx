@@ -19,7 +19,7 @@ import {
 } from "@/app/sandbox/console/_components/catalog";
 import { loadPersonaContext } from "@/app/sandbox/_server/actions/load-persona-context";
 import type { PersonaContext } from "@/app/sandbox/_server/queries/read-persona-context";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 import { cn } from "@/lib/utils";
 import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 

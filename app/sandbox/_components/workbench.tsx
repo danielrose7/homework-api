@@ -18,7 +18,7 @@ import { SiteNav } from "@/app/_components/site-nav";
 import { ExchangeView } from "@/app/sandbox/_components/exchange-view";
 import { NetworkDock } from "@/app/sandbox/_components/network-dock";
 import { ResetDialog } from "@/app/sandbox/_components/reset-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 import { send, signIn, switchPersona } from "@/app/sandbox/_lib/api";
 import { useExchanges } from "@/app/sandbox/_lib/exchange-store";
 import { DEFAULT_PERSONA, PEOPLE } from "@/app/sandbox/_lib/people";

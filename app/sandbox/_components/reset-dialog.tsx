@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 
 export function ResetDialog({
   open,

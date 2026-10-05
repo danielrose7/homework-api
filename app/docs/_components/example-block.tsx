@@ -4,7 +4,7 @@ import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
 import { useLanguage } from "@/app/docs/_components/language";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 import { LANGUAGES, type Language } from "@/app/docs/_lib/snippets";
 import { cn } from "@/lib/utils";
 

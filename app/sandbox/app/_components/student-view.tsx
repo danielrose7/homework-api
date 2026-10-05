@@ -9,7 +9,7 @@ import type { Submission } from "@/app/sandbox/_lib/types";
 import { ErrorBanner } from "@/app/sandbox/app/_components/error-banner";
 import { ResultsTable } from "@/app/sandbox/app/_components/results-table";
 import { useSubmissionList } from "@/app/sandbox/app/_components/use-submission-list";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 
 type Outcome = { status: number; body: unknown; location?: string };

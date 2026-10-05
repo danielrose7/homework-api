@@ -23,7 +23,7 @@ import {
 import { ErrorBanner } from "@/app/sandbox/app/_components/error-banner";
 import { ResultsTable } from "@/app/sandbox/app/_components/results-table";
 import { useSubmissionList } from "@/app/sandbox/app/_components/use-submission-list";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 import { cn } from "@/lib/utils";
 import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 

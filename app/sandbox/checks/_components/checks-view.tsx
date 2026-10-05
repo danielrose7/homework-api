@@ -10,7 +10,7 @@ import {
   type Asserter,
   type Check,
 } from "@/app/sandbox/checks/_components/checks";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/app/_components/button";
 import { cn } from "@/lib/utils";
 
 interface Line {
