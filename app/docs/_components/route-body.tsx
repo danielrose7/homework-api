@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ExampleBlock } from "@/app/docs/_components/example-block";
 import { examplesFor } from "@/app/docs/_components/example-for";
 import { FieldTable } from "@/app/docs/_components/field-table";
@@ -58,7 +60,13 @@ export function routeHeadings(doc: RouteDoc): Heading[] {
   return sectionsOf(doc).map((entry) => ({ ...entry, level: 2 }));
 }
 
-export function RouteBody({ doc }: { doc: RouteDoc }) {
+export function RouteBody({
+  doc,
+  consoleHref,
+}: {
+  doc: RouteDoc;
+  consoleHref?: string;
+}) {
   const params = [
     ...(doc.path.includes("{org_slug}") ? [ORG_SLUG_FIELD] : []),
     ...(doc.params ? fieldsOf(doc.params) : []),
@@ -70,6 +78,14 @@ export function RouteBody({ doc }: { doc: RouteDoc }) {
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border bg-card px-3 py-2.5 text-[13px] break-all">
         <MethodTag method={doc.method} className="text-[13px]" />
         <span>{doc.path}</span>
+        {consoleHref ? (
+          <Link
+            href={consoleHref}
+            className="ml-auto font-bold underline underline-offset-4"
+          >
+            Try in the console →
+          </Link>
+        ) : null}
       </p>
       <p className="text-muted-foreground mt-3 text-[12.5px]">
         {doc.roles === "public"

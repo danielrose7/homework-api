@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { ExchangeView } from "@/app/sandbox/_components/exchange-view";
@@ -58,16 +59,22 @@ const varsIn = (path: string) =>
 export function ConsoleView({
   catalog,
   options,
+  initialKey,
 }: {
   catalog: CatalogGroup[];
   options: SandboxOptions;
+  initialKey?: string;
 }) {
   const allItems = catalog.flatMap((group) => group.items);
   const { active } = useSession();
   const persona = active ?? "";
   const { exchanges, selectedId } = useExchanges();
   const selected = exchanges.find((item) => item.id === selectedId) ?? null;
-  const [key, setKey] = useState("sign_in");
+  const [key, setKey] = useState(
+    allItems.some((candidate) => candidate.key === initialKey)
+      ? (initialKey ?? "sign_in")
+      : "sign_in",
+  );
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [sending, setSending] = useState(false);
 
@@ -234,7 +241,15 @@ export function ConsoleView({
             Send
           </Button>
         </div>
-        <p className="text-muted-foreground px-4 pb-2">{item.note}</p>
+        <p className="text-muted-foreground px-4 pb-2">
+          {item.note}{" "}
+          <Link
+            href={`/docs/api/${key.replaceAll("_", "-")}`}
+            className="text-foreground underline underline-offset-4"
+          >
+            Docs ↗
+          </Link>
+        </p>
         {group ? (
           <div className="flex flex-wrap items-center gap-1.5 px-4 pb-2.5">
             <span className="text-muted-foreground mr-0.5 text-[11px] tracking-wider uppercase">

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { DocFrame } from "@/app/docs/_components/doc-frame";
 import { RouteBody, routeHeadings } from "@/app/docs/_components/route-body";
+import { sandboxEnabled } from "@/app/sandbox/_server/guard";
 import { apiHref, routeForApiSlug } from "@/app/docs/_lib/nav";
 
 export async function generateMetadata({
@@ -26,7 +27,12 @@ export default async function ApiRoutePage({
       description={doc.summary}
       headings={routeHeadings(doc)}
     >
-      <RouteBody doc={doc} />
+      <RouteBody
+        doc={doc}
+        consoleHref={
+          sandboxEnabled() ? `/sandbox/console?route=${doc.id}` : undefined
+        }
+      />
     </DocFrame>
   );
 }
