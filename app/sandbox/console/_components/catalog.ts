@@ -204,6 +204,12 @@ export function presetsFor(
             }),
         },
         {
+          label: "incomplete on pass/fail",
+          pick: () => ungraded("band"),
+          as: grader,
+          body: () => ({ band: "Incomplete" }),
+        },
+        {
           label: "regrade with reason",
           pick: () => regradable,
           as: grader,

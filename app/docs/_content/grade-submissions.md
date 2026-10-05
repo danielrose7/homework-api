@@ -19,7 +19,8 @@ list_overview | A student is refused
 ## Grade a submission
 
 `PUT` replaces the current grade, so repeating the same request changes nothing. Send `points` for work graded by
-points, or `band` for work graded by band (such as `Pass`), plus optional `teacher_notes`.
+points, or `band` for work graded by band (such as `Pass`), plus optional `teacher_notes`. A teacher can send `band: "Incomplete"` on any assignment, including pass/fail work,
+when a submission is not ready to be marked.
 
 ```example
 grade | Grade with points

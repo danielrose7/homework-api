@@ -318,4 +318,34 @@ describe("scale overrides and pass/fail", () => {
       percent: null,
     });
   });
+
+  it("lets a teacher mark band-mode work Incomplete, then replace it without a reason", async () => {
+    const seeded = await seedAssignment();
+    const pass_fail = await gradingScaleFactory
+      .passFail()
+      .create({ organization_id: seeded.school.organization.id });
+    const assignment = await assignmentFactory.passFail().create({
+      class_id: seeded.klass.id,
+      grading_scale_id: pass_fail.id,
+    });
+    const submission = await submissionFactory.create({
+      assignment_id: assignment.id,
+      class_seat_id: seeded.seats[0]!.id,
+    });
+    const teacher = await seeded.school.teachers[0]!.context();
+
+    const incomplete = await gradeSubmission(teacher, submission.id, {
+      band: "Incomplete",
+    });
+    expect(incomplete.grade).toMatchObject({
+      label: "Incomplete",
+      points_awarded: null,
+      percent: null,
+    });
+
+    const passed = await gradeSubmission(teacher, submission.id, {
+      band: "Pass",
+    });
+    expect(passed.grade.label).toBe("Pass");
+  });
 });

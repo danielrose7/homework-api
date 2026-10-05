@@ -21,7 +21,7 @@ const bodySchema = z.strictObject({
     .string()
     .nullish()
     .describe(
-      "A band name from the scale, such as `Pass`, `Fail` or `Incomplete`. Send it instead of `points` for assignments graded by band; `Incomplete` is also allowed on points assignments.",
+      "A band name from the scale, such as `Pass`, `Fail` or `Incomplete`. Send it instead of `points` for assignments graded by band; `Incomplete` is allowed on any assignment, whether graded by points or by band.",
     ),
   teacher_notes: z
     .string()

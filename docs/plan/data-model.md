@@ -80,7 +80,7 @@ Scales are data, not code, so +/- letters, pass/fail and other schemes need no d
 
 "Incomplete" is a **grade**, not a status or a null: the brief lists it beside A–F as a value a teacher can give.
 It is a manual-only, neutral band (`min_percent` null, `is_passing` null, `counts_in_average` false) that the
-default scales include. Points never produce it; the teacher picks it. It is excluded from averages until
+default scales include (Pass/Fail included). Points never produce it; the teacher picks it, in either grading mode. It is excluded from averages until
 replaced by a real grade through a regrade (the `reason` is optional when replacing an Incomplete).
 `ungraded` is different: no band at all. A submission is ungraded exactly when `grade_band_id` is null, so there
 is no `status` column. Whether an Incomplete should convert to a failing grade after a deadline is a future decision.

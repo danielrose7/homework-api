@@ -354,6 +354,7 @@ export function TeacherView({ options }: { options: SandboxOptions }) {
                   >
                     <option>Pass</option>
                     <option>Fail</option>
+                    <option>Incomplete</option>
                   </select>
                 </Field>
               )}
