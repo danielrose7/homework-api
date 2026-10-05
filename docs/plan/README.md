@@ -88,6 +88,7 @@ API key plugins), shadcn/ui, Vitest + Fishery, pnpm (matches `../goji-health`).
 | Docs become a multi-page site (Cloudflare-style: tree nav, per-endpoint pages, guides) styled like the sandbox, with a webfont pairing instead of system fonts                                                                                                                                                                                                                                                                                                    | Decided | Folded into Phase 7; prose is small Markdown files plus a nav manifest, rendered by a catch-all route with the existing `react-markdown`. No MDX |
 | Docs code lives in `app/docs/_lib`; the `RouteDoc` type stays in `lib/server` so infrastructure never imports from `app/`                                                                                                                                                                                                                                                                                                                                         | Decided | Registry, examples, snippets and fields moved with their tests                                                                                   |
 | Docs and sandbox cross-link (endpoint page to console and back, persona deep links); `/` becomes a real homepage                                                                                                                                                                                                                                                                                                                                                  | Decided | Sandbox links only show when `SANDBOX_MODE=true`                                                                                                 |
+| The README leads with the live URL, then covers requirements (Node 22.12+, pnpm 11.25, Docker), local run, tests and a setup prompt for a coding agent; it links to the docs and plan for decisions and deferred work                                                                                                                                                                                                                                             | Decided | Node floor comes from Prisma 7 and Vitest 5; the live site runs with `SANDBOX_MODE` off, so the sandbox is local-only                            |
 | UI authenticates with a Bearer token kept in memory and `sessionStorage`; screens are console, app, brief checks, and a data view behind `SANDBOX_MODE`                                                                                                                                                                                                                                                                                                           | Decided | Phase 6 decisions 1 and 3; the data view reads tables through a dev-only route                                                                   |
 
 ## Deviations from the plan
@@ -251,13 +252,20 @@ the code on GitHub) are Markdown rendered on the page.
 
 ### Phase 7 — Polish
 
+Decided (2026-10-04) for the README: decision 2 became "local run plus a link to the live site" (the site is
+https://homework-api-steel.vercel.app/; its sandbox is off). Decision 3 became system requirements, a local dev
+server, a sample setup prompt for a coding agent, tests, and pointers to the code and plan. CI (decision 1) is
+still open.
+
 **Decide before starting** (recommendation in italics):
 
 1. CI: _GitHub Actions with a Postgres service container running typecheck, lint, format check, tests and build._
-2. Deployment: _none for the take-home; the README explains how to run it locally in two commands._
+2. Deployment: _none for the take-home; the README explains how to run it locally in two commands._ Answered above:
+   local run plus the live link.
 3. README scope: _what it is, run it, run the tests, the design decisions worth discussing, and what was deferred._
+   Answered above.
 
-- [ ] README: setup, design decisions, how to run tests
+- [x] README: setup, system requirements, how to run tests, the live URL
 - [x] Docs site: move `lib/docs` into `app/docs/_lib`; shared site shell (header, theme, fonts) used by home, docs and
       sandbox; docs split into pages with a tree nav and per-endpoint reference pages; guides; sandbox and docs
       cross-links; homepage
