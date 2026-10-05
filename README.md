@@ -11,7 +11,9 @@ A multi-school REST API where students submit homework and teachers grade it. Ta
   worth discussing.
 
 The sandbox (a console that sends real requests as seeded users, plus the "brief checks" that walk the
-assignment's requirements) only runs when `SANDBOX_MODE=true`, so it is off on the live site. Run it locally.
+assignment's requirements) only runs when `SANDBOX_MODE=true`. It is on for the live site at
+[/sandbox/console](https://homework-api-steel.vercel.app/sandbox/console) and
+[/sandbox/checks](https://homework-api-steel.vercel.app/sandbox/checks), and you can also run it locally.
 
 ## Stack
 
