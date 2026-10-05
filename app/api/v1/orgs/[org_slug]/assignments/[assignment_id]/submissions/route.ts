@@ -4,11 +4,16 @@ import { MAX_TEXT_LENGTH } from "@/lib/domain/submission";
 import {
   ALLOWED_CONTENT_TYPES,
   MAX_FILES_PER_RECORD,
+  MAX_MULTIPART_BYTES,
   MAX_UPLOAD_BYTES,
   type UploadInput,
 } from "@/lib/domain/uploads";
 import { STATUS } from "@/lib/http-status";
 import { validationFailed } from "@/lib/server/errors";
+import {
+  readBodyBytes,
+  RequestBodyTooLargeError,
+} from "@/lib/server/request-body";
 import { defineRoute } from "@/lib/server/route";
 import { serve } from "@/lib/server/serve";
 import { submitAssignment } from "@/modules/submissions/mutations/submit-assignment";
@@ -97,7 +102,7 @@ Allowed file types: ${ALLOWED_CONTENT_TYPES.map((type) => `\`${type}\``).join(",
         status: STATUS.unprocessable_content,
         code: "validation_failed",
         description:
-          "Detail codes: `content_required`, `text_too_long`, `too_many_files`, `filename_required`, `file_empty`, `file_too_large`, `content_type_not_allowed`, `content_type_mismatch`. File problems name the file, as `files.1.file`.",
+          "Detail codes: `content_required`, `text_too_long`, `request_too_large`, `too_many_files`, `filename_required`, `file_empty`, `file_too_large`, `content_type_not_allowed`, `content_type_mismatch`. File problems name the file, as `files.1.file`.",
       },
     ],
   },
@@ -110,15 +115,33 @@ Allowed file types: ${ALLOWED_CONTENT_TYPES.map((type) => `\`${type}\``).join(",
     let text: string | null;
     let files: UploadInput[] = [];
     if (isMultipart) {
-      const form = await request.formData().catch(() => {
-        throw validationFailed([
-          {
-            field: "",
-            code: "invalid_multipart",
-            message: "Request body is not valid multipart form data",
-          },
-        ]);
-      });
+      const bytes = await readBodyBytes(request, MAX_MULTIPART_BYTES).catch(
+        (error: unknown) => {
+          if (error instanceof RequestBodyTooLargeError) {
+            throw validationFailed([
+              {
+                field: "files",
+                code: "request_too_large",
+                message: "The multipart request is too large",
+              },
+            ]);
+          }
+          throw error;
+        },
+      );
+      const form = await new Response(bytes, {
+        headers: { "content-type": request.headers.get("content-type") ?? "" },
+      })
+        .formData()
+        .catch(() => {
+          throw validationFailed([
+            {
+              field: "",
+              code: "invalid_multipart",
+              message: "Request body is not valid multipart form data",
+            },
+          ]);
+        });
       const parsed = input.parse(multipartSubmission, {
         text: form.get("text") ?? undefined,
         files: form.getAll("files"),

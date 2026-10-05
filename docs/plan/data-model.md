@@ -158,7 +158,7 @@ its bytes live_:
   blob is kept (retention is indefinite).
 - **Two steps.** Upload creates an unattached blob, then attach links it, like a Rails direct upload. Phase 3's
   multipart submit will do both in the submission's transaction.
-- **Validation (`422`):** file name required and sanitized to its last path segment; non-empty; at most 5 MB; content
+- **Validation (`422`):** the multipart body is stream-capped before parsing; file name required and sanitized to its last path segment; non-empty; at most 5 MB; content
   type on an allow-list; bytes must match the declared type (PDF, PNG, JPEG, GIF, WebP, HEIC/HEIF/AVIF, ZIP and text are sniffed); at most 5
   files per record per name. Attaching to graded work is a `409`; attaching the same blob twice is a `409`.
 - **Access.** A student sees their own submission's files, a teacher those of classes they teach, an administrator

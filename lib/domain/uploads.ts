@@ -2,6 +2,8 @@ import { issue, type ValidationIssue } from "./validation";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 export const MAX_FILES_PER_RECORD = 5;
+export const MAX_MULTIPART_BYTES =
+  MAX_FILES_PER_RECORD * MAX_UPLOAD_BYTES + 64 * 1024;
 
 export const ALLOWED_CONTENT_TYPES = [
   "text/plain",

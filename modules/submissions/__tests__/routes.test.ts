@@ -77,6 +77,31 @@ describe("POST /assignments/{id}/submissions", () => {
     ]);
   });
 
+  it("rejects an oversized multipart request before reading it", async () => {
+    const seeded = await seedAssignment();
+    const form = new FormData();
+    form.set("text", "small body");
+    const headers = new Headers(seeded.school.students[0]!.headers);
+    headers.set("content-length", String(30 * 1024 * 1024));
+
+    const response = await callRoute(
+      submit,
+      {
+        org_slug: seeded.school.organization.slug,
+        assignment_id: seeded.assignment.id,
+      },
+      { headers, form },
+    );
+
+    expect(response.status).toBe(STATUS.unprocessable_content);
+    expect((await errorOf(response)).details).toContainEqual(
+      expect.objectContaining({
+        field: "files",
+        code: "request_too_large",
+      }),
+    );
+  });
+
   it("answers 422 with every issue for bad content", async () => {
     const seeded = await seedAssignment();
     const form = new FormData();

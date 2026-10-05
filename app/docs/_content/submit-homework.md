@@ -16,7 +16,8 @@ submit | Submit text
 ## Submit text and a file
 
 For files, send `multipart/form-data` with `text` and one `files` field per file. Allowed types and size limits are
-on the [route reference](/docs/api/submit). Attachments cannot be added after submitting.
+on the [route reference](/docs/api/submit). The whole multipart body is capped at the five valid files plus form
+overhead, so oversized requests stop before parsing. Attachments cannot be added after submitting.
 
 ```example
 submit | Submit text and a file
