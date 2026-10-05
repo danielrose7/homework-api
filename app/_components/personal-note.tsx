@@ -211,8 +211,8 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
             its file path matches the param
           </p>
           <p>
-            Anyhow... super excited to meet you each in a few days time and
-            answer questions.
+            Anyhow... super excited to meet you each in a few days&apos; time
+            and answer questions.
           </p>
           <p>Upwards,</p>
           <p className="font-bold">Daniel Rose</p>
