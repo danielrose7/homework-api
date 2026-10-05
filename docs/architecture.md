@@ -43,7 +43,8 @@ A module owns application operations and representations for one domain resource
 - `types.ts` holds shared internal result and input types when putting them beside one operation would create a cycle
   or duplication.
 - `utils/` holds module-specific helpers shared by queries or mutations, such as the Prisma `where` builders in
-  `utils/filter-where.ts`. They take plain inputs and return plain values; they do not fetch data.
+  `utils/filter-where.ts` and the access-checked loader in `utils/load-accessible-submission.ts`. Helpers that only
+  build values stay pure; loaders take a `RequestContext` and scope by `organization_id` like any query.
 - `__tests__/` holds focused query, mutation and route tests for the module. Keep cross-module acceptance, database and
   architecture tests in the top-level `test/` directory.
 
