@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { GITHUB_URL } from "@/app/_components/github";
 import { cn } from "@/lib/utils";
-
-export const GITHUB_URL = "https://github.com/danielrose7/homework-api";
 
 export function SiteNav({
   section,

@@ -1,6 +1,7 @@
-import { GITHUB_URL } from "@/app/_components/site-nav";
+import { GITHUB_URL } from "@/app/_components/github";
 
 const MAIN = `${GITHUB_URL}/blob/main`;
+const BETTER_AUTH_URL = "https://www.better-auth.com";
 const SCHEMA_URL = `${MAIN}/prisma/schema.prisma`;
 
 const READ_THESE = [
@@ -17,7 +18,11 @@ const READ_THESE = [
 ] as const;
 
 const TLDR = [
-  "A multi-school REST API: students submit homework, teachers grade it. Next.js, TypeScript, Postgres, Prisma and Better Auth.",
+  <>
+    A multi-school REST API: students submit homework, teachers grade it.
+    Next.js, TypeScript, Postgres, Prisma and{" "}
+    <ExternalLink href={BETTER_AUTH_URL}>Better Auth</ExternalLink>.
+  </>,
   "Grading scales are data (letters, plus/minus, pass/fail) and points are kept, so a gradebook can come later.",
   "Tests run against a real database, each in a rolled-back transaction. The docs examples run as tests too.",
   "The sandbox's brief checks click through the assignment's requirements against the real routes.",
@@ -46,8 +51,8 @@ export function PersonalNote() {
           TL;DR
         </p>
         <ul className="list-disc space-y-1 pl-6">
-          {TLDR.map((line) => (
-            <li key={line}>{line}</li>
+          {TLDR.map((line, index) => (
+            <li key={index}>{line}</li>
           ))}
         </ul>
         <p>
@@ -99,13 +104,14 @@ export function PersonalNote() {
           <p>
             While working through the skinny version of schema required by the
             assignment, I realized it would be good to have some users. I
-            reached for better auth--an open source auth library that&apos;s now
-            part of vercel. It has some quirks for this simple use case but
-            handles users, session mgmt, and organizations.
-            &quot;Organizations&quot; in this context are setup as schools. Most
-            every table has organization_id on it to help for resource
-            management and the future potential of things like row level
-            security (multiple tenants, one database).
+            reached for{" "}
+            <ExternalLink href={BETTER_AUTH_URL}>better auth</ExternalLink>--an
+            open source auth library that&apos;s now part of vercel. It has some
+            quirks for this simple use case but handles users, session mgmt, and
+            organizations. &quot;Organizations&quot; in this context are setup
+            as schools. Most every table has organization_id on it to help for
+            resource management and the future potential of things like row
+            level security (multiple tenants, one database).
           </p>
           <p>
             I also tried to think about what future projects might include. As

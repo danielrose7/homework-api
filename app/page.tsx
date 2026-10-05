@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { PersonalNote } from "@/app/_components/personal-note";
-import { GITHUB_URL } from "@/app/_components/site-nav";
+import { GITHUB_URL } from "@/app/_components/github";
 import { SiteHeader } from "@/app/_components/site-header";
 import { ExampleFor } from "@/app/docs/_components/example-for";
 import { LanguageProvider } from "@/app/docs/_components/language";
@@ -127,6 +127,12 @@ export default function Home() {
             >
               API reference
             </Link>
+            <a
+              href={`${GITHUB_URL}#run-it-locally`}
+              className="hover:border-ring rounded-md border px-4 py-2 font-bold"
+            >
+              Repo and setup
+            </a>
           </div>
 
           <PersonalNote />
@@ -226,6 +232,12 @@ export default function Home() {
         <footer className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-1 border-t px-5 py-6 sm:px-8">
           <a href={GITHUB_URL} className="hover:text-foreground">
             Source on GitHub
+          </a>
+          <a
+            href={`${GITHUB_URL}#run-it-locally`}
+            className="hover:text-foreground"
+          >
+            Run it locally
           </a>
           <Link
             href="/docs/architecture/deferred"

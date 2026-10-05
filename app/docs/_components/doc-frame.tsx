@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { GITHUB_URL } from "@/app/_components/site-nav";
+import { GITHUB_URL } from "@/app/_components/github";
 import { Toc } from "@/app/docs/_components/toc";
 import type { Heading } from "@/app/docs/_lib/content";
 import { readingOrder } from "@/app/docs/_lib/nav";
