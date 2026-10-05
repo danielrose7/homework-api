@@ -1,11 +1,17 @@
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { appendOnly, hideSoftDeleted } from "@/lib/server/db-extensions";
 
+const isNeon = (connectionString: string) =>
+  new URL(connectionString).hostname.endsWith(".neon.tech");
+
 export function createPrismaClient(connectionString: string) {
   const base = new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
+    adapter: isNeon(connectionString)
+      ? new PrismaNeon({ connectionString })
+      : new PrismaPg({ connectionString }),
   });
   return base.$extends(hideSoftDeleted).$extends(appendOnly);
 }
