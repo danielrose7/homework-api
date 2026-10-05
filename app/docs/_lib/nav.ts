@@ -101,6 +101,12 @@ export const ARCHITECTURE_SECTION: NavSection = {
       description: "The choices worth discussing, and why they were made.",
     },
     {
+      slug: "architecture/soft-deletes",
+      title: "Soft deletes",
+      description:
+        "How deleted rows stay hidden, and the code that enforces it.",
+    },
+    {
       slug: "architecture/testing",
       title: "Testing",
       description: "Rolled-back transactions, factories and tested examples.",

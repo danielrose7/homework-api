@@ -20,7 +20,8 @@ for it. A [test](https://github.com/danielrose7/homework-api/blob/main/test/tena
 route as a member of a different school.
 
 **Nothing is hard-deleted.** Deletes are soft (`deleted_at`, who, and why), and an audit log records reads, grades
-and denials by id only, never by content.
+and denials by id only, never by content. See [Soft deletes](/docs/architecture/soft-deletes) for how the client
+enforces it.
 
 **Submissions are race-safe.** Two parallel submits for a one-submission assignment give one `201` and one `409`,
 enforced by a unique attempt number and a retry, and proven in the
