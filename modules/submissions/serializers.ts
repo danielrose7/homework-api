@@ -77,30 +77,10 @@ export function toGradeResult(params: {
 
 export function serializeSubmission(view: SubmissionView) {
   return {
-    id: view.id,
+    ...view,
     object: "submission" as const,
-    assignment: view.assignment,
-    student: {
-      member_id: view.student.member_id,
-      name: view.student.name,
-      username: view.student.username,
-    },
-    attempt_number: view.attempt_number,
-    text: view.text,
     submitted_at: view.submitted_at.toISOString(),
     graded_at: view.graded_at?.toISOString() ?? null,
-    teacher_notes: view.teacher_notes,
-    grade:
-      view.grade === null
-        ? null
-        : {
-            label: view.grade.label,
-            group: view.grade.group,
-            points_awarded: view.grade.points_awarded,
-            max_points: view.grade.max_points,
-            percent: view.grade.percent,
-            scale_id: view.grade.scale_id,
-          },
   };
 }
 
