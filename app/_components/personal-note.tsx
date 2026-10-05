@@ -141,13 +141,12 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
             My grading is a bit more than the assignment asked for in terms of
             an enum-type letter grade. I wanted to make something that would
             extend to the next-up project so captured points and moved grade
-            scales to be data-driven. Simply put the schema allows for a
-            school/class to have things like Pass/Fail and &apos;A+, A, A-,
-            etc&apos; rather than just &apos;A&apos;. This introduced what might
-            seem to be odd terms to the app like &apos;grade band&apos; to help
-            with future extension ideas including grade book functionality (eg
-            total up all the homework points to get the class grade for
-            homework).
+            scales to be data-driven. This schema allows for a school/class to
+            have things like Pass/Fail and &apos;A+, A, A-, etc&apos; rather
+            than just &apos;A&apos;. This introduced what might seem to be odd
+            terms to the app like &apos;grade band&apos; to help with future
+            extension ideas including grade book functionality (eg total up all
+            the homework points to get the class grade for homework).
           </p>
           <p>
             Early on in the project I wanted to ensure there was hefty test
