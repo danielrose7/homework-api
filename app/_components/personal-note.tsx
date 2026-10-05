@@ -87,7 +87,7 @@ export function PersonalNote({ sandbox }: { sandbox: boolean }) {
         </summary>
         <div className="mt-4 space-y-4">
           <p>
-            My name is Daniel Rose. I&apos;m a runner, foodie, and developer
+            My name is Daniel Rose. I&apos;m a runner, food lover, and developer
             living in the San Juan mountains of SW Colorado: Silverton to be
             exact. It&apos;s close to Durango or Telluride, which you might have
             heard of.
