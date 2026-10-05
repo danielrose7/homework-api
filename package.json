@@ -13,6 +13,7 @@
     "test": "vitest run && vitest run --config vitest.race.config.mts",
     "test:race": "vitest run --config vitest.race.config.mts",
     "test:watch": "vitest",
+    "db:roles": "tsx scripts/roles.ts",
     "db:setup": "tsx scripts/setup.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",

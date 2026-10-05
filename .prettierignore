@@ -4,3 +4,4 @@ pnpm-lock.yaml
 *.pdf
 next-env.d.ts
 lib/generated
+.agents

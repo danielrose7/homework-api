@@ -59,7 +59,7 @@ These are what make a later RLS migration a policy-writing exercise rather than 
 
 ## DB roles
 
-Created by `scripts/roles.sql`, applied idempotently by `pnpm db:setup` over the superuser `ADMIN_DATABASE_URL`:
+Created by `scripts/roles.sql`, applied idempotently by `pnpm db:setup` (dev passwords) or `pnpm db:roles` (generated passwords, for hosted databases) over the admin `ADMIN_DATABASE_URL`:
 
 | Role           | Purpose                            | Privileges       |
 | -------------- | ---------------------------------- | ---------------- |

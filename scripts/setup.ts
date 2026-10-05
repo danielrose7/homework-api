@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, readFileSync } from "node:fs";
+import { copyFileSync, existsSync } from "node:fs";
 import { config } from "dotenv";
 import { Client } from "pg";
+import { applyRoles } from "./roles";
 
 if (!existsSync(".env.local") && !existsSync(".env")) {
   copyFileSync(".env.example", ".env.local");
@@ -18,16 +19,6 @@ const admin_url =
 const run = (command: string, args: string[]) =>
   execFileSync(command, args, { stdio: "inherit" });
 
-async function applyRoles() {
-  const client = new Client({ connectionString: admin_url });
-  await client.connect();
-  try {
-    await client.query(readFileSync("scripts/roles.sql", "utf8"));
-  } finally {
-    await client.end();
-  }
-}
-
 async function isEmpty() {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
@@ -43,7 +34,11 @@ async function isEmpty() {
 
 async function main() {
   run("docker", ["compose", "up", "-d", "--wait"]);
-  await applyRoles();
+  await applyRoles(admin_url, {
+    app_owner: "app_owner",
+    app_user: "app_user",
+    app_readonly: "app_readonly",
+  });
   run("pnpm", ["exec", "prisma", "migrate", "deploy"]);
   run("pnpm", ["exec", "prisma", "generate"]);
   if (process.env.SANDBOX_MODE === "true" && (await isEmpty())) {
