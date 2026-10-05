@@ -39,6 +39,7 @@ export async function downloadAttachment(
     resource_id: attachment.id,
     metadata: { submission_id: attachment.record_id },
   });
+
   return {
     filename: blob.filename,
     content_type: blob.content_type,
