@@ -55,7 +55,7 @@ Seeded users share the password `sandbox-dev`: `reyes` (administrator), `alvarez
 After `git clone` and `cd homework-api`, paste this into Claude Code or a similar agent:
 
 ```text
-Read CLAUDE.md and docs/plan/README.md, then set this project up locally: check that Node is 22.12 or newer,
+Read AGENTS.md and docs/plan/README.md, then set this project up locally: check that Node is 22.12 or newer,
 pnpm is installed and Docker is running, then run `pnpm install` and `pnpm db:setup`. Start `pnpm dev`, confirm
 http://localhost:3000/docs loads, and sign in through POST /api/auth/sign-in/username as `alvarez` with password
 `sandbox-dev`. Report anything that failed and do not change any files.
