@@ -3,6 +3,9 @@ that runs against the seeded [Sandbox school](/docs/sandbox-school).
 
 ## Run it
 
+Using the live site, skip this and open the [sandbox console](/sandbox/console). To run it yourself, follow
+[Run it locally in the README](https://github.com/danielrose7/homework-api#run-it-locally). In short:
+
 ```sh
 pnpm db:setup   # database, migrations and the Sandbox seed
 pnpm dev        # http://localhost:3000
@@ -48,4 +51,4 @@ get | Read one of my submissions
 
 - [Submit homework](/docs/guides/submit-homework) covers files, limits and the errors you can hit.
 - [Grade submissions](/docs/guides/grade-submissions) covers filtering what is waiting and regrading.
-- Prefer clicking to typing? Every call above has a button in the sandbox console.
+- Prefer clicking to typing? Open the [sandbox console](/sandbox/console); every call above is there.

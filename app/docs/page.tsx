@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { sandboxEnabled } from "@/app/sandbox/_server/guard";
+import { ConsoleCallout } from "@/app/docs/_components/console-callout";
 import { ROUTE_DOCS } from "@/app/docs/_lib/registry";
 
 export const metadata: Metadata = {
@@ -55,7 +55,11 @@ export default function DocsHome() {
         Python or Node. Every example in these docs is a request that runs.
       </p>
 
-      <div className="mt-10 grid gap-3 sm:grid-cols-2">
+      <div className="mt-8">
+        <ConsoleCallout />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
         {PATHS.map((path) => (
           <Link
             key={path.href}
@@ -85,21 +89,6 @@ export default function DocsHome() {
           </Link>
         ))}
       </div>
-
-      {sandboxEnabled() ? (
-        <div className="bg-muted mt-12 flex flex-wrap items-center justify-between gap-4 rounded-xl border px-5 py-4">
-          <p className="font-sans text-[14.5px]">
-            Rather click than type? The sandbox console calls every route as a
-            seeded teacher or student and shows the request.
-          </p>
-          <Link
-            href="/sandbox/console"
-            className="bg-primary text-primary-foreground rounded-md px-3 py-1.5 font-bold"
-          >
-            Open the sandbox
-          </Link>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -7,7 +7,7 @@ in with the password `sandbox-dev`.
 | Teachers      | `alvarez` (Algebra I), `chen` (English 9), `okafor` (Biology) |
 | Students      | `maya`, `jon`, `priya`, `theo`, `lena`, `omar`, `sam`, `noor` |
 
-To run it yourself:
+To run it yourself, follow [Run it locally in the README](https://github.com/danielrose7/homework-api#run-it-locally):
 
 ```sh
 pnpm db:setup   # database, migrations and the Sandbox seed

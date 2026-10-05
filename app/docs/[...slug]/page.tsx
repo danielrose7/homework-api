@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ConsoleCallout } from "@/app/docs/_components/console-callout";
 import { DocFrame } from "@/app/docs/_components/doc-frame";
 import { Markdown } from "@/app/docs/_components/markdown";
 import { RunExamplesVariables } from "@/app/docs/_components/example-variables";
 import { contentPath, headingsOf, readContent } from "@/app/docs/_lib/content";
 import { ARCHITECTURE_SECTION, CONTENT_SECTIONS } from "@/app/docs/_lib/nav";
+
+const CONSOLE_ROUTE: Record<string, string | null> = {
+  introduction: null,
+  "getting-started": "sign_in",
+  "guides/submit-homework": "submit",
+  "guides/grade-submissions": "grade",
+};
 
 const SECTIONS = [...CONTENT_SECTIONS, ARCHITECTURE_SECTION];
 
@@ -45,6 +53,9 @@ export default async function DocPage({
       headings={headingsOf(markdown)}
       source={contentPath(page.slug).replace(`${process.cwd()}/`, "")}
     >
+      {page.slug in CONSOLE_ROUTE ? (
+        <ConsoleCallout route={CONSOLE_ROUTE[page.slug] ?? undefined} />
+      ) : null}
       <Markdown>{markdown}</Markdown>
       {page.slug === "run-the-examples" ? <RunExamplesVariables /> : null}
     </DocFrame>
