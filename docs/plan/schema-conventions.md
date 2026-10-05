@@ -32,6 +32,13 @@ can (marked **tested** below).
 - **Money-like numbers:** points `Decimal(7,2)`, percentages `Decimal(6,2)`, GPA `Decimal(3,2)`. Compare them as
   exact hundredths in code, never as floats.
 
+## Field order
+
+Domain models list their fields in blank-line-separated groups: `id`, `created_at`, `updated_at`, `organization_id`;
+the model's own columns; the soft-delete columns; relations (including back-relations); then `@@unique`, `@@index`
+and `@@map`. A comment per database check (named as in the migration) closes the model. `prisma format` hoists those
+comments above the `@@` lines, so move them back after running it. Better Auth's models are left in its order.
+
 ## Tenancy
 
 - **Every non-global model has `organization_id`**, NOT NULL, `@db.Uuid`. Global models: `user`, `session`,
