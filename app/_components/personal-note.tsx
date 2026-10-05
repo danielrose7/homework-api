@@ -15,7 +15,7 @@ const READ_THESE = [
   ["modules/submissions", `${GITHUB_URL}/tree/main/modules/submissions`],
   [
     "Teacher submissions endpoint handler",
-    `${MAIN}/app/api/v1/orgs/%5Borg_slug%5D/submissions/route.ts#L83-L96`,
+    `${MAIN}/app/api/v1/orgs/%5Borg_slug%5D/submissions/route.ts#L83-L88`,
   ],
   [
     "Grade route handler endpoint",
