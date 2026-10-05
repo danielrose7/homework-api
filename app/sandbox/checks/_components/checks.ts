@@ -6,6 +6,7 @@ import {
   type Submission,
 } from "@/app/sandbox/_lib/types";
 import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
+import { ASSIGNMENTS, CLASSES } from "@/app/sandbox/_server/seed-data";
 
 export interface Asserter {
   ok(exchange: Exchange | null, condition: boolean, message: string): void;
@@ -170,6 +171,14 @@ export const CHECKS: Check[] = [
     title: "A teacher sees an overview of submissions",
     requirement: "Teachers: overview of all submissions.",
     async run(t, call) {
+      const taughtClasses = new Set(
+        CLASSES.filter((c) => c.teacher === "alvarez").map((c) => c.key),
+      );
+      const taughtTitles = new Set(
+        ASSIGNMENTS.filter((a) => taughtClasses.has(a.class_key)).map(
+          (a) => a.title,
+        ),
+      );
       const teacher = await call
         .as("alvarez")
         .get(`${BASE}/submissions?limit=100`);
@@ -177,7 +186,7 @@ export const CHECKS: Check[] = [
       t.eq(teacher, teacher.status, 200, "teacher gets 200");
       t.ok(
         teacher,
-        page(teacher).every((s) => /quiz|quadratics/i.test(s.assignment.title)),
+        page(teacher).every((s) => taughtTitles.has(s.assignment.title)),
         "a teacher sees only the classes they teach",
       );
       t.ok(
