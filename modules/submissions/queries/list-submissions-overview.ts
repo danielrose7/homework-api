@@ -1,5 +1,6 @@
 import { instantsForDayRange, validateDayRange } from "@/lib/domain/local-days";
 import { issue, type ValidationIssue } from "@/lib/domain/validation";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { requirePermission, type RequestContext } from "@/lib/server/context";
 import { listSubmissions } from "@/modules/submissions/queries/list-submissions";
 import type {
@@ -34,6 +35,19 @@ function validateOverviewFilters(filters: OverviewFilters): ValidationIssue[] {
   return issues;
 }
 
+function visibleScope(
+  ctx: RequestContext,
+): Prisma.AssignmentSubmissionWhereInput {
+  if (ctx.role === "administrator") return {};
+  return {
+    assignment: {
+      class: {
+        teachers: { some: { member_id: ctx.member_id, deleted_at: null } },
+      },
+    },
+  };
+}
+
 export async function listSubmissionsOverview(
   ctx: RequestContext,
   filters: OverviewFilters,
@@ -42,30 +56,22 @@ export async function listSubmissionsOverview(
   const { timezone } = await ctx.db.organizationPreferences.findUniqueOrThrow({
     where: { organization_id: ctx.organization_id },
   });
-  const range = instantsForDayRange(filters, timezone);
+  const { from, before } = instantsForDayRange(filters, timezone);
+
+  const submissionFilters: SubmissionFilters = {
+    grade: filters.grade,
+    assignment: filters.assignment,
+    student: filters.student,
+    limit: filters.limit,
+    starting_after: filters.starting_after,
+    ...(from ? { submitted_from: from } : {}),
+    ...(before ? { submitted_before: before } : {}),
+  };
 
   return listSubmissions(
     ctx,
-    ctx.role === "administrator"
-      ? {}
-      : {
-          assignment: {
-            class: {
-              teachers: {
-                some: { member_id: ctx.member_id, deleted_at: null },
-              },
-            },
-          },
-        },
-    {
-      grade: filters.grade,
-      assignment: filters.assignment,
-      student: filters.student,
-      limit: filters.limit,
-      starting_after: filters.starting_after,
-      ...(range.from ? { submitted_from: range.from } : {}),
-      ...(range.before ? { submitted_before: range.before } : {}),
-    },
+    visibleScope(ctx),
+    submissionFilters,
     validateOverviewFilters(filters),
   );
 }
