@@ -85,21 +85,6 @@ export const CONTENT_SECTIONS: readonly NavSection[] = [
       },
     ],
   },
-  {
-    title: "Resources",
-    pages: [
-      {
-        slug: "resources/submission",
-        title: "Submission",
-        description: "The homework object and its grade.",
-      },
-      {
-        slug: "resources/attachment",
-        title: "Attachment",
-        description: "A file handed in with a submission.",
-      },
-    ],
-  },
 ];
 
 export const ARCHITECTURE_SECTION: NavSection = {
@@ -130,7 +115,7 @@ export const ARCHITECTURE_SECTION: NavSection = {
 
 /** The Markdown file name behind a page: its slug without the folder. */
 export function contentFile(slug: string): string {
-  return slug.replace(/^(guides|resources|architecture)\//, "");
+  return slug.replace(/^(guides|architecture)\//, "");
 }
 
 export const API_GROUPS: readonly RouteGroup[] = [

@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { describe, expect, it } from "vitest";
 
 import { seedSandbox } from "@/app/sandbox/_server/mutations/seed-sandbox";
@@ -87,23 +85,6 @@ async function resolveVariable(
     default:
       throw new Error(`no way to resolve ${variable}`);
   }
-}
-
-/** Dotted paths of every key, so a documented sample can be compared with a real response. */
-function keyPaths(value: unknown, prefix = ""): string[] {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return [prefix];
-  }
-  return Object.entries(value).flatMap(([key, child]) =>
-    keyPaths(child, prefix ? `${prefix}.${key}` : key),
-  );
-}
-
-function documentedSample(page: string): unknown {
-  const source = readFileSync(`app/docs/_content/${page}.md`, "utf8");
-  const block = /```json\n([\s\S]*?)```/.exec(source)?.[1];
-  if (!block) throw new Error(`no JSON sample in ${page}.md`);
-  return JSON.parse(block);
 }
 
 function formFor(example: RouteExample): FormData | undefined {
@@ -216,16 +197,5 @@ describe("docs examples", () => {
     expect(bodies.get("Sign in"), "sign-in body").toMatchObject({
       token: expect.any(String),
     });
-    expect(
-      keyPaths(documentedSample("submission")).sort(),
-      "Submission sample",
-    ).toEqual(keyPaths(bodies.get("Read one of my submissions")).sort());
-    const { attachments } = bodies.get("Submit text and a file") as {
-      attachments: { data: unknown[] };
-    };
-    expect(
-      keyPaths(documentedSample("attachment")).sort(),
-      "Attachment sample",
-    ).toEqual(keyPaths(attachments.data[0]).sort());
   }, 60_000);
 });

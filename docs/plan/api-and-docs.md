@@ -137,7 +137,7 @@ docs page lists the codes per endpoint.
   `doc` on its `defineRoute` (id, method, path, roles, params/query/body schemas, errors); `app/docs/_lib/registry.ts`
   lists them, and `test/docs-registry.test.ts` fails if a route file has no entry or a different verb, path or path
   parameter.
-- The docs are a multi-page site under `/docs`: a tree of Start, Guides, Concepts and Resources pages, one API
+- The docs are a multi-page site under `/docs`: a tree of Start, Guides and Concepts pages, one API
   reference page per route (`/docs/api/<route-id>`), and the codebase guide under "Under the hood". Each prose page is
   a small Markdown file in `app/docs/_content/`, listed in `app/docs/_lib/nav.ts`; `test/docs-pages.test.ts` fails if a
   file and the nav disagree. A guide embeds a tested example with an ` ```example ` fence reading
@@ -145,7 +145,7 @@ docs page lists the codes per endpoint.
 - Examples for every route are defined once in `app/docs/_lib/examples.ts` and rendered as curl, Python (`requests`) and
   Node (`fetch`) tabs by `app/docs/_lib/snippets.ts`. They read `HOST`, `TOKEN` and ids from environment variables.
   `test/docs-examples.test.ts` runs each against the seeded Sandbox school and checks the documented status and
-  error code, and that the sample JSON in `resources.md` has the keys of the real responses. The snippet test runs
+  error code. The snippet test runs
   every generated snippet against a local echo server (Python is skipped without `requests`; set `PYTHON` to pick an
   interpreter).
 - The sandbox console builds its request list from the same registry.

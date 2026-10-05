@@ -49,8 +49,8 @@ const BRIEF = [
   ],
   [
     "Each homework carries assignment, student, dates, grade and teacher notes",
-    "/docs/resources/submission",
-    "The submission object",
+    "/docs/api/get",
+    "Read one submission",
   ],
   [
     "Tests for the business logic",

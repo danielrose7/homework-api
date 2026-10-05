@@ -37,7 +37,6 @@ const CONCEPTS = [
   ["/docs/authentication", "Authentication"],
   ["/docs/errors", "Errors"],
   ["/docs/pagination", "Pagination"],
-  ["/docs/resources/submission", "The submission object"],
   ["/docs/schools-and-roles", "Schools and roles"],
 ] as const;
 
