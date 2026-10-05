@@ -58,7 +58,14 @@ export function Workbench({ children }: { children: ReactNode }) {
   const settle = useRef<((confirmed: boolean) => void) | null>(null);
 
   useEffect(() => {
-    if (!session.get().active) void switchPersona(DEFAULT_PERSONA);
+    const requested = PEOPLE.find(
+      (person) =>
+        person.username ===
+        new URLSearchParams(window.location.search).get("as"),
+    );
+    if (requested) {
+      void switchPersona(requested.username);
+    } else if (!session.get().active) void switchPersona(DEFAULT_PERSONA);
   }, []);
 
   const last = exchanges.at(-1);

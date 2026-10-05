@@ -8,7 +8,7 @@ import { MethodTag } from "@/app/_components/method-tag";
 import { inputClass } from "@/app/sandbox/_components/ui";
 import { send, switchPersona, type AuthMode } from "@/app/sandbox/_lib/api";
 import { useExchanges } from "@/app/sandbox/_lib/exchange-store";
-import { roleOf } from "@/app/sandbox/_lib/people";
+import { PEOPLE, roleOf } from "@/app/sandbox/_lib/people";
 import { session, useSession } from "@/app/sandbox/_lib/session";
 import {
   presetsFor,
@@ -119,11 +119,6 @@ export function ConsoleView({
   });
   const [sending, setSending] = useState(false);
 
-  const wantedPersona = initialParams.as;
-  useEffect(() => {
-    if (wantedPersona) void switchPersona(wantedPersona);
-  }, [wantedPersona]);
-
   const draftKey = (k: string) => (k === "sign_in" ? `sign_in:${persona}` : k);
   const item = allItems.find((candidate) => candidate.key === key);
   const draft = item
@@ -163,8 +158,13 @@ export function ConsoleView({
   const resolved = (name: string, source: Draft) =>
     source.vars[name] ?? optionsFor(name)[0]?.[0] ?? "";
 
+  const [personaApplied, setPersonaApplied] = useState(
+    !PEOPLE.some((person) => person.username === initialParams.as),
+  );
+  if (!personaApplied && active === initialParams.as) setPersonaApplied(true);
+
   const search =
-    item && draft
+    personaApplied && item && draft
       ? new URLSearchParams([
           ["route", key],
           ...(active ? [["as", active]] : []),
