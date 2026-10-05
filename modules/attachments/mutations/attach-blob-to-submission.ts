@@ -7,7 +7,7 @@ import {
   deniedAsNotFound,
   validationFailed,
 } from "@/lib/server/errors";
-import { loadAccessibleSubmission } from "@/modules/submissions/queries/load-accessible-submission";
+import { loadAccessibleSubmission } from "@/modules/submissions/utils/load-accessible-submission";
 import type { AttachInput } from "@/modules/attachments/types";
 
 export async function attachBlobToSubmission(
