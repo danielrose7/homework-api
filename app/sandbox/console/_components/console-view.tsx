@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ExchangeView } from "@/app/sandbox/_components/exchange-view";
 import { MethodTag } from "@/app/_components/method-tag";
@@ -17,6 +17,8 @@ import {
   type CatalogItem,
   type Preset,
 } from "@/app/sandbox/console/_components/catalog";
+import { loadPersonaContext } from "@/app/sandbox/_server/actions/load-persona-context";
+import type { PersonaContext } from "@/app/sandbox/_server/queries/read-persona-context";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { SandboxOptions } from "@/app/sandbox/_server/queries/read-options";
@@ -56,14 +58,48 @@ function makeDraft(item: CatalogItem, persona: string): Draft {
 const varsIn = (path: string) =>
   [...path.matchAll(/\{(\w+)\}/g)].map((match) => match[1] ?? "");
 
+const RESERVED_PARAMS = ["route", "as", "auth"];
+
+function applyParams(
+  draft: Draft,
+  params: Record<string, string>,
+  item: CatalogItem,
+): Draft {
+  const names = varsIn(item.path);
+  const vars = Object.fromEntries(
+    names.flatMap((name) => {
+      const value = params[name];
+      return value ? [[name, value]] : [];
+    }),
+  );
+  const query = [...draft.query];
+  for (const [k, v] of Object.entries(params)) {
+    if (RESERVED_PARAMS.includes(k) || names.includes(k)) continue;
+    const row = query.find((candidate) => candidate.k === k);
+    if (row) Object.assign(row, { v, on: true });
+    else query.push({ k, v, on: true });
+  }
+  const auth = params.auth;
+  return {
+    ...draft,
+    vars,
+    query,
+    sub: query.some((row) => row.on) ? "params" : draft.sub,
+    auth:
+      auth === "none" || auth === "bad" || auth === "persona"
+        ? auth
+        : draft.auth,
+  };
+}
+
 export function ConsoleView({
   catalog,
   options,
-  initialKey,
+  initialParams,
 }: {
   catalog: CatalogGroup[];
   options: SandboxOptions;
-  initialKey?: string;
+  initialParams: Record<string, string>;
 }) {
   const allItems = catalog.flatMap((group) => group.items);
   const { active } = useSession();
@@ -71,17 +107,28 @@ export function ConsoleView({
   const { exchanges, selectedId } = useExchanges();
   const selected = exchanges.find((item) => item.id === selectedId) ?? null;
   const [key, setKey] = useState(
-    allItems.some((candidate) => candidate.key === initialKey)
-      ? (initialKey ?? "sign_in")
+    allItems.some((candidate) => candidate.key === initialParams.route)
+      ? (initialParams.route ?? "sign_in")
       : "sign_in",
   );
-  const [drafts, setDrafts] = useState<Record<string, Draft>>({});
+  const [drafts, setDrafts] = useState<Record<string, Draft>>(() => {
+    const first = allItems.find((candidate) => candidate.key === key);
+    return first
+      ? { [key]: applyParams(makeDraft(first, ""), initialParams, first) }
+      : {};
+  });
   const [sending, setSending] = useState(false);
 
-  const item = allItems.find((candidate) => candidate.key === key);
-  if (!item) return null;
+  const wantedPersona = initialParams.as;
+  useEffect(() => {
+    if (wantedPersona) void switchPersona(wantedPersona);
+  }, [wantedPersona]);
+
   const draftKey = (k: string) => (k === "sign_in" ? `sign_in:${persona}` : k);
-  const draft = drafts[draftKey(key)] ?? makeDraft(item, persona);
+  const item = allItems.find((candidate) => candidate.key === key);
+  const draft = item
+    ? (drafts[draftKey(key)] ?? makeDraft(item, persona))
+    : null;
   const patch = (changes: Partial<Draft>, forKey = key) =>
     setDrafts((current) => {
       const target = allItems.find((candidate) => candidate.key === forKey);
@@ -95,13 +142,48 @@ export function ConsoleView({
       };
     });
 
+  const [context, setContext] = useState<PersonaContext | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    let stale = false;
+    void loadPersonaContext(active).then((loaded) => {
+      if (!stale) setContext(loaded);
+    });
+    return () => {
+      stale = true;
+    };
+  }, [active]);
+  const scoped = context?.username === active ? context : options;
+
   const optionsFor = (name: string): Array<[string, string]> =>
     name === "assignment_id"
-      ? options.assignments.map((a) => [a.id, `${a.title} (${a.class_name})`])
-      : options.submissions.map((s) => [s.id, subLabel(s)]);
+      ? scoped.assignments.map((a) => [a.id, `${a.title} (${a.class_name})`])
+      : scoped.submissions.map((s) => [s.id, subLabel(s)]);
 
   const resolved = (name: string, source: Draft) =>
     source.vars[name] ?? optionsFor(name)[0]?.[0] ?? "";
+
+  const search =
+    item && draft
+      ? new URLSearchParams([
+          ["route", key],
+          ...(active ? [["as", active]] : []),
+          ...varsIn(draft.path).map((name): [string, string] => [
+            name,
+            resolved(name, draft),
+          ]),
+          ...draft.query
+            .filter((row) => row.on && row.k)
+            .map((row): [string, string] => [row.k, row.v]),
+          ...(draft.auth === "persona" ? [] : [["auth", draft.auth]]),
+        ]).toString()
+      : "";
+  useEffect(() => {
+    if (search) window.history.replaceState(null, "", `?${search}`);
+  }, [search]);
+
+  if (!item || !draft) return null;
+  const live: Draft = draft;
 
   function urlFor(source: Draft) {
     const path = source.path.replace(
@@ -115,7 +197,7 @@ export function ConsoleView({
     return query ? `${path}?${query}` : path;
   }
 
-  async function sendDraft(source: Draft = draft, target: CatalogItem = item!) {
+  async function sendDraft(source: Draft = live, target: CatalogItem = item!) {
     setSending(true);
     try {
       await send({
@@ -449,7 +531,7 @@ export function ConsoleView({
 
   function updateRow(index: number, changes: Partial<QueryRow>) {
     patch({
-      query: draft.query.map((row, i) =>
+      query: live.query.map((row, i) =>
         i === index ? { ...row, ...changes } : row,
       ),
     });

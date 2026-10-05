@@ -5,12 +5,17 @@ import { readSandboxOptions } from "@/app/sandbox/_server/queries/read-options";
 export default async function ConsolePage({
   searchParams,
 }: PageProps<"/sandbox/console">) {
-  const { route } = await searchParams;
+  const params = Object.fromEntries(
+    Object.entries(await searchParams).flatMap(([name, value]) => {
+      const first = Array.isArray(value) ? value[0] : value;
+      return first === undefined ? [] : [[name, first]];
+    }),
+  );
   return (
     <ConsoleView
       catalog={readCatalog()}
       options={await readSandboxOptions()}
-      initialKey={typeof route === "string" ? route : undefined}
+      initialParams={params}
     />
   );
 }
